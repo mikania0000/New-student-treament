@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>鳳甲國中新生報到管理系統</title>
+  <style>
+    :root {
+      --primary-blue: #007BFF;
+      --secondary-blue: #E9F2FF;
+      --accent-pink: #FF69B4;
+      --accent-orange: #FFA500;
+      --accent-red: #D32F2F;
+      --success-green: #4CAF50;
+      --bg-light: #f4f7f9;
+      --text-dark: #333;
+      --border-color: #ddd;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Microsoft JhengHei", "PingFang TC", Arial, sans-serif;
+      background-color: var(--bg-light);
+      margin: 0;
+      padding: 20px;
+      color: var(--text-dark);
+      line-height: 1.6;
+    }
+
+    .app-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 20px;
+    }
+
+    @media (max-width: 1100px) {
+      .app-container { grid-template-columns: 1fr; }
+    }
+
+    /* 卡片設計 */
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 25px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(0,0,0,0.05);
+    }
+
+    h2, h3 {
+      margin-top: 0;
+      color: var(--primary-blue);
+      border-left: 6px solid var(--primary-blue);
+      padding-left: 15px;
+      margin-bottom: 20px;
+    }
+
+    /* 表單佈局 */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group label {
+      font-size: 15px;
+      font-weight: bold;
+      margin-bottom: 6px;
+      color: #555;
+    }
+
+    input, select {
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 16px;
+      width: 100%;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary-blue);
+      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    }
+
+    /* 按鈕樣式 */
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      min-width: 120px;
+    }
+
+    button:active { transform: translateY(1px); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-search { background-color: var(--primary-blue); }
+    .btn-add { background-color: var(--accent-pink); }
+    .btn-checkin { background-color: var(--accent-orange); }
+    .btn-cancel { background-color: var(--accent-red); }
+    .btn-clear { background-color: #6c757d; }
+
+    /* 統計區表格 */
+    .stats-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      font-size: 16px;
+    }
+    .stats-table th, .stats-table td {
+      padding: 12px;
+      border: 1px solid #eef2f7;
+      text-align: left;
+    }
+    .stats-header { background: var(--primary-blue) !important; color: white !important; font-weight: bold; }
+    .highlight-pink { background-color: #fff0f5 !important; }
+
+    /* 結果列表 */
+    .result-container {
+      overflow-x: auto;
+      margin-top: 10px;
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 900px;
+    }
+    .data-table th {
+      background-color: var(--primary-blue);
+      color: white;
+      padding: 14px;
+      position: sticky;
+      top: 0;
+      font-weight: 500;
+    }
+    .data-table td {
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+      text-align: center;
+    }
+    .data-table tr:hover { background-color: var(--secondary-blue); }
+
+    .editable-cell input {
+      width: 100%;
+      padding: 6px;
+      border: 1px solid var(--accent-orange);
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    /* 訊息彈窗 */
+    #statusMessage {
+      position: fixed;
+      top: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 15px 30px;
+      border-radius: 50px;
+      color: white;
+      font-weight: bold;
+      z-index: 2000;
+      display: none;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+      animation: fadeInDown 0.4s;
+    }
+
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translate(-50%, -20px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
+
+    /* 彈出層 (Modal) */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      justify-content: center;
+      align-items: center;
+      z-index: 1500;
+    }
+    .modal-content {
+      background: white;
+      padding: 35px;
+      border-radius: 15px;
+      width: 95%;
+      max-width: 550px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+    }
+  </style>
+</head>
+<body>
+
+<div id="statusMessage"></div>
+
+<div class="app-container">
+  <!-- 左側：操作區 -->
+  <div class="main-content">
+    <div class="card">
+      <h2>鳳甲國中新生入學報到處理系統</h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>臨時編號</label>
+          <input type="text" id="tempId" placeholder="請輸入編號">
+        </div>
+        <div class="form-group">
+          <label>身分證號</label>
+          <input type="text" id="idNumber" placeholder="請輸入證號">
+        </div>
+        <div class="form-group">
+          <label>學生姓名</label>
+          <input type="text" id="studentName" placeholder="請輸入姓名">
+        </div>
+        <div class="form-group">
+          <label>學生性別</label>
+          <select id="gender">
+            <option value="">全部</option>
+            <option value="男">男</option>
+            <option value="女">女</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>畢業國小</label>
+          <select id="primarySchool">
+            <option value="">載入中...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>報到狀態</label>
+          <select id="reportStatus">
+            <option value="">全部</option>
+            <option value="已報到">已報到</option>
+            <option value="未報到">未報到</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button id="searchBtn" class="btn-search">🔍 查詢資料</button>
+        <button id="addBtn" class="btn-add">➕ 新增學生</button>
+        <button id="checkinBtn" class="btn-checkin">✅ 辦理報到</button>
+        <button id="cancelCheckinBtn" class="btn-cancel">❌ 取消報到</button>
+        <button id="clearBtn" class="btn-clear">🧹 清除欄位</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>查詢結果</h3>
+      <div id="resultArea" class="result-container">
+        <p style="text-align: center; color: #999; padding: 40px 0;">請設定查詢條件並點擊查詢按鈕...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右側：統計看板 -->
+  <div class="side-content">
+    <div class="card">
+      <h3>📊 即時統計看板</h3>
+      <div id="statsArea" style="min-height: 200px;">
+        <p style="text-align: center; color: #999;">統計數據載入中...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 新增學生彈窗 -->
+<div id="addModal" class="modal">
+  <div class="modal-content">
+    <h3>新增學生資料</h3>
+    <div class="form-grid" style="grid-template-columns: 1fr;">
+      <div class="form-group"><label>臨時編號 *</label><input type="text" id="newTempId"></div>
+      <div class="form-group"><label>身分證號 *</label><input type="text" id="newIdNumber"></div>
+      <div class="form-group"><label>學生姓名 *</label><input type="text" id="newStudentName"></div>
+      <div class="form-group">
+        <label>學生性別 *</label>
+        <select id="newGender"><option value="男">男</option><option value="女">女</option></select>
+      </div>
+      <div class="form-group"><label>畢業國小 *</label><input type="text" id="newPrimarySchool"></div>
+      <div class="form-group"><label>連絡電話 1</label><input type="text" id="newPhone1"></div>
+      <div class="form-group"><label>連絡電話 2</label><input type="text" id="newPhone2"></div>
+    </div>
+    <div class="btn-group" style="justify-content: flex-end; margin-top: 25px;">
+      <button id="confirmAddBtn" class="btn-search">確認新增</button>
+      <button id="closeModalBtn" class="btn-clear">取消關閉</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  /**
+   * 環境相容層：模擬真實試算表「統計」分頁的結構
+   */
+  if (typeof google === 'undefined') {
+    window.google = {
+      script: {
+        run: {
+          withSuccessHandler: function(cb) {
+            return {
+              getPrimarySchools: () => cb(['鳳甲國小', '五甲國小', '南成國小', '過埤國小']),
+              getStatisticsData: () => cb([
+                ['報到資訊統計表', '數值'],
+                ['最新報到編號', 'T085'],
+                ['最新報到姓名', '王小明'],
+                ['---', '---'],
+                ['總新生人數', '150'],
+                ['今日報到人數', '98'],
+                ['剩餘未報到', '52'],
+                ['男生報到數', '50'],
+                ['女生報到數', '48'],
+                ['報到率百分比', '65.3%'],
+                ['---', '---'],
+                ['備註事項', '系統運行正常']
+              ]),
+              queryStudentData: (f) => cb({
+                headers: ["臨時編號", "身分證號", "學生姓名", "畢業國小", "電話1", "電話2", "報到情形", "備註"],
+                data: [['T001', 'A123***789', '王小明', '鳳甲國小', '0912-345-678', '', '已報到', '測試備註']]
+              }),
+              updateStudentData: (r) => cb('模擬環境：修改成功'),
+              submitCheckIn: (id) => cb('<div style="color:green;">模擬環境：報到成功</div>'),
+              cancelCheckIn: (id) => cb('<div style="color:green;">模擬環境：取消成功</div>'),
+              addNewStudent: (d) => cb({ success: '模擬環境：新增成功' })
+            };
+          }
+        }
+      }
+    };
+  }
+
+  const UI = {
+    loading: '<div style="text-align:center; padding:30px;"><b style="color:#007BFF;">處理中，請稍候...</b></div>'
+  };
+
+  document.addEventListener("DOMContentLoaded", () => {
+    loadSchools();
+    updateStats();
+    setInterval(updateStats, 10000);
+
+    document.getElementById("searchBtn").onclick = performSearch;
+    document.getElementById("clearBtn").onclick = clearForm;
+    document.getElementById("addBtn").onclick = () => document.getElementById("addModal").style.display = 'flex';
+    document.getElementById("closeModalBtn").onclick = () => document.getElementById("addModal").style.display = 'none';
+    document.getElementById("confirmAddBtn").onclick = handleAddStudent;
+    document.getElementById("checkinBtn").onclick = () => handleCheckAction(true);
+    document.getElementById("cancelCheckinBtn").onclick = () => handleCheckAction(false);
+  });
+
+  function loadSchools() {
+    google.script.run.withSuccessHandler(list => {
+      const select = document.getElementById("primarySchool");
+      select.innerHTML = '<option value="">全部</option>';
+      list.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = opt.textContent = s;
+        select.appendChild(opt);
+      });
+    }).getPrimarySchools();
+  }
+
+  function updateStats() {
+    google.script.run.withSuccessHandler(data => {
+      const area = document.getElementById("statsArea");
+      if (!data || data.length === 0) return;
+
+      let html = `<table class="stats-table">`;
+      data.forEach((row, i) => {
+        // 比照原來的 GS 邏輯進行上色
+        const isHeader = i === 0 || i === 1;
+        const isPink = [4, 5, 9, 11, 13].includes(i);
+        
+        let rowClass = "";
+        if (isHeader) rowClass = "stats-header";
+        else if (isPink) rowClass = "highlight-pink";
+
+        html += `<tr class="${rowClass}">`;
+        row.forEach(cell => {
+          html += i === 0 ? `<th>${cell}</th>` : `<td>${cell}</td>`;
+        });
+        html += `</tr>`;
+      });
+      area.innerHTML = html + `</table>`;
+    }).getStatisticsData();
+  }
+
+  function performSearch() {
+    const filters = {
+      tempId: document.getElementById("tempId").value.trim(),
+      idNumber: document.getElementById("idNumber").value.trim(),
+      studentName: document.getElementById("studentName").value.trim(),
+      gender: document.getElementById("gender").value,
+      primarySchool: document.getElementById("primarySchool").value,
+      reportStatus: document.getElementById("reportStatus").value
+    };
+
+    if (Object.values(filters).every(v => v === "")) {
+      showToast("請至少輸入一個查詢條件", "#e67e22");
+      return;
+    }
+
+    document.getElementById("resultArea").innerHTML = UI.loading;
+    google.script.run.withSuccessHandler(res => {
+      const area = document.getElementById("resultArea");
+      if (!res || !res.data || res.data.length === 0) {
+        area.innerHTML = '<p style="text-align:center; color:red; padding:20px;">查無相符資料。</p>';
+        return;
+      }
+
+      let html = `<table class="data-table"><thead><tr>`;
+      res.headers.forEach(h => html += `<th>${h}</th>`);
+      html += `<th>操作</th></tr></thead><tbody>`;
+
+      res.data.forEach((row, rIdx) => {
+        html += `<tr>`;
+        row.forEach((cell, cIdx) => {
+          const isEditable = [4, 5, 7].includes(cIdx);
+          html += `<td class="${isEditable ? 'editable-cell' : ''}">
+            <span>${cell}</span>
+            ${isEditable ? `<input type="text" value="${cell}" style="display:none;">` : ''}
+          </td>`;
+        });
+        html += `<td><button class="btn-modify" style="background:#FF69B4; padding:5px 12px; font-size:14px;" onclick="toggleEditRow(this)">修正</button></td></tr>`;
+      });
+      area.innerHTML = html + `</tbody></table>`;
+    }).queryStudentData(filters);
+  }
+
+  function toggleEditRow(btn) {
+    const tr = btn.closest("tr");
+    const editables = tr.querySelectorAll(".editable-cell");
+    const isEditing = btn.textContent === "儲存";
+
+    if (!isEditing) {
+      btn.textContent = "儲存";
+      btn.style.backgroundColor = "#27ae60";
+      editables.forEach(td => {
+        td.querySelector("span").style.display = "none";
+        td.querySelector("input").style.display = "block";
+      });
+    } else {
+      btn.disabled = true;
+      btn.textContent = "請稍候";
+      const rowData = Array.from(tr.cells).map(td => {
+        const input = td.querySelector("input");
+        return input ? input.value : (td.querySelector("span")?.textContent || td.textContent);
+      });
+      google.script.run.withSuccessHandler(msg => {
+        showToast(msg, "#27ae60");
+        btn.disabled = false;
+        btn.textContent = "修正";
+        btn.style.backgroundColor = "#FF69B4";
+        editables.forEach(td => {
+          const val = td.querySelector("input").value;
+          td.querySelector("span").textContent = val;
+          td.querySelector("span").style.display = "inline";
+          td.querySelector("input").style.display = "none";
+        });
+        updateStats();
+      }).updateStudentData(rowData);
+    }
+  }
+
+  function handleCheckAction(isCheckIn) {
+    const tid = document.getElementById("tempId").value.trim();
+    if (!tid) {
+      showToast("請輸入臨時編號以執行操作", "#e67e22");
+      return;
+    }
+    showToast("處理中...", "#3498db");
+    google.script.run.withSuccessHandler(response => {
+      const temp = document.createElement("div");
+      temp.innerHTML = response;
+      const text = temp.textContent || temp.innerText;
+      showToast(text, text.includes("成功") ? "#27ae60" : "#c0392b");
+      if (text.includes("成功")) {
+        clearForm();
+        updateStats();
+      }
+    })[isCheckIn ? "submitCheckIn" : "cancelCheckIn"](tid);
+  }
+
+  function handleAddStudent() {
+    const data = {
+      newTempId: document.getElementById("newTempId").value.trim(),
+      newIdNumber: document.getElementById("newIdNumber").value.trim(),
+      newStudentName: document.getElementById("newStudentName").value.trim(),
+      newGender: document.getElementById("newGender").value,
+      newPrimarySchool: document.getElementById("newPrimarySchool").value.trim(),
+      newPhone1: document.getElementById("newPhone1").value.trim(),
+      newPhone2: document.getElementById("newPhone2").value.trim()
+    };
+    if (!data.newTempId || !data.newIdNumber || !data.newStudentName) {
+      showToast("必填欄位不可空白", "#c0392b");
+      return;
+    }
+    document.getElementById("confirmAddBtn").disabled = true;
+    google.script.run.withSuccessHandler(res => {
+      document.getElementById("confirmAddBtn").disabled = false;
+      if (res.error) showToast(res.error, "#c0392b");
+      else {
+        showToast(res.success, "#27ae60");
+        document.getElementById("addModal").style.display = 'none';
+        document.querySelectorAll("#addModal input").forEach(i => i.value = "");
+        updateStats();
+      }
+    }).addNewStudent(data);
+  }
+
+  function showToast(text, color) {
+    const msg = document.getElementById("statusMessage");
+    msg.style.backgroundColor = color;
+    msg.innerHTML = text;
+    msg.style.display = "block";
+    setTimeout(() => msg.style.display = "none", 4000);
+  }
+
+  function clearForm() {
+    document.querySelectorAll(".main-content input").forEach(i => i.value = "");
+    document.querySelectorAll(".main-content select").forEach(s => { if (s.id !== "primarySchool") s.selectedIndex = 0; });
+    document.getElementById("resultArea").innerHTML = '<p style="text-align: center; color: #999; padding: 40px 0;">欄位已清空。</p>';
+  }
+</script>
+</body>
+</html>
