@@ -112,28 +112,13 @@
     input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: var(--font-content); }
     input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,123,255,0.1); }
 
-    /* ★ 匯入彈窗樣式修正 ★ */
     .import-area {
-        width: 100%; 
-        height: 300px; /* 高度加大 */
-        padding: 15px;
+        width: 100%; height: 270px; padding: 15px;
         border: 2px dashed #ccc; border-radius: 8px;
-        font-family: monospace; 
-        font-size: 14px; /* 字體縮小 */
-        resize: vertical;
-        margin-bottom: 15px; background: #fafafa;
-        line-height: 1.5;
+        font-family: monospace; font-size: 14px; resize: vertical;
+        margin-bottom: 15px; background: #fafafa; line-height: 1.5;
     }
-    .import-instructions { 
-        font-size: 14px; /* 字體縮小 */
-        color: #666; 
-        margin-bottom: 15px; 
-        background: #f0f8ff; 
-        padding: 12px; 
-        border-radius: 8px; 
-        border-left: 5px solid var(--primary); 
-        line-height: 1.6; 
-    }
+    .import-instructions { font-size: 14px; color: #666; margin-bottom: 15px; background: #f0f8ff; padding: 12px; border-radius: 8px; border-left: 5px solid var(--primary); line-height: 1.6; }
     .tag { display: inline-block; background: #e9ecef; padding: 2px 6px; border-radius: 4px; font-size: 12px; margin: 0 4px; color: #495057; }
 
     .btn-group { display: flex; flex-wrap: wrap; gap: 12px; }
@@ -156,20 +141,15 @@
     .btn-clear { background-color: #6c757d; }
     .btn-file { background-color: #20c997; }
 
-    /* ★ 統計表樣式修正：高度極小化，字體統一 ★ */
+    /* ★ 統計表樣式修正：高度壓縮至 3px ★ */
     .stats-table { width: 100%; border-collapse: collapse; font-size: 18px; }
     .stats-table th, .stats-table td { 
-        padding: 4px 8px; 
+        padding: 3px 8px; 
         border: 1px solid #eef2f7; 
         text-align: left; 
     }
-    .stats-header { 
-        background: var(--primary); 
-        color: white; 
-    }
-    .stats-header th { 
-        font-weight: normal; 
-    }
+    .stats-header { background: var(--primary); color: white; }
+    .stats-header th { font-weight: normal; }
     .highlight-pink { background-color: #ffeef2; }
     .highlight-pink td { border-top: 1px solid #ffccd5; border-bottom: 1px solid #ffccd5; color: #d63384; font-weight: bold; }
 
@@ -193,15 +173,10 @@
       background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 2000;
       backdrop-filter: blur(2px);
     }
-    /* ★ 視窗樣式修正：加寬並減少內距 ★ */
     .modal-content { 
-      background: white; 
-      padding: 30px; 
-      border-radius: 16px; 
-      width: 95%; max-width: 800px; /* 加寬 */
+      background: white; padding: 30px; border-radius: 16px; width: 95%; max-width: 800px; 
       box-shadow: 0 15px 35px rgba(0,0,0,0.3); animation: modalFadeIn 0.3s ease;
-      max-height: 95vh; 
-      overflow-y: auto;
+      max-height: 95vh; overflow-y: auto;
     }
     @keyframes modalFadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
     .scroll-hint { display: none; background: #333; color: #fff; padding: 5px; text-align: center; font-size: 12px; position: fixed; bottom: 0; width: 100%; z-index: 100; }
@@ -226,7 +201,7 @@
           </div>
       </div>
       
-      <div class="version-tag">版本：v2026.01.26.24 (優化視窗高度)</div>
+      <div class="version-tag">版本：v2026.01.26.25 (POST 極速上傳版)</div>
       
       <div class="form-grid">
         <div class="form-group"><label>臨時編號</label><input type="text" id="tempId" placeholder="輸入臨時編號"></div>
@@ -306,22 +281,20 @@
 <!-- 彈窗：批次匯入 -->
 <div id="importModal" class="modal">
   <div class="modal-content">
-    <h3>📥 批次匯入資料</h3>
+    <h3>📥 批次匯入資料 (POST)</h3>
     <div class="import-instructions">
         <strong>使用說明：</strong><br>
         1. 請複製 Excel 資料表內容（含標題）並貼於下方，或點選按鈕上傳檔案。<br>
-        2. 系統將自動計算最佳批次大小，確保上傳不中斷。<br>
-        3. 支援格式：Excel (.xlsx, .xls) 或 CSV。
+        2. 系統識別關鍵字：<span class="tag">臨時編號/編班</span> <span class="tag">身分證</span> <span class="tag">姓名</span> <span class="tag">國小</span><br>
+        3. 支援格式：Excel (.xlsx, .xls) 或 CSV。<br>
+        4. <strong>注意：</strong>此模式為整批上傳，請確認後端已更新支援 POST。
     </div>
-    <textarea id="pasteArea" class="import-area" placeholder="請在此貼上 Excel 資料...
-範例：
-臨時編號	身分證號	姓名	性別	畢業國小	電話1	電話2
-101	A123456789	王小明	男	鳳甲國小	0912345678	071234567"></textarea>
+    <textarea id="pasteArea" class="import-area" placeholder="請在此貼上 Excel 資料..."></textarea>
     <div class="btn-group" style="justify-content: space-between; align-items: center; margin-top: 10px;">
         <input type="file" id="modalFileInput" style="display:none;" accept=".xlsx,.xls,.csv" onclick="this.value=null">
         <button onclick="document.getElementById('modalFileInput').click()" class="btn-file">📂 選擇檔案 (Excel/CSV)</button>
         <div style="display: flex; gap: 10px;">
-            <button onclick="parsePastedData()" class="btn-search">🚀 開始解析與匯入</button>
+            <button onclick="parsePastedData()" class="btn-search">🚀 立即匯入 (整批)</button>
             <button onclick="closeModal('importModal')" class="btn-clear">關閉</button>
         </div>
     </div>
@@ -362,37 +335,35 @@
       }
   }
 
+  // 標準 GET 請求
   function callGAS(func, params, cb) {
     const cbName = 'gas_cb_' + Math.floor(Math.random() * 1000000);
-    window[cbName] = (res) => { 
-        cb(res); 
-        delete window[cbName]; 
-        const t = document.getElementById(cbName); 
-        if(t) t.remove(); 
-    };
+    window[cbName] = (res) => { cb(res); delete window[cbName]; document.getElementById(cbName)?.remove(); };
     const s = document.createElement('script'); s.id = cbName;
     s.src = `${DEPLOY_URL}?action=${func}&callback=${cbName}&data=${encodeURIComponent(JSON.stringify(params))}&v=${Date.now()}`;
     s.onerror = () => { 
-        const errorMsg = "⚠️ 無法連線至資料庫";
-        document.getElementById("statsArea").innerHTML = `<div style="text-align:center;color:#D32F2F;padding:20px;background:#fff5f5;border-radius:8px;">${errorMsg}</div>`;
         toast("連線失敗，請檢查後端部署", "#D32F2F"); 
-        setStatus(false, "連線失敗");
-        isUpdatingStats = false;
+        setStatus(false, "連線失敗"); isUpdatingStats = false;
     };
     document.body.appendChild(s);
   }
 
-  function callGASPromise(func, params) {
+  // ★ 新增：POST 請求函式 (用於匯入大量資料)
+  // 注意：需要更新後端 doPost
+  function callGAS_POST(func, params) {
     return new Promise((resolve, reject) => {
-      const cbName = 'gas_cb_' + Math.floor(Math.random() * 1000000);
-      window[cbName] = (res) => {
-        delete window[cbName]; const t = document.getElementById(cbName); if(t) t.remove();
-        if(res.error) reject(res.error); else resolve(res);
-      };
-      const s = document.createElement('script'); s.id = cbName;
-      s.src = `${DEPLOY_URL}?action=${func}&callback=${cbName}&data=${encodeURIComponent(JSON.stringify(params))}&v=${Date.now()}`;
-      s.onerror = () => reject("連線失敗");
-      document.body.appendChild(s);
+        // 使用 text/plain 避免 preflight 複雜度，後端需用 JSON.parse(e.postData.contents) 解析
+        fetch(DEPLOY_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: func, data: params })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.error) reject(data.error);
+            else resolve(data);
+        })
+        .catch(err => reject(err.toString()));
     });
   }
 
@@ -400,21 +371,12 @@
     loadSchools(); updateStats(); setInterval(updateStats, 15000);
     
     document.getElementById("searchBtn").onclick = search;
-    document.getElementById("clearBtn").onclick = () => { 
-      document.querySelectorAll(".form-card input").forEach(i=>i.value="");
-      document.getElementById("resultArea").innerHTML = '<p style="text-align: center; color: #999;">欄位已清空</p>';
-    };
+    document.getElementById("clearBtn").onclick = () => { document.querySelectorAll(".form-card input").forEach(i=>i.value=""); document.getElementById("resultArea").innerHTML = '<p style="text-align: center; color: #999;">欄位已清空</p>'; };
     document.getElementById("addBtn").onclick = () => document.getElementById("addModal").style.display='flex';
     document.getElementById("resetBtn").onclick = () => document.getElementById("pwdModal").style.display='flex';
-    document.getElementById("importBtn").onclick = () => {
-        document.getElementById("importModal").style.display='flex';
-        document.getElementById("pasteArea").value = ''; 
-        document.getElementById("importStatus").innerText = '';
-    };
-
+    document.getElementById("importBtn").onclick = () => { document.getElementById("importModal").style.display='flex'; document.getElementById("pasteArea").value = ''; document.getElementById("importStatus").innerText = ''; };
     document.getElementById("checkinBtn").onclick = () => handleCheck(true);
     document.getElementById("cancelCheckinBtn").onclick = () => handleCheck(false);
-    
     document.getElementById("modalFileInput").onchange = (e) => handleFile(e.target.files[0]);
     document.getElementById("hiddenFileInput").onchange = (e) => handleFile(e.target.files[0]);
     
@@ -434,26 +396,14 @@
   }
 
   function updateStats() { 
-      if (isUpdatingStats) return;
-      isUpdatingStats = true;
-      
+      if (isUpdatingStats) return; isUpdatingStats = true;
       callGAS('getStatisticsData', {}, d => { 
           isUpdatingStats = false;
-          if (d && d.error) {
-              document.getElementById("statsArea").innerHTML = `<p style="text-align:center;color:#D32F2F">無法讀取統計: ${d.error}</p>`;
-              setStatus(false, "後端錯誤");
-              return;
-          }
+          if (d && d.error) { setStatus(false, "後端錯誤"); return; }
           if(!d || !Array.isArray(d) || d.length === 0) {
-             document.getElementById("statsArea").innerHTML = `
-                <div style="text-align:center;color:#666;padding:20px;border:1px dashed #ccc;border-radius:8px;background:#fafafa;">
-                    <strong style="color:#007BFF;font-size:18px;">系統連線成功！</strong><br><br>
-                    目前資料庫是空的，或統計表無資料。
-                </div>`;
-             setStatus(true, "連線正常 (無統計)");
-             return; 
+             document.getElementById("statsArea").innerHTML = `<div style="text-align:center;color:#666;padding:20px;">暫無統計資料</div>`;
+             setStatus(true, "無統計數據"); return; 
           }
-          
           setStatus(true, "系統運作中");
           let h = '<table class="stats-table">'; 
           d.forEach((r, i) => { 
@@ -468,10 +418,7 @@
     const f = { tempId: document.getElementById("tempId").value.trim(), idNumber: document.getElementById("idNumber").value.trim(), studentName: document.getElementById("studentName").value.trim(), primarySchool: document.getElementById("primarySchool").value, reportStatus: document.getElementById("reportStatus").value };
     document.getElementById("resultArea").innerHTML = '<p style="text-align:center; padding: 20px;"><span style="display:inline-block;animation:spin 1s infinite linear">↻</span> 正在查詢資料庫...</p>';
     callGAS('queryStudentData', f, res => {
-      if (res.error) {
-         document.getElementById("resultArea").innerHTML = `<p style="text-align:center;padding:20px;color:#d32f2f">查詢錯誤：${res.error}<br><small>請確認後端是否已部署最新版本</small></p>`;
-         return;
-      }
+      if (res.error) { document.getElementById("resultArea").innerHTML = `<p style="text-align:center;padding:20px;color:#d32f2f">查詢錯誤：${res.error}</p>`; return; }
       if (!res.data || !res.data.length) { document.getElementById("resultArea").innerHTML = '<p style="text-align:center;padding:20px;color:#d32f2f">查無資料</p>'; return; }
       let h = '<table class="data-table"><thead><tr>' + res.headers.map(v=>`<th>${v}</th>`).join('') + '<th>操作</th></tr></thead><tbody>';
       res.data.forEach(r => {
@@ -488,41 +435,21 @@
     const tr = btn.closest("tr");
     const editables = tr.querySelectorAll(".editable");
     const isSaving = btn.innerText === "儲存";
-
     if (!isSaving) {
       btn.innerText = "儲存"; btn.style.background = "#28a745";
       tr.classList.add("editing-row");
       editables.forEach(td => { td.querySelector("span").style.display="none"; td.querySelector("input").style.display="block"; });
     } else {
       btn.disabled = true; btn.innerText = "存檔中...";
-      
-      const allCells = Array.from(tr.cells);
-      const dataCells = allCells.slice(0, allCells.length - 1);
-      
-      const rowData = dataCells.map(td => {
+      const rowData = Array.from(tr.cells).slice(0, -1).map(td => {
         const input = td.querySelector("input");
-        const span = td.querySelector("span");
-        if (input && input.style.display !== 'none') return input.value;
-        return span ? span.innerText : td.innerText;
+        return (input && input.style.display !== 'none') ? input.value : td.querySelector("span")?.innerText || td.innerText;
       });
-
+      // 這裡繼續用 callGAS (GET) 因為單筆資料量小，沒問題
       callGAS('updateStudentData', rowData, msg => {
-        const isSuccess = msg.success;
-        toast(isSuccess || msg.error, isSuccess ? "#28a745" : "#D32F2F");
-        
-        btn.disabled = false; btn.innerText = "修正"; btn.style.background = "";
-        tr.classList.remove("editing-row");
-        
-        if (isSuccess) {
-           editables.forEach(td => { 
-             const input = td.querySelector("input");
-             const span = td.querySelector("span");
-             span.innerText = input.value; 
-             span.style.display="inline"; 
-             input.style.display="none"; 
-           });
-           updateStats();
-        }
+        toast(msg.success || msg.error, msg.success ? "#28a745" : "#D32F2F");
+        btn.disabled = false; btn.innerText = "修正"; btn.style.background = ""; tr.classList.remove("editing-row");
+        if (msg.success) { editables.forEach(td => { const inp = td.querySelector("input"); td.querySelector("span").innerText = inp.value; td.querySelector("span").style.display="inline"; inp.style.display="none"; }); updateStats(); }
       });
     }
   }
@@ -532,7 +459,6 @@
     if(!id) return toast("請輸入臨時編號", "#FFA500");
     toast("系統處理中...", "#007BFF");
     callGAS(isIn?'submitCheckIn':'cancelCheckIn', id, res => {
-      if (res.error) { toast("錯誤: " + res.error, "#D32F2F"); return; }
       let msg = typeof res==='string' ? res : (res.message || JSON.stringify(res));
       msg = msg.replace(/<[^>]*>/g,"");
       const isSuccess = msg.includes("成功");
@@ -544,17 +470,13 @@
   function saveStudent() {
     const d = { nT: document.getElementById("nT").value.trim(), nI: document.getElementById("nI").value.trim(), nN: document.getElementById("nN").value.trim(), nG: document.getElementById("nG").value, nS: document.getElementById("nS").value.trim(), nP1: document.getElementById("nP1").value.trim(), nP2: document.getElementById("nP2").value.trim() };
     if(!d.nT||!d.nI||!d.nN) return toast("必填欄位不可空白", "#D32F2F");
-    callGAS('addNewStudent', d, res => { 
-        if(res.error) { toast(res.error, "#D32F2F"); return; }
-        toast(res.success, "#28a745"); 
-        closeModal('addModal'); updateStats(); 
-    });
+    callGAS('addNewStudent', d, res => { toast(res.success||res.error, res.success?"#28a745":"#D32F2F"); closeModal('addModal'); updateStats(); });
   }
 
   function doReset() {
     const p = document.getElementById("sysPwd").value;
     if(!p) return toast("請輸入密碼", "#D32F2F");
-    callGAS('clearAllData', p, res => { toast(res.success||res.error, res.success?"#28a745":"#D32F2F"); if(res.success) { closeModal('pwdModal'); updateStats(); } });
+    callGAS('clearAllData', p, res => { toast(res.success||res.error, res.success?"#28a745":"#D32F2F"); closeModal('pwdModal'); updateStats(); });
   }
 
   function parsePastedData() {
@@ -564,7 +486,7 @@
     processImportData(rows);
   }
 
-  // ★★★ 智慧分批上傳核心邏輯 ★★★
+  // ★★★ 核心修正：使用 callGAS_POST 整批上傳，移除分批迴圈 ★★★
   async function processImportData(data) {
     if(data.length < 2) return toast("資料無內容或格式錯誤", "#D32F2F");
     const h = data[0];
@@ -579,86 +501,26 @@
     if (final.length === 0) return toast("沒有讀取到有效資料", "#FFA500");
 
     closeModal('importModal');
-    
-    // 智慧計算批次：預設 5，但如果網址過長會自動縮減
-    // GET URL 限制保守估計 1800 字元
-    const MAX_URL_LEN = 1800;
-    const BASE_URL_LEN = DEPLOY_URL.length + 100; // 預留 base url + param names
-    
-    let currentIndex = 0;
-    let batchCount = 1;
+    toast(`🚀 正在整批上傳 ${final.length} 筆資料...`, "#007BFF");
 
-    while (currentIndex < final.length) {
-        // 動態決定這一批要抓幾筆
-        let currentBatchSize = 0;
-        let currentBatchLen = 0;
-        let batchData = [];
-
-        // 試算下一批能塞幾筆
-        for (let i = currentIndex; i < final.length; i++) {
-            // 估算這一列的字串長度 (轉成 JSON 後的長度)
-            const rowStr = JSON.stringify(final[i]);
-            const rowLen = encodeURIComponent(rowStr).length + 2; // +2 for commas
-            
-            // 如果加了這一列會超過限制，就停止
-            if (BASE_URL_LEN + currentBatchLen + rowLen > MAX_URL_LEN) {
-                break;
-            }
-            
-            batchData.push(final[i]);
-            currentBatchLen += rowLen;
-            currentBatchSize++;
-            
-            // 安全上限：最多 10 筆 (避免後端處理超時)
-            if (currentBatchSize >= 10) break;
-        }
-
-        // 如果一筆都塞不下 (極端情況)，強制塞一筆，但可能失敗
-        if (currentBatchSize === 0) {
-            batchData.push(final[currentIndex]);
-            currentBatchSize = 1;
-        }
-
-        const mode = (currentIndex === 0) ? 'overwrite' : 'append';
-        const progressPct = Math.round((currentIndex / final.length) * 100);
-        toast(`上傳第 ${batchCount} 批 (${progressPct}%)... 每批 ${currentBatchSize} 筆`, "#007BFF");
-
-        // 執行上傳 (含重試)
-        let retryCount = 0;
-        let success = false;
-        while(retryCount < 3 && !success) {
-            try {
-                if(retryCount > 0) toast(`第 ${batchCount} 批重試 (${retryCount}/3)...`, "#FFA500");
-                await callGASPromise('importStudentData', { rows: batchData, mode: mode });
-                success = true;
-                await new Promise(r => setTimeout(r, 2000)); // 成功後休息 2 秒
-            } catch(err) {
-                console.error(err);
-                retryCount++;
-                await new Promise(r => setTimeout(r, 3000));
-            }
-        }
-
-        if(!success) return toast(`❌ 第 ${batchCount} 批匯入失敗，請檢查資料是否含有特殊字元`, "#D32F2F");
-
-        currentIndex += currentBatchSize;
-        batchCount++;
+    try {
+        // 直接使用 POST 一次傳送所有資料 (overwrite 模式)
+        await callGAS_POST('importStudentData', { rows: final, mode: 'overwrite' });
+        toast(`✅ 匯入完成！共 ${final.length} 筆`, "#28a745");
+        updateStats(); 
+        loadSchools();
+        document.getElementById("modalFileInput").value = ""; 
+        document.getElementById("hiddenFileInput").value = ""; 
+        document.getElementById("pasteArea").value = "";
+    } catch (err) {
+        console.error(err);
+        toast(`❌ 匯入失敗: ${err} (請確認後端已更新支援 POST)`, "#D32F2F");
     }
-
-    toast(`全數匯入完成！共 ${final.length} 筆`, "#28a745");
-    updateStats(); loadSchools();
-    document.getElementById("modalFileInput").value = ""; document.getElementById("hiddenFileInput").value = ""; document.getElementById("pasteArea").value = "";
   }
 
   async function handleFile(f) {
     if(!f) return; 
-    
-    // 檢查程式庫是否載入成功
-    if (typeof XLSX === 'undefined') {
-        toast("❌ 系統錯誤：Excel 元件未載入，請檢查網路", "#D32F2F");
-        return;
-    }
-
+    if (typeof XLSX === 'undefined') { toast("❌ 系統錯誤：Excel 元件未載入", "#D32F2F"); return; }
     toast("解析檔案中...", "#007BFF");
     const r = new FileReader();
     r.onload = async (ev) => { try { const wb = XLSX.read(new Uint8Array(ev.target.result), {type:'array'}); const d = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1}); processImportData(d); } catch (err) { toast("失敗: " + err, "#D32F2F"); } };
