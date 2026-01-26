@@ -67,7 +67,6 @@
       border-radius: 12px;
       box-shadow: var(--shadow);
       padding: 25px;
-      /* 移除 margin-bottom，改由 grid gap 控制，或視需要添加 */
       border: 3px dashed transparent;
       transition: all 0.3s;
       position: relative;
@@ -125,6 +124,43 @@
     .form-group label { display: block; font-weight: bold; margin-bottom: 6px; font-size: 14px; color: #555; }
     input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: var(--font-content); }
     input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,123,255,0.1); }
+    
+    /* 匯入彈窗專用樣式 */
+    .import-area {
+        width: 100%;
+        height: 200px;
+        padding: 15px;
+        border: 2px dashed #ccc;
+        border-radius: 8px;
+        font-family: monospace;
+        font-size: 14px;
+        resize: vertical;
+        margin-bottom: 15px;
+        background: #fafafa;
+    }
+    .import-area:focus {
+        border-color: var(--primary);
+        outline: none;
+        background: white;
+    }
+    .import-instructions {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 15px;
+        background: #f0f8ff;
+        padding: 10px;
+        border-radius: 6px;
+        border-left: 4px solid var(--primary);
+    }
+    .tag {
+        display: inline-block;
+        background: #e9ecef;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 12px;
+        margin: 0 2px;
+        color: #495057;
+    }
 
     .btn-group { display: flex; flex-wrap: wrap; gap: 10px; }
     button {
@@ -150,6 +186,7 @@
     .btn-reset:hover { background-color: #700000; }
     .btn-clear { background-color: #6c757d; }
     .btn-clear:hover { background-color: #5a6268; }
+    .btn-file { background-color: #20c997; }
 
     /* ★ 統計表樣式 - 扁平化設定 ★ */
     .stats-table {
@@ -167,12 +204,12 @@
     
     /* ★ 重要事項粉紅底樣式 ★ */
     .highlight-pink { 
-        background-color: #ffeef2; /* 柔和的粉紅底 */
+        background-color: #ffeef2;
     }
     .highlight-pink td {
-        border-top: 1px solid #ffccd5; /* 上淡粉紅邊線 */
-        border-bottom: 1px solid #ffccd5; /* 下淡粉紅邊線 */
-        color: #d63384; /* 深粉紅文字，增加辨識度 */
+        border-top: 1px solid #ffccd5;
+        border-bottom: 1px solid #ffccd5;
+        color: #d63384;
         font-weight: bold;
     }
 
@@ -202,9 +239,11 @@
       backdrop-filter: blur(2px);
     }
     .modal-content { 
-      background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 550px; 
+      background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 600px; 
       box-shadow: 0 10px 25px rgba(0,0,0,0.2);
       animation: modalFadeIn 0.3s ease;
+      max-height: 90vh;
+      overflow-y: auto;
     }
 
     @keyframes modalFadeIn {
@@ -236,7 +275,7 @@
         <span>放開滑鼠以匯入 Excel</span>
       </div>
       <h2>鳳甲國中報到管理系統</h2>
-      <div class="version-tag">版本：v2026.01.26.8 (樣式優化)</div>
+      <div class="version-tag">版本：v2026.01.26.9 (支援文字貼上匯入)</div>
       
       <div class="form-grid">
         <div class="form-group"><label>臨時編號</label><input type="text" id="tempId" placeholder="輸入臨時編號"></div>
@@ -258,14 +297,16 @@
         <button id="addBtn" class="btn-add">➕ 新增新生</button>
         <button id="checkinBtn" class="btn-checkin">✅ 報到</button>
         <button id="cancelCheckinBtn" class="btn-cancel">❌ 取消報到</button>
-        <button id="importBtn" class="btn-import">📥 匯入 Excel</button>
+        <!-- 修改匯入按鈕功能 -->
+        <button id="importBtn" class="btn-import">📥 匯入資料</button>
         <button id="resetBtn" class="btn-reset">🗑️ 系統重設</button>
         <button id="clearBtn" class="btn-clear">🧹 清除欄位</button>
       </div>
       <p style="font-size: 14px; color: #666; margin-top: 15px; display: flex; align-items: center; gap: 5px;">
-        💡 提示：拖曳 Excel 檔案至此白色卡片範圍即可自動啟動匯入
+        💡 提示：點擊「匯入資料」可選擇貼上文字或上傳檔案
       </p>
-      <input type="file" id="fileInput" style="display:none;" accept=".xlsx,.xls">
+      <!-- 隱藏的檔案輸入框供拖曳使用 -->
+      <input type="file" id="hiddenFileInput" style="display:none;" accept=".xlsx,.xls,.csv">
     </div>
 
     <!-- 統計看板卡片 (現在位於操作區右側) -->
@@ -311,6 +352,37 @@
   </div>
 </div>
 
+<!-- 新增：資料匯入彈窗 -->
+<div id="importModal" class="modal">
+  <div class="modal-content">
+    <h3>📥 批次匯入資料</h3>
+    
+    <div class="import-instructions">
+        <strong>使用說明：</strong><br>
+        1. 請複製 Excel 資料表內容（含標題）並貼於下方，或點選按鈕上傳檔案。<br>
+        2. 系統自動識別標題關鍵字：<span class="tag">臨時編班/編號</span> <span class="tag">身分證</span> <span class="tag">姓名</span> <span class="tag">性別</span> <span class="tag">國小</span> <span class="tag">電話</span><br>
+        3. 支援格式：Excel (.xlsx, .xls) 或 CSV。
+    </div>
+
+    <textarea id="pasteArea" class="import-area" placeholder="請在此貼上 Excel 資料...
+範例：
+臨時編班	身分證字號	姓名	性別	畢業國小	電話1	電話2
+101	A123456789	王小明	男	鳳甲國小	0912345678	071234567
+..."></textarea>
+
+    <div class="btn-group" style="justify-content: space-between; align-items: center; margin-top: 10px;">
+        <input type="file" id="modalFileInput" style="display:none;" accept=".xlsx,.xls,.csv">
+        <button onclick="document.getElementById('modalFileInput').click()" class="btn-file">📂 選擇檔案 (Excel/CSV)</button>
+        
+        <div style="display: flex; gap: 10px;">
+            <button onclick="parsePastedData()" class="btn-search">🚀 開始解析與匯入</button>
+            <button onclick="closeModal('importModal')" class="btn-clear">關閉</button>
+        </div>
+    </div>
+    <p id="importStatus" style="font-size: 13px; color: #666; margin-top: 10px;"></p>
+  </div>
+</div>
+
 <div id="pwdModal" class="modal">
   <div class="modal-content" style="max-width: 400px;">
     <h3>⚠️ 系統重設確認</h3>
@@ -329,7 +401,6 @@
 </style>
 
 <script>
-  // ★ 部署 ID (請確認 Code.gs 已重新部署) ★
   const DEPLOY_ID = "AKfycbxpY4iHHkEkdNsBvLdb2OJPqzn0eY14CWjLRiEoDJ0IBUhucE2Pp5dJepyZR5AxP_LO";
   const DEPLOY_URL = `https://script.google.com/macros/s/${DEPLOY_ID}/exec`;
 
@@ -342,7 +413,6 @@
     document.body.appendChild(s);
   }
 
-  // Promise 封裝：支援分批匯入的順序執行
   function callGASPromise(func, params) {
     return new Promise((resolve, reject) => {
       const cbName = 'gas_cb_' + Math.floor(Math.random() * 1000000);
@@ -359,6 +429,7 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     loadSchools(); updateStats(); setInterval(updateStats, 15000);
+    
     document.getElementById("searchBtn").onclick = search;
     document.getElementById("clearBtn").onclick = () => { 
       document.querySelectorAll(".form-card input").forEach(i=>i.value="");
@@ -366,12 +437,22 @@
     };
     document.getElementById("addBtn").onclick = () => document.getElementById("addModal").style.display='flex';
     document.getElementById("resetBtn").onclick = () => document.getElementById("pwdModal").style.display='flex';
-    document.getElementById("importBtn").onclick = () => document.getElementById("fileInput").click();
-    document.getElementById("fileInput").onchange = (e) => handleFile(e.target.files[0]);
+    
+    // 修改匯入按鈕行為：開啟彈窗
+    document.getElementById("importBtn").onclick = () => {
+        document.getElementById("importModal").style.display='flex';
+        document.getElementById("pasteArea").value = ''; // 清空上次內容
+        document.getElementById("importStatus").innerText = '';
+    };
+
     document.getElementById("checkinBtn").onclick = () => handleCheck(true);
     document.getElementById("cancelCheckinBtn").onclick = () => handleCheck(false);
     
-    // 綁定拖放事件
+    // 綁定檔案輸入事件 (包含彈窗內的與隱藏的)
+    document.getElementById("modalFileInput").onchange = (e) => handleFile(e.target.files[0]);
+    document.getElementById("hiddenFileInput").onchange = (e) => handleFile(e.target.files[0]);
+    
+    // 綁定拖放事件 (主卡片)
     const dropCard = document.getElementById("dropCard");
     dropCard.ondragover = (e) => { e.preventDefault(); dropCard.classList.add("dragover"); };
     dropCard.ondragleave = () => dropCard.classList.remove("dragover");
@@ -409,7 +490,7 @@
       let h = '<table class="data-table"><thead><tr>' + res.headers.map(v=>`<th>${v}</th>`).join('') + '<th>操作</th></tr></thead><tbody>';
       res.data.forEach(r => {
         h += '<tr>' + r.map((v, idx) => {
-          const edit = [4, 5, 7].includes(idx); // 允許編輯電話與備註等欄位
+          const edit = [4, 5, 7].includes(idx); 
           return `<td class="${edit?'editable':''}"><span>${v}</span>${edit?`<input type="text" value="${v}" style="display:none">`:''}</td>`;
         }).join('') + '<td><button class="btn-search" style="font-size:13px;padding:6px 12px;" onclick="toggleEdit(this)">修正</button></td></tr>';
       });
@@ -424,7 +505,6 @@
       editables.forEach(td => { td.querySelector("span").style.display="none"; td.querySelector("input").style.display="block"; });
     } else {
       btn.disabled = true; btn.innerText = "存檔中...";
-      // 注意：這裡假設第一欄是編號(Key)，實際應用要對應 GAS 邏輯
       const rowData = Array.from(tr.cells).map(td => td.querySelector("input") ? td.querySelector("input").value : (td.querySelector("span")?.innerText || td.innerText)).slice(0,8);
       callGAS('updateStudentData', rowData, msg => {
         toast(msg, "#28a745"); btn.disabled = false; btn.innerText = "修正"; btn.style.background = "";
@@ -439,10 +519,8 @@
     if(!id) return toast("請輸入臨時編號", "#FFA500");
     toast("系統處理中...", "#007BFF");
     callGAS(isIn?'submitCheckIn':'cancelCheckIn', id, res => {
-      // 處理 GAS 回傳可能包含 HTML 標籤的情況
       let msg = typeof res==='string' ? res : (res.message || JSON.stringify(res));
       msg = msg.replace(/<[^>]*>/g,"");
-      
       const isSuccess = msg.includes("成功");
       toast(msg, isSuccess ? "#28a745" : "#D32F2F");
       if(isSuccess) { updateStats(); document.getElementById("tempId").value = ""; search(); }
@@ -461,51 +539,87 @@
     callGAS('clearAllData', p, res => { toast(res.success||res.error, res.success?"#28a745":"#D32F2F"); if(res.success) { closeModal('pwdModal'); updateStats(); } });
   }
 
-  // ★ 分批匯入邏輯 (解決網址長度限制) ★
+  // ★ 新增：解析貼上的文字資料 ★
+  function parsePastedData() {
+    const text = document.getElementById("pasteArea").value.trim();
+    if (!text) return toast("請先貼上資料", "#FFA500");
+
+    // 簡單的 CSV/Tab 解析器
+    const rows = text.split(/\r\n|\n/).map(line => line.split(/\t|,/)); // 支援 Tab 或逗號分隔
+    processImportData(rows);
+  }
+
+  // ★ 共用：資料匯入核心邏輯 ★
+  async function processImportData(data) {
+    if(data.length < 2) return toast("資料無內容或格式錯誤", "#D32F2F");
+        
+    const h = data[0];
+    const find = (keywords) => h.findIndex(t => t && keywords.some(k => t.toString().includes(k)));
+    
+    // 欄位對應邏輯：增加容錯率
+    const m = { 
+        t: find(["編號", "臨時", "編班"]), // 臨時編班, 臨時編號
+        i: find(["身分證", "證號"]),        // 身分證字號
+        n: find(["姓名"]), 
+        g: find(["性別"]), 
+        s: find(["國小", "畢業"]), 
+        p1: find(["電話1", "電話１"]), 
+        p2: find(["電話2", "電話２"]) 
+    };
+    
+    // 檢查關鍵欄位
+    if (m.t === -1 || m.n === -1) {
+        toast("無法辨識標題：請確認包含『臨時編班』與『姓名』", "#D32F2F");
+        document.getElementById("importStatus").innerText = "❌ 失敗：找不到關鍵標題列";
+        return;
+    }
+    
+    const final = data.slice(1).map(row => [
+        row[m.t]||"", row[m.i]||"", row[m.n]||"", 
+        row[m.g]||"", row[m.s]||"", row[m.p1]||"", row[m.p2]||""
+    ]).filter(r=>r[0]||r[2]); // 過濾空行
+
+    if (final.length === 0) return toast("沒有讀取到有效資料", "#FFA500");
+
+    // 開始分批上傳
+    const BATCH_SIZE = 10;
+    const totalBatches = Math.ceil(final.length / BATCH_SIZE);
+    
+    // 關閉輸入彈窗，改為顯示 toast 進度
+    closeModal('importModal');
+
+    for (let i = 0; i < totalBatches; i++) {
+        const chunk = final.slice(i * BATCH_SIZE, (i + 1) * BATCH_SIZE);
+        const mode = (i === 0) ? 'overwrite' : 'append';
+        toast(`正在上傳第 ${i + 1}/${totalBatches} 批資料 (${Math.round((i+1)/totalBatches*100)}%)...`, "#007BFF");
+        
+        try {
+        await callGASPromise('importStudentData', { rows: chunk, mode: mode });
+        await new Promise(r => setTimeout(r, 800)); // 避免觸發 API 限制
+        } catch(err) {
+        return toast(`匯入中斷於第 ${i+1} 批: ${err}`, "#D32F2F");
+        }
+    }
+
+    toast(`全數匯入完成！共 ${final.length} 筆`, "#28a745");
+    updateStats(); loadSchools();
+    
+    // 重置輸入框
+    document.getElementById("modalFileInput").value = ""; 
+    document.getElementById("hiddenFileInput").value = "";
+    document.getElementById("pasteArea").value = "";
+  }
+
+  // ★ 檔案讀取 (整合 SheetJS) ★
   async function handleFile(f) {
-    if(!f) return; toast("解析 Excel 資料中...", "#007BFF");
+    if(!f) return; 
+    toast("解析檔案中...", "#007BFF");
     const r = new FileReader();
     r.onload = async (ev) => {
       try {
         const wb = XLSX.read(new Uint8Array(ev.target.result), {type:'array'});
         const d = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1});
-        if(d.length < 2) return toast("Excel 無內容", "#D32F2F");
-        
-        const h = d[0];
-        const find = (keywords) => h.findIndex(t => t && keywords.some(k => t.toString().includes(k)));
-        // 欄位對應邏輯：增加容錯率
-        const m = { t: find(["編號", "臨時"]), i: find(["身分證"]), n: find(["姓名"]), g: find(["性別"]), s: find(["國小", "畢業"]), p1: find(["電話1", "電話１", "父"]), p2: find(["電話2", "電話２", "母"]) };
-        
-        if (m.t === -1 || m.n === -1) return toast("無法辨識標題：請確認 Excel 包含『編號』與『姓名』欄位", "#D32F2F");
-        
-        const final = d.slice(1).map(row => [
-          row[m.t]||"", row[m.i]||"", row[m.n]||"", 
-          row[m.g]||"", row[m.s]||"", row[m.p1]||"", row[m.p2]||""
-        ]).filter(r=>r[0]||r[2]);
-
-        if (final.length === 0) return toast("沒有讀取到有效資料", "#FFA500");
-
-        const BATCH_SIZE = 10; // 每批 10 筆
-        const totalBatches = Math.ceil(final.length / BATCH_SIZE);
-        
-        for (let i = 0; i < totalBatches; i++) {
-          const chunk = final.slice(i * BATCH_SIZE, (i + 1) * BATCH_SIZE);
-          const mode = (i === 0) ? 'overwrite' : 'append';
-          toast(`正在上傳第 ${i + 1}/${totalBatches} 批資料 (${Math.round((i+1)/totalBatches*100)}%)...`, "#007BFF");
-          
-          try {
-            await callGASPromise('importStudentData', { rows: chunk, mode: mode });
-            // 延遲 0.8 秒避免太快觸發 Google API 限制
-            await new Promise(r => setTimeout(r, 800));
-          } catch(err) {
-            return toast(`匯入中斷於第 ${i+1} 批: ${err}`, "#D32F2F");
-          }
-        }
-
-        toast(`全數匯入完成！共 ${final.length} 筆`, "#28a745");
-        updateStats(); loadSchools();
-        document.getElementById("fileInput").value = ""; // 重置 input
-
+        processImportData(d);
       } catch (err) {
         console.error(err);
         toast("讀取檔案失敗: " + err, "#D32F2F");
