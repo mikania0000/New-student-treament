@@ -140,10 +140,10 @@
     .btn-clear { background-color: #6c757d; }
     .btn-file { background-color: #20c997; }
 
-    /* ★ 統計表樣式修正：統一字體與粗細 ★ */
+    /* ★ 統計表樣式修正：統一字體與粗細，縮小高度 ★ */
     .stats-table { width: 100%; border-collapse: collapse; font-size: 18px; }
     .stats-table th, .stats-table td { 
-        padding: 12px 15px; 
+        padding: 5px 10px; /* 縮小高度 */
         border: 1px solid #eef2f7; 
         text-align: left; 
     }
@@ -205,7 +205,7 @@
           </div>
       </div>
       
-      <div class="version-tag">版本：v2026.01.26.20 (支援自動重試)</div>
+      <div class="version-tag">版本：v2026.01.26.21 (小批次高穩定版)</div>
       
       <div class="form-grid">
         <div class="form-group"><label>臨時編號</label><input type="text" id="tempId" placeholder="輸入臨時編號"></div>
@@ -556,8 +556,8 @@
     const final = data.slice(1).map(row => [ row[m.t]||"", row[m.i]||"", row[m.n]||"", row[m.g]||"", row[m.s]||"", row[m.p1]||"", row[m.p2]||"" ]).filter(r=>r[0]||r[2]);
     if (final.length === 0) return toast("沒有讀取到有效資料", "#FFA500");
 
-    // ★ 修改：批次設為 20 (安全值)，防止網址過長
-    const BATCH_SIZE = 20;
+    // ★ 修改：批次縮小為 10，最安全，並維持自動重試
+    const BATCH_SIZE = 10;
     const totalBatches = Math.ceil(final.length / BATCH_SIZE);
     closeModal('importModal');
 
@@ -566,7 +566,6 @@
         const mode = (i === 0) ? 'overwrite' : 'append';
         toast(`正在上傳第 ${i + 1}/${totalBatches} 批資料...`, "#007BFF");
         
-        // ★ 自動重試機制 (最多重試 3 次)
         let retryCount = 0;
         let success = false;
         
@@ -577,13 +576,12 @@
                 await callGASPromise('importStudentData', { rows: chunk, mode: mode });
                 success = true;
                 
-                // 成功後等待 2.5 秒，避免太快發送下一批導致後端 Lock 衝突
+                // 成功後等待 2.5 秒
                 await new Promise(r => setTimeout(r, 2500)); 
                 
             } catch(err) {
                 console.error(err);
                 retryCount++;
-                // 失敗後等待 3 秒再試
                 await new Promise(r => setTimeout(r, 3000));
             }
         }
