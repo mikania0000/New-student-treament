@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>鳳甲國中新生報到管理系統</title>
+  <!-- 引入 Excel 處理函式庫 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     :root {
@@ -189,7 +190,7 @@
           </div>
       </div>
       
-      <div class="version-tag">版本：v2026.01.26.16 (連線診斷版)</div>
+      <div class="version-tag">版本：v2026.01.26.17 (修復檔案選擇無反應)</div>
       
       <div class="form-grid">
         <div class="form-group"><label>臨時編號</label><input type="text" id="tempId" placeholder="輸入臨時編號"></div>
@@ -218,7 +219,8 @@
       <p style="font-size: 14px; color: #666; margin-top: 15px; display: flex; align-items: center; gap: 5px;">
         💡 提示：點擊「匯入資料」可選擇貼上文字或上傳檔案
       </p>
-      <input type="file" id="hiddenFileInput" style="display:none;" accept=".xlsx,.xls,.csv">
+      <!-- ★重點修正：加入 onclick="this.value=null" 確保每次點擊都清空，讓 onchange 必定觸發 -->
+      <input type="file" id="hiddenFileInput" style="display:none;" accept=".xlsx,.xls,.csv" onclick="this.value=null">
     </div>
 
     <!-- 統計看板 -->
@@ -281,7 +283,8 @@
 臨時編號	身分證號	姓名	性別	畢業國小	電話1	電話2
 101	A123456789	王小明	男	鳳甲國小	0912345678	071234567"></textarea>
     <div class="btn-group" style="justify-content: space-between; align-items: center; margin-top: 10px;">
-        <input type="file" id="modalFileInput" style="display:none;" accept=".xlsx,.xls,.csv">
+        <!-- ★重點修正：加入 onclick="this.value=null" -->
+        <input type="file" id="modalFileInput" style="display:none;" accept=".xlsx,.xls,.csv" onclick="this.value=null">
         <button onclick="document.getElementById('modalFileInput').click()" class="btn-file">📂 選擇檔案 (Excel/CSV)</button>
         <div style="display: flex; gap: 10px;">
             <button onclick="parsePastedData()" class="btn-search">🚀 開始解析與匯入</button>
@@ -379,6 +382,7 @@
     document.getElementById("checkinBtn").onclick = () => handleCheck(true);
     document.getElementById("cancelCheckinBtn").onclick = () => handleCheck(false);
     
+    // 綁定檔案輸入事件
     document.getElementById("modalFileInput").onchange = (e) => handleFile(e.target.files[0]);
     document.getElementById("hiddenFileInput").onchange = (e) => handleFile(e.target.files[0]);
     
@@ -403,25 +407,22 @@
       
       callGAS('getStatisticsData', {}, d => { 
           isUpdatingStats = false;
-          // 1. 檢查後端錯誤
           if (d && d.error) {
               document.getElementById("statsArea").innerHTML = `<p style="text-align:center;color:#D32F2F">無法讀取統計: ${d.error}</p>`;
               setStatus(false, "後端錯誤");
               return;
           }
-          // 2. 檢查是否為空陣列
           if(!d || !Array.isArray(d) || d.length === 0) {
              document.getElementById("statsArea").innerHTML = `
                 <div style="text-align:center;color:#666;padding:20px;border:1px dashed #ccc;border-radius:8px;background:#fafafa;">
                     <strong style="color:#007BFF;font-size:16px;">系統連線成功！</strong><br><br>
-                    目前資料庫是空的。<br>請點擊左側「📥 匯入資料」按鈕<br>開始使用系統。
+                    目前資料庫是空的，或統計表無資料。<br>請確認後端「統計」工作表是否有數據。
                 </div>`;
-             setStatus(true, "連線正常 (無資料)");
+             setStatus(true, "連線正常 (無統計)");
              return; 
           }
           
           setStatus(true, "系統運作中");
-          // 3. 正常渲染
           let h = '<table class="stats-table">'; 
           d.forEach((r, i) => { 
               const c = i<=1?'stats-header':([4,5,9,11,13].includes(i)?'highlight-pink':''); 
@@ -435,7 +436,6 @@
     const f = { tempId: document.getElementById("tempId").value.trim(), idNumber: document.getElementById("idNumber").value.trim(), studentName: document.getElementById("studentName").value.trim(), primarySchool: document.getElementById("primarySchool").value, reportStatus: document.getElementById("reportStatus").value };
     document.getElementById("resultArea").innerHTML = '<p style="text-align:center; padding: 20px;"><span style="display:inline-block;animation:spin 1s infinite linear">↻</span> 正在查詢資料庫...</p>';
     callGAS('queryStudentData', f, res => {
-      // 錯誤處理修正
       if (res.error) {
          document.getElementById("resultArea").innerHTML = `<p style="text-align:center;padding:20px;color:#d32f2f">查詢錯誤：${res.error}<br><small>請確認後端是否已部署最新版本</small></p>`;
          return;
@@ -561,7 +561,15 @@
   }
 
   async function handleFile(f) {
-    if(!f) return; toast("解析檔案中...", "#007BFF");
+    if(!f) return; 
+    
+    // 檢查程式庫是否載入成功
+    if (typeof XLSX === 'undefined') {
+        toast("❌ 系統錯誤：Excel 元件未載入，請檢查網路", "#D32F2F");
+        return;
+    }
+
+    toast("解析檔案中...", "#007BFF");
     const r = new FileReader();
     r.onload = async (ev) => { try { const wb = XLSX.read(new Uint8Array(ev.target.result), {type:'array'}); const d = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1}); processImportData(d); } catch (err) { toast("失敗: " + err, "#D32F2F"); } };
     r.readAsArrayBuffer(f);
