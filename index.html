@@ -16,10 +16,10 @@
       --bg: #f4f7f9;
       --text: #333;
       --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      /* 字體大小定義 (依需求調整) */
+      /* 字體大小定義 */
       --font-main-title: 45px;
-      --font-content: 20px; /* 內文預設 20 */
-      --font-btn: 18px;     /* 按鈕調整為 18 */
+      --font-content: 20px;
+      --font-btn: 18px;
     }
 
     * { box-sizing: border-box; }
@@ -123,10 +123,10 @@
     .btn-group { display: flex; flex-wrap: wrap; gap: 12px; }
     button {
       padding: 12px 24px; border: none; border-radius: 8px;
-      font-size: var(--font-btn); /* 調整為 18px */
+      font-size: var(--font-btn); 
       font-weight: bold; cursor: pointer; color: white; transition: all 0.2s;
       display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      white-space: nowrap; /* 盡量不換行 */
+      white-space: nowrap;
     }
     button:active { transform: scale(0.95); }
     button:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -140,10 +140,10 @@
     .btn-clear { background-color: #6c757d; }
     .btn-file { background-color: #20c997; }
 
-    /* ★ 統計表樣式修正：統一字體與粗細，縮小高度 ★ */
+    /* ★ 統計表樣式修正：高度壓縮 ★ */
     .stats-table { width: 100%; border-collapse: collapse; font-size: 18px; }
     .stats-table th, .stats-table td { 
-        padding: 5px 10px; /* 縮小高度 */
+        padding: 4px 10px; /* 上下內距縮小至 4px */
         border: 1px solid #eef2f7; 
         text-align: left; 
     }
@@ -151,9 +151,7 @@
         background: var(--primary); 
         color: white; 
     }
-    .stats-header th {
-        font-weight: normal; /* 取消標題粗體，讓第一行感覺一致 */
-    }
+    .stats-header th { font-weight: normal; }
     .highlight-pink { background-color: #ffeef2; }
     .highlight-pink td { border-top: 1px solid #ffccd5; border-bottom: 1px solid #ffccd5; color: #d63384; font-weight: bold; }
 
@@ -205,7 +203,7 @@
           </div>
       </div>
       
-      <div class="version-tag">版本：v2026.01.26.21 (小批次高穩定版)</div>
+      <div class="version-tag">版本：v2026.01.26.22 (5筆/4秒慢速穩定版)</div>
       
       <div class="form-grid">
         <div class="form-group"><label>臨時編號</label><input type="text" id="tempId" placeholder="輸入臨時編號"></div>
@@ -290,7 +288,8 @@
         <strong>使用說明：</strong><br>
         1. 請複製 Excel 資料表內容（含標題）並貼於下方，或點選按鈕上傳檔案。<br>
         2. 系統識別關鍵字：<span class="tag">臨時編號/編班</span> <span class="tag">身分證</span> <span class="tag">姓名</span> <span class="tag">國小</span><br>
-        3. 支援格式：Excel (.xlsx, .xls) 或 CSV。
+        3. 支援格式：Excel (.xlsx, .xls) 或 CSV。<br>
+        4. <strong>注意：</strong>為確保資料庫完整，系統將採慢速上傳 (每5筆休息4秒)。
     </div>
     <textarea id="pasteArea" class="import-area" placeholder="請在此貼上 Excel 資料...
 範例：
@@ -556,15 +555,15 @@
     const final = data.slice(1).map(row => [ row[m.t]||"", row[m.i]||"", row[m.n]||"", row[m.g]||"", row[m.s]||"", row[m.p1]||"", row[m.p2]||"" ]).filter(r=>r[0]||r[2]);
     if (final.length === 0) return toast("沒有讀取到有效資料", "#FFA500");
 
-    // ★ 修改：批次縮小為 10，最安全，並維持自動重試
-    const BATCH_SIZE = 10;
+    // ★ 修改：批次設為 5，並延長等待時間為 4 秒 (極慢但穩定)
+    const BATCH_SIZE = 5;
     const totalBatches = Math.ceil(final.length / BATCH_SIZE);
     closeModal('importModal');
 
     for (let i = 0; i < totalBatches; i++) {
         const chunk = final.slice(i * BATCH_SIZE, (i + 1) * BATCH_SIZE);
         const mode = (i === 0) ? 'overwrite' : 'append';
-        toast(`正在上傳第 ${i + 1}/${totalBatches} 批資料...`, "#007BFF");
+        toast(`正在上傳第 ${i + 1}/${totalBatches} 批資料 (5筆/批)...`, "#007BFF");
         
         let retryCount = 0;
         let success = false;
@@ -576,13 +575,13 @@
                 await callGASPromise('importStudentData', { rows: chunk, mode: mode });
                 success = true;
                 
-                // 成功後等待 2.5 秒
-                await new Promise(r => setTimeout(r, 2500)); 
+                // ★ 修改：延長等待時間至 4000ms (4秒)
+                await new Promise(r => setTimeout(r, 4000)); 
                 
             } catch(err) {
                 console.error(err);
                 retryCount++;
-                await new Promise(r => setTimeout(r, 3000));
+                await new Promise(r => setTimeout(r, 5000)); // 失敗後等待 5 秒
             }
         }
         
