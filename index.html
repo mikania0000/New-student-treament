@@ -4,72 +4,176 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>鳳甲國中新生報到管理系統</title>
+  <!-- 引入 Excel 處理函式庫 (SheetJS) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     :root {
-      --primary: #007BFF; --secondary: #E9F2FF; --accent: #FF69B4; --warning: #FFA500;
-      --danger: #D32F2F; --success: #28a745; --bg: #f4f7f9; --text: #333; --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      --font-main-title: 50px; --font-content: 20px; --font-sub-title: 32px; --font-version: 14px;
+      --primary: #007BFF;
+      --secondary: #E9F2FF;
+      --accent: #FF69B4;
+      --warning: #FFA500;
+      --danger: #D32F2F;
+      --success: #28a745;
+      --bg: #f4f7f9;
+      --text: #333;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      /* 字體大小定義 */
+      --font-main-title: 50px;
+      --font-content: 20px;
+      --font-sub-title: 32px;
+      --font-version: 14px;
     }
+
     * { box-sizing: border-box; }
-    body { font-family: "Microsoft JhengHei", Arial, sans-serif; background: var(--bg); margin: 0; padding: 0; font-size: var(--font-content); line-height: 1.6; overflow-x: hidden; }
-    
-    .app-container { 
-      max-width: 98%; 
-      margin: 20px auto; 
-      display: grid; 
-      /* ★★★ 這裡控制統計表寬度 (目前 380px)，修改這個數字即可調整 ★★★ */
-      grid-template-columns: 1fr 400px; 
-      gap: 25px; 
-      padding: 0 20px; 
+    body {
+      font-family: "Microsoft JhengHei", "PingFang TC", Arial, sans-serif;
+      background-color: var(--bg);
+      margin: 0; padding: 0;
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+      font-size: var(--font-content);
     }
 
-    @media (min-width: 851px) {
-      .main-content { display: contents; }
-      .form-card { grid-column: 1 / 2; grid-row: 1; }
-      .side-content { grid-column: 2 / 3; grid-row: 1; }
-      .result-card { grid-column: 1 / -1; grid-row: 2; }
+    /* ★ 佈局寬度設定 ★ */
+    .app-container {
+      max-width: 98%; /* 讓網頁撐滿螢幕，增加查詢結果空間 */
+      margin: 20px auto;
+      display: grid;
+      grid-template-columns: 1fr 420px; /* 右側看板固定 380px，其餘給左側 */
+      gap: 25px;
+      padding: 0 20px;
     }
+
     @media (max-width: 850px) {
-      .app-container { display: flex; width: 100vw; height: 100vh; overflow-x: auto; scroll-snap-type: x mandatory; padding: 0; margin: 0; gap: 0; }
-      .main-content, .side-content { flex: 0 0 100vw; width: 100vw; height: 100vh; overflow-y: auto; scroll-snap-align: start; padding: 20px; display: block; }
+      .app-container {
+        display: flex;
+        width: 100vw;
+        height: 100vh;
+        margin: 0; padding: 0; gap: 0;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+      }
+      .main-content, .side-content {
+        flex: 0 0 100vw;
+        width: 100vw;
+        height: 100vh;
+        overflow-y: auto;
+        scroll-snap-align: start;
+        padding: 20px;
+      }
       h2 { font-size: 36px !important; }
-      .scroll-hint { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); color: white; padding: 8px 18px; border-radius: 25px; font-size: 14px; z-index: 1000; }
     }
-    @media (min-width: 851px) { .scroll-hint { display: none; } }
 
-    .card { background: #fff; border-radius: 12px; box-shadow: var(--shadow); padding: 30px; margin-bottom: 20px; border: 3px dashed transparent; transition: 0.3s; position: relative; }
-    .card.dragover { border-color: var(--primary); background: #f0f8ff; transform: scale(1.01); }
-    .drag-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: none; justify-content: center; align-items: center; font-size: 30px; color: var(--primary); font-weight: bold; border-radius: 12px; pointer-events: none; }
+    /* 卡片設計 */
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 30px;
+      margin-bottom: 20px;
+      border: 3px dashed transparent; /* 預留邊框給拖放用 */
+      transition: all 0.3s;
+      position: relative;
+    }
+    .card.dragover {
+      border-color: var(--primary);
+      background-color: #f0f8ff;
+      transform: scale(1.01);
+    }
+    .drag-overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(255,255,255,0.9);
+      display: none; justify-content: center; align-items: center;
+      font-size: 30px; color: var(--primary); font-weight: bold;
+      border-radius: 12px; pointer-events: none;
+    }
     .card.dragover .drag-overlay { display: flex; }
 
-    h2 { margin-top: 0; color: var(--primary); border-left: 10px solid var(--primary); padding-left: 20px; font-size: var(--font-main-title); line-height: 1.2; margin-bottom: 5px; }
-    .version-tag { font-size: var(--font-version); color: #999; margin-bottom: 20px; margin-left: 32px; font-weight: normal; }
-    h3 { margin-top: 0; color: var(--primary); border-left: 6px solid var(--primary); padding-left: 15px; font-size: var(--font-sub-title); margin-bottom: 15px; }
+    h2 {
+      margin-top: 0; color: var(--primary);
+      border-left: 10px solid var(--primary);
+      padding-left: 20px; margin-bottom: 5px;
+      font-size: var(--font-main-title);
+      line-height: 1.2;
+    }
 
-    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-bottom: 25px; }
+    .version-tag {
+      font-size: var(--font-version);
+      color: #999;
+      margin-bottom: 20px;
+      margin-left: 30px;
+      font-weight: normal;
+    }
+
+    h3 {
+      margin-top: 0; color: var(--primary);
+      border-left: 6px solid var(--primary);
+      padding-left: 15px; margin-bottom: 15px;
+      font-size: var(--font-sub-title);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 15px; margin-bottom: 25px;
+    }
     .form-group label { display: block; font-weight: bold; margin-bottom: 6px; }
     input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: var(--font-content); }
 
     .btn-group { display: flex; flex-wrap: wrap; gap: 12px; }
-    button { padding: 12px 24px; border: none; border-radius: 8px; font-size: var(--font-content); font-weight: bold; cursor: pointer; color: white; transition: 0.2s; }
-    .btn-search { background: var(--primary); } .btn-add { background: var(--accent); } .btn-checkin { background: var(--warning); }
-    .btn-cancel { background: var(--danger); } .btn-import { background: #483D8B; } .btn-reset { background: #8B0000; } .btn-clear { background: #6c757d; }
+    button {
+      padding: 12px 24px; border: none; border-radius: 8px;
+      font-size: var(--font-content); font-weight: bold;
+      cursor: pointer; color: white; transition: all 0.2s;
+    }
+    button:active { transform: scale(0.95); }
 
-    .stats-table { width: 100%; border-collapse: collapse; font-size: var(--font-content); }
-    .stats-table th, .stats-table td { padding: 3.6px 14px; border: 1px solid #eef2f7; text-align: left; }
+    .btn-search { background-color: var(--primary); }
+    .btn-add { background-color: var(--accent); }
+    .btn-checkin { background-color: var(--warning); }
+    .btn-cancel { background-color: var(--danger); }
+    .btn-import { background-color: #483D8B; }
+    .btn-reset { background-color: #8B0000; }
+    .btn-clear { background-color: #6c757d; }
+
+    /* ★ 統計表樣式 - 扁平化設定 ★ */
+    .stats-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: var(--font-content);
+    }
+    .stats-table th, .stats-table td {
+      padding: 5px 14px; /* 上下 5px，讓表格變扁 */
+      border: 1px solid #eef2f7;
+      text-align: left;
+    }
     .stats-header { background: var(--primary); color: white; }
-    .highlight-pink { background: #fff0f5; }
+    .highlight-pink { background-color: #fff0f5; }
 
+    /* 結果表格 */
     .result-container { overflow-x: auto; margin-top: 20px; }
-    .data-table { width: 100%; border-collapse: collapse; min-width: 1000px; font-size: var(--font-content); }
-    .data-table th { background: var(--primary); color: white; padding: 15px; }
+    .data-table {
+      width: 100%; border-collapse: collapse; min-width: 1000px;
+      font-size: var(--font-content);
+    }
+    .data-table th { background-color: var(--primary); color: white; padding: 15px; }
     .data-table td { padding: 12px; border-bottom: 1px solid #eee; text-align: center; }
-    .data-table tr:hover { background: var(--secondary); }
+    .data-table tr:hover { background-color: var(--secondary); }
+
     .editable input { width: 100%; padding: 5px; font-size: var(--font-content); text-align: center; }
 
-    #statusMessage { position: fixed; top: 30px; left: 50%; transform: translateX(-50%); padding: 15px 30px; border-radius: 50px; color: white; font-weight: bold; z-index: 3000; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 2000; }
+    #statusMessage {
+      position: fixed; top: 30px; left: 50%; transform: translateX(-50%);
+      padding: 15px 30px; border-radius: 50px; color: white; font-weight: bold;
+      z-index: 3000; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .modal {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 2000;
+    }
     .modal-content { background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 550px; }
   </style>
 </head>
@@ -79,19 +183,27 @@
 <div class="scroll-hint">⬅️ 左右滑動：切換「操作區」與「統計看板」 ➡️</div>
 
 <div class="app-container">
+  <!-- 左側：操作區與查詢結果 -->
   <div class="main-content">
-    <!-- 拖曳區卡片 -->
+    
     <div class="card form-card" id="dropCard">
       <div class="drag-overlay">📂 放開滑鼠以匯入 Excel</div>
       <h2>鳳甲國中報到管理系統</h2>
-      <div class="version-tag">版本：v2026.01.26.5</div>
+      <div class="version-tag">版本：v2026.01.26.6</div>
       
       <div class="form-grid">
         <div class="form-group"><label>臨時編號</label><input type="text" id="tempId" placeholder="輸入臨時編號"></div>
         <div class="form-group"><label>身分證號</label><input type="text" id="idNumber" placeholder="輸入證號"></div>
         <div class="form-group"><label>學生姓名</label><input type="text" id="studentName" placeholder="輸入姓名"></div>
         <div class="form-group"><label>畢業國小</label><select id="primarySchool"><option value="">全部國小</option></select></div>
-        <div class="form-group"><label>報到狀態</label><select id="reportStatus"><option value="">全部</option><option value="已報到">已報到</option><option value="未報到">未報到</option></select></div>
+        <div class="form-group">
+          <label>報到狀態</label>
+          <select id="reportStatus">
+            <option value="">全部</option>
+            <option value="已報到">已報到</option>
+            <option value="未報到">未報到</option>
+          </select>
+        </div>
       </div>
       
       <div class="btn-group">
@@ -109,10 +221,13 @@
 
     <div class="card result-card">
       <h3>查詢結果</h3>
-      <div id="resultArea" class="result-container"><p style="text-align: center; color: #999;">請輸入條件並執行查詢...</p></div>
+      <div id="resultArea" class="result-container">
+        <p style="text-align: center; color: #999;">請輸入條件並執行查詢...</p>
+      </div>
     </div>
   </div>
 
+  <!-- 右側：統計看板 -->
   <div class="side-content">
     <div class="card">
       <h3>📊 即時統計看板</h3>
@@ -121,7 +236,7 @@
   </div>
 </div>
 
-<!-- 彈窗 -->
+<!-- 彈窗組 -->
 <div id="addModal" class="modal">
   <div class="modal-content">
     <h3>手動新增學生</h3>
@@ -154,6 +269,7 @@
 </div>
 
 <script>
+  // ★ 部署 ID (請確認 Code.gs 已重新部署) ★
   const DEPLOY_ID = "AKfycbxpY4iHHkEkdNsBvLdb2OJPqzn0eY14CWjLRiEoDJ0IBUhucE2Pp5dJepyZR5AxP_LO";
   const DEPLOY_URL = `https://script.google.com/macros/s/${DEPLOY_ID}/exec`;
 
@@ -166,13 +282,12 @@
     document.body.appendChild(s);
   }
 
-  // 封裝成 Promise 以支援 async/await
+  // Promise 封裝：支援分批匯入的順序執行
   function callGASPromise(func, params) {
     return new Promise((resolve, reject) => {
       const cbName = 'gas_cb_' + Math.floor(Math.random() * 1000000);
       window[cbName] = (res) => {
-        delete window[cbName];
-        const t = document.getElementById(cbName); if(t) t.remove();
+        delete window[cbName]; const t = document.getElementById(cbName); if(t) t.remove();
         if(res.error) reject(res.error); else resolve(res);
       };
       const s = document.createElement('script'); s.id = cbName;
@@ -196,6 +311,7 @@
     document.getElementById("checkinBtn").onclick = () => handleCheck(true);
     document.getElementById("cancelCheckinBtn").onclick = () => handleCheckAction(false);
     
+    // 綁定拖放事件
     const dropCard = document.getElementById("dropCard");
     dropCard.ondragover = (e) => { e.preventDefault(); dropCard.classList.add("dragover"); };
     dropCard.ondragleave = () => dropCard.classList.remove("dragover");
@@ -258,11 +374,10 @@
     callGAS('clearAllData', p, res => { toast(res.success||res.error, res.success?"#28a745":"#D32F2F"); if(res.success) { closeModal('pwdModal'); updateStats(); } });
   }
 
-  // ★ 分批匯入邏輯 (解決資料量過大問題) ★
+  // ★ 分批匯入邏輯 (解決網址長度限制) ★
   async function handleFile(f) {
     if(!f) return; toast("解析 Excel 資料中...", "#007BFF");
     const r = new FileReader();
-    
     r.onload = async (ev) => {
       try {
         const wb = XLSX.read(new Uint8Array(ev.target.result), {type:'array'});
@@ -271,44 +386,34 @@
         
         const h = d[0];
         const find = (keywords) => h.findIndex(t => t && keywords.some(k => t.toString().includes(k)));
-        const m = { 
-          t: find(["臨時編班", "臨時編號", "編號"]), 
-          i: find(["身分證"]), 
-          n: find(["姓名"]), 
-          g: find(["性別"]), 
-          s: find(["畢業國小", "國小"]),
-          p1: find(["電話１", "電話1"]),
-          p2: find(["電話２", "電話2"])
-        };
+        const m = { t: find(["編號", "臨時"]), i: find(["身分證"]), n: find(["姓名"]), g: find(["性別"]), s: find(["國小", "畢業"]), p1: find(["電話1", "電話１"]), p2: find(["電話2", "電話２"]) };
         
-        if (m.t === -1 || m.n === -1) return toast("無法辨識 Excel 欄位標題", "#D32F2F");
+        if (m.t === -1 || m.n === -1) return toast("無法辨識標題：請包含『編號』與『姓名』", "#D32F2F");
         
         const final = d.slice(1).map(row => [
           row[m.t]||"", row[m.i]||"", row[m.n]||"", 
           row[m.g]||"", row[m.s]||"", row[m.p1]||"", row[m.p2]||""
         ]).filter(r=>r[0]||r[2]);
 
-        // 分批上傳 (Batching)
-        const BATCH_SIZE = 50; // 每批 50 筆，避免網址過長
+        const BATCH_SIZE = 10; // 每批 10 筆
         const totalBatches = Math.ceil(final.length / BATCH_SIZE);
         
         for (let i = 0; i < totalBatches; i++) {
           const chunk = final.slice(i * BATCH_SIZE, (i + 1) * BATCH_SIZE);
-          const mode = (i === 0) ? 'overwrite' : 'append'; // 第一批覆寫，後面追加
-          
+          const mode = (i === 0) ? 'overwrite' : 'append';
           toast(`正在匯入第 ${i + 1}/${totalBatches} 批資料...`, "#007BFF");
           
-          // 使用 Promise 等待每一批完成
           try {
             await callGASPromise('importStudentData', { rows: chunk, mode: mode });
+            // 延遲 0.8 秒避免太快
+            await new Promise(r => setTimeout(r, 800));
           } catch(err) {
             return toast(`匯入中斷於第 ${i+1} 批: ${err}`, "#D32F2F");
           }
         }
 
         toast(`全數匯入完成！共 ${final.length} 筆`, "#28a745");
-        updateStats(); 
-        loadSchools();
+        updateStats(); loadSchools();
 
       } catch (err) {
         toast("讀取檔案失敗: " + err, "#D32F2F");
