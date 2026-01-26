@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>鳳甲國中新生報到管理系統</title>
-  <!-- 引入 Excel 處理函式庫 (SheetJS) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     :root {
@@ -37,7 +36,6 @@
       padding: 0 20px;
     }
 
-    /* 上方區塊佈局 */
     .dashboard-top {
       display: grid;
       grid-template-columns: 1fr 420px;
@@ -51,7 +49,6 @@
       .scroll-hint { display: none !important; }
     }
 
-    /* 卡片通用樣式 */
     .card {
       background: #fff;
       border-radius: 12px;
@@ -63,9 +60,8 @@
       border: 3px dashed transparent;
     }
     .card.result-card { height: auto; min-height: 300px; }
-    
-    /* 拖曳效果 */
     .card.dragover { border-color: var(--primary); background-color: #f0f8ff; transform: scale(1.01); }
+    
     .drag-overlay {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(255,255,255,0.95);
@@ -86,13 +82,20 @@
     .version-tag { font-size: 12px; color: #999; margin-bottom: 20px; margin-left: 25px; }
     h3 { margin-top: 0; color: var(--primary); border-left: 5px solid var(--primary); padding-left: 12px; margin-bottom: 15px; font-size: 20px; }
 
-    /* 表單區塊 */
     .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
     .form-group label { display: block; font-weight: bold; margin-bottom: 6px; font-size: 14px; color: #555; }
     input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; }
     input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,123,255,0.1); }
 
-    /* 按鈕樣式 */
+    .import-area {
+        width: 100%; height: 200px; padding: 15px;
+        border: 2px dashed #ccc; border-radius: 8px;
+        font-family: monospace; font-size: 14px; resize: vertical;
+        margin-bottom: 15px; background: #fafafa;
+    }
+    .import-instructions { font-size: 14px; color: #666; margin-bottom: 15px; background: #f0f8ff; padding: 10px; border-radius: 6px; border-left: 4px solid var(--primary); }
+    .tag { display: inline-block; background: #e9ecef; padding: 2px 6px; border-radius: 4px; font-size: 12px; margin: 0 2px; color: #495057; }
+
     .btn-group { display: flex; flex-wrap: wrap; gap: 10px; }
     button {
       padding: 10px 20px; border: none; border-radius: 6px;
@@ -111,14 +114,12 @@
     .btn-clear { background-color: #6c757d; }
     .btn-file { background-color: #20c997; }
 
-    /* 統計表樣式 */
     .stats-table { width: 100%; border-collapse: collapse; font-size: 14px; }
     .stats-table th, .stats-table td { padding: 8px 10px; border: 1px solid #eef2f7; text-align: left; }
     .stats-header { background: var(--primary); color: white; }
     .highlight-pink { background-color: #ffeef2; }
     .highlight-pink td { border-top: 1px solid #ffccd5; border-bottom: 1px solid #ffccd5; color: #d63384; font-weight: bold; }
 
-    /* 結果表格樣式 (Excel 風格) */
     .result-container { overflow-x: auto; margin-top: 10px; }
     .data-table { width: 100%; border-collapse: collapse; min-width: 800px; font-size: 12pt; border: 1px solid #000; }
     .data-table th { background-color: var(--primary); color: white; padding: 12px; text-align: center; white-space: nowrap; border: 1px solid #333; }
@@ -126,21 +127,9 @@
     .data-table tr:hover { background-color: var(--secondary); }
     .data-table tr:nth-child(even) { background-color: #fafbfc; }
 
-    /* 編輯模式 */
     .editable input { width: 100%; padding: 5px; font-size: 14px; text-align: center; border: 1px solid #aaa; }
     .editing-row { background-color: #fff3cd !important; }
 
-    /* 匯入彈窗樣式 */
-    .import-area {
-        width: 100%; height: 200px; padding: 15px;
-        border: 2px dashed #ccc; border-radius: 8px;
-        font-family: monospace; font-size: 14px; resize: vertical;
-        margin-bottom: 15px; background: #fafafa;
-    }
-    .import-instructions { font-size: 14px; color: #666; margin-bottom: 15px; background: #f0f8ff; padding: 10px; border-radius: 6px; border-left: 4px solid var(--primary); }
-    .tag { display: inline-block; background: #e9ecef; padding: 2px 6px; border-radius: 4px; font-size: 12px; margin: 0 2px; color: #495057; }
-
-    /* 通用元件 */
     #statusMessage {
       position: fixed; top: 30px; left: 50%; transform: translateX(-50%);
       padding: 12px 25px; border-radius: 50px; color: white; font-weight: bold;
@@ -172,7 +161,7 @@
     <div class="card form-card" id="dropCard">
       <div class="drag-overlay"><span>📂</span><span>放開滑鼠以匯入 Excel</span></div>
       <h2>鳳甲國中報到管理系統</h2>
-      <div class="version-tag">版本：v2026.01.26.12 (修復編輯功能)</div>
+      <div class="version-tag">版本：v2026.01.26.13 (錯誤修正版)</div>
       
       <div class="form-grid">
         <div class="form-group"><label>臨時編號</label><input type="text" id="tempId" placeholder="輸入臨時編號"></div>
@@ -335,11 +324,9 @@
     document.getElementById("checkinBtn").onclick = () => handleCheck(true);
     document.getElementById("cancelCheckinBtn").onclick = () => handleCheck(false);
     
-    // 綁定檔案輸入事件 (彈窗內與隱藏的)
     document.getElementById("modalFileInput").onchange = (e) => handleFile(e.target.files[0]);
     document.getElementById("hiddenFileInput").onchange = (e) => handleFile(e.target.files[0]);
     
-    // 拖曳上傳
     const dropCard = document.getElementById("dropCard");
     dropCard.ondragover = (e) => { e.preventDefault(); dropCard.classList.add("dragover"); };
     dropCard.ondragleave = () => dropCard.classList.remove("dragover");
@@ -353,11 +340,15 @@
     const f = { tempId: document.getElementById("tempId").value.trim(), idNumber: document.getElementById("idNumber").value.trim(), studentName: document.getElementById("studentName").value.trim(), primarySchool: document.getElementById("primarySchool").value, reportStatus: document.getElementById("reportStatus").value };
     document.getElementById("resultArea").innerHTML = '<p style="text-align:center; padding: 20px;"><span style="display:inline-block;animation:spin 1s infinite linear">↻</span> 正在查詢資料庫...</p>';
     callGAS('queryStudentData', f, res => {
+      // ★ 錯誤處理修正：顯示後端錯誤
+      if (res.error) {
+         document.getElementById("resultArea").innerHTML = `<p style="text-align:center;padding:20px;color:#d32f2f">查詢錯誤：${res.error}<br><small>請檢查後端 Code.gs 是否已重新部署為新版本</small></p>`;
+         return;
+      }
       if (!res.data || !res.data.length) { document.getElementById("resultArea").innerHTML = '<p style="text-align:center;padding:20px;color:#d32f2f">查無資料</p>'; return; }
       let h = '<table class="data-table"><thead><tr>' + res.headers.map(v=>`<th>${v}</th>`).join('') + '<th>操作</th></tr></thead><tbody>';
       res.data.forEach(r => {
         h += '<tr>' + r.map((v, idx) => {
-          // 允許編輯：身分證(1), 姓名(2), 性別(3), 國小(4), 電話(5,6), 備註(9)
           const edit = [1, 2, 3, 4, 5, 6, 9].includes(idx); 
           return `<td class="${edit?'editable':''}"><span>${v}</span>${edit?`<input type="text" value="${v}" style="display:none">`:''}</td>`;
         }).join('') + '<td><button class="btn-search" style="font-size:13px;padding:6px 12px;" onclick="toggleEdit(this)">修正</button></td></tr>';
@@ -378,20 +369,16 @@
     } else {
       btn.disabled = true; btn.innerText = "存檔中...";
       
-      // 收集整列資料 (包括不可編輯的欄位如編號)
-      // tr.cells 包含所有 td，最後一個是操作按鈕，需排除
       const allCells = Array.from(tr.cells);
       const dataCells = allCells.slice(0, allCells.length - 1);
       
       const rowData = dataCells.map(td => {
         const input = td.querySelector("input");
         const span = td.querySelector("span");
-        // 如果有 input 且顯示中，取 input 值，否則取 span 文字，若都無則取 td 內文
         if (input && input.style.display !== 'none') return input.value;
         return span ? span.innerText : td.innerText;
       });
 
-      // 傳送 rowData 給後端，後端會抓取 rowData[0] (臨時編號) 進行比對
       callGAS('updateStudentData', rowData, msg => {
         const isSuccess = msg.success;
         toast(isSuccess || msg.error, isSuccess ? "#28a745" : "#D32F2F");
@@ -418,6 +405,7 @@
     if(!id) return toast("請輸入臨時編號", "#FFA500");
     toast("系統處理中...", "#007BFF");
     callGAS(isIn?'submitCheckIn':'cancelCheckIn', id, res => {
+      if (res.error) { toast("錯誤: " + res.error, "#D32F2F"); return; }
       let msg = typeof res==='string' ? res : (res.message || JSON.stringify(res));
       msg = msg.replace(/<[^>]*>/g,"");
       const isSuccess = msg.includes("成功");
@@ -429,7 +417,11 @@
   function saveStudent() {
     const d = { nT: document.getElementById("nT").value.trim(), nI: document.getElementById("nI").value.trim(), nN: document.getElementById("nN").value.trim(), nG: document.getElementById("nG").value, nS: document.getElementById("nS").value.trim(), nP1: document.getElementById("nP1").value.trim(), nP2: document.getElementById("nP2").value.trim() };
     if(!d.nT||!d.nI||!d.nN) return toast("必填欄位不可空白", "#D32F2F");
-    callGAS('addNewStudent', d, res => { toast(res.success||res.error, res.success?"#28a745":"#D32F2F"); if(res.success) { closeModal('addModal'); updateStats(); } });
+    callGAS('addNewStudent', d, res => { 
+        if(res.error) { toast(res.error, "#D32F2F"); return; }
+        toast(res.success, "#28a745"); 
+        closeModal('addModal'); updateStats(); 
+    });
   }
 
   function doReset() {
