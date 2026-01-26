@@ -72,15 +72,36 @@
     }
     .card.dragover .drag-overlay { display: flex; }
 
+    /* 標題與狀態燈 */
+    .header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
     h2 {
-      margin-top: 0; color: var(--primary);
+      margin: 0; color: var(--primary);
       border-left: 8px solid var(--primary);
-      padding-left: 15px; margin-bottom: 5px;
+      padding-left: 15px;
       font-size: var(--font-main-title);
       line-height: 1.2;
     }
+    .status-indicator {
+      font-size: 12px; padding: 4px 10px; border-radius: 20px; background: #eee; color: #666; font-weight: bold; display: flex; align-items: center; gap: 5px;
+    }
+    .status-ok { background: #d4edda; color: #155724; }
+    .status-err { background: #f8d7da; color: #721c24; }
+    .pulse { width: 8px; height: 8px; border-radius: 50%; background: #666; }
+    .status-ok .pulse { background: #28a745; box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); animation: pulse-green 2s infinite; }
+    .status-err .pulse { background: #dc3545; }
+
+    @keyframes pulse-green {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(40, 167, 69, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+    }
+
     .version-tag { font-size: 12px; color: #999; margin-bottom: 20px; margin-left: 25px; }
-    h3 { margin-top: 0; color: var(--primary); border-left: 5px solid var(--primary); padding-left: 12px; margin-bottom: 15px; font-size: 20px; }
+    
+    .stats-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .stats-header-row h3 { margin: 0; border-left: 5px solid var(--primary); padding-left: 12px; font-size: 20px; color: var(--primary); }
+    .refresh-btn { background: none; border: 1px solid #ddd; padding: 5px 10px; border-radius: 4px; color: #666; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+    .refresh-btn:hover { background: #f0f0f0; color: var(--primary); border-color: var(--primary); }
 
     .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
     .form-group label { display: block; font-weight: bold; margin-bottom: 6px; font-size: 14px; color: #555; }
@@ -160,8 +181,15 @@
     <!-- 操作區 -->
     <div class="card form-card" id="dropCard">
       <div class="drag-overlay"><span>📂</span><span>放開滑鼠以匯入 Excel</span></div>
-      <h2>鳳甲國中報到管理系統</h2>
-      <div class="version-tag">版本：v2026.01.26.14 (強化除錯版)</div>
+      
+      <div class="header-row">
+          <h2>鳳甲國中報到管理系統</h2>
+          <div id="connectionStatus" class="status-indicator">
+              <span class="pulse"></span> <span id="statusText">連線中...</span>
+          </div>
+      </div>
+      
+      <div class="version-tag">版本：v2026.01.26.16 (連線診斷版)</div>
       
       <div class="form-grid">
         <div class="form-group"><label>臨時編號</label><input type="text" id="tempId" placeholder="輸入臨時編號"></div>
@@ -190,13 +218,15 @@
       <p style="font-size: 14px; color: #666; margin-top: 15px; display: flex; align-items: center; gap: 5px;">
         💡 提示：點擊「匯入資料」可選擇貼上文字或上傳檔案
       </p>
-      <!-- 隱藏的檔案輸入框供拖曳與按鈕使用 -->
       <input type="file" id="hiddenFileInput" style="display:none;" accept=".xlsx,.xls,.csv">
     </div>
 
     <!-- 統計看板 -->
     <div class="card stats-card">
-      <h3>📊 即時統計看板</h3>
+      <div class="stats-header-row">
+          <h3>📊 即時統計看板</h3>
+          <button onclick="updateStats()" class="refresh-btn" title="手動更新">↻ 重新整理</button>
+      </div>
       <div id="statsArea">
           <p style="text-align: center; color: #666; padding: 20px;">
               <span style="display: inline-block; animation: spin 1s infinite linear;">↻</span> 連線至 Google 資料庫中...
@@ -282,15 +312,36 @@
   const DEPLOY_ID = "AKfycbxpY4iHHkEkdNsBvLdb2OJPqzn0eY14CWjLRiEoDJ0IBUhucE2Pp5dJepyZR5AxP_LO";
   const DEPLOY_URL = `https://script.google.com/macros/s/${DEPLOY_ID}/exec`;
 
+  let isUpdatingStats = false;
+
+  function setStatus(isOk, text) {
+      const el = document.getElementById("connectionStatus");
+      const txt = document.getElementById("statusText");
+      if (isOk) {
+          el.className = "status-indicator status-ok";
+          txt.innerText = text || "系統連線正常";
+      } else {
+          el.className = "status-indicator status-err";
+          txt.innerText = text || "連線異常";
+      }
+  }
+
   function callGAS(func, params, cb) {
     const cbName = 'gas_cb_' + Math.floor(Math.random() * 1000000);
-    window[cbName] = (res) => { cb(res); delete window[cbName]; const t = document.getElementById(cbName); if(t) t.remove(); };
+    window[cbName] = (res) => { 
+        cb(res); 
+        delete window[cbName]; 
+        const t = document.getElementById(cbName); 
+        if(t) t.remove(); 
+    };
     const s = document.createElement('script'); s.id = cbName;
     s.src = `${DEPLOY_URL}?action=${func}&callback=${cbName}&data=${encodeURIComponent(JSON.stringify(params))}&v=${Date.now()}`;
     s.onerror = () => { 
-        const errorMsg = "連線失敗，請檢查：<br>1. GAS 是否已部署為「新版本」<br>2. 權限是否設為「任何人」";
-        document.getElementById("statsArea").innerHTML = `<p style="text-align:center;color:#D32F2F">${errorMsg}</p>`;
-        toast("連線失敗，請檢查權限與版本", "#D32F2F"); 
+        const errorMsg = "⚠️ 無法連線至資料庫<br><span style='font-size:12px;color:#666'>請檢查：1.GAS是否已發布為「新版本」 2.權限是否為「任何人」</span>";
+        document.getElementById("statsArea").innerHTML = `<div style="text-align:center;color:#D32F2F;padding:20px;background:#fff5f5;border-radius:8px;">${errorMsg}</div>`;
+        toast("連線失敗，請檢查後端部署", "#D32F2F"); 
+        setStatus(false, "連線失敗");
+        isUpdatingStats = false;
     };
     document.body.appendChild(s);
   }
@@ -304,7 +355,7 @@
       };
       const s = document.createElement('script'); s.id = cbName;
       s.src = `${DEPLOY_URL}?action=${func}&callback=${cbName}&data=${encodeURIComponent(JSON.stringify(params))}&v=${Date.now()}`;
-      s.onerror = () => reject("連線失敗");
+      s.onerror = () => reject("連線失敗，請檢查網路或部署狀態");
       document.body.appendChild(s);
     });
   }
@@ -339,7 +390,6 @@
 
   function loadSchools() { 
       callGAS('getPrimarySchools', {}, list => { 
-          // 增加錯誤檢查
           if (list && list.error) return; 
           const s = document.getElementById("primarySchool"); 
           s.innerHTML = '<option value="">全部國小</option>'; 
@@ -348,17 +398,29 @@
   }
 
   function updateStats() { 
+      if (isUpdatingStats) return;
+      isUpdatingStats = true;
+      
       callGAS('getStatisticsData', {}, d => { 
+          isUpdatingStats = false;
           // 1. 檢查後端錯誤
           if (d && d.error) {
               document.getElementById("statsArea").innerHTML = `<p style="text-align:center;color:#D32F2F">無法讀取統計: ${d.error}</p>`;
+              setStatus(false, "後端錯誤");
               return;
           }
           // 2. 檢查是否為空陣列
           if(!d || !Array.isArray(d) || d.length === 0) {
-             document.getElementById("statsArea").innerHTML = '<p style="text-align:center;color:#999">暫無統計資料 (資料庫可能是空的，請匯入新生)</p>';
+             document.getElementById("statsArea").innerHTML = `
+                <div style="text-align:center;color:#666;padding:20px;border:1px dashed #ccc;border-radius:8px;background:#fafafa;">
+                    <strong style="color:#007BFF;font-size:16px;">系統連線成功！</strong><br><br>
+                    目前資料庫是空的。<br>請點擊左側「📥 匯入資料」按鈕<br>開始使用系統。
+                </div>`;
+             setStatus(true, "連線正常 (無資料)");
              return; 
           }
+          
+          setStatus(true, "系統運作中");
           // 3. 正常渲染
           let h = '<table class="stats-table">'; 
           d.forEach((r, i) => { 
