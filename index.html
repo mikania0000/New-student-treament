@@ -35,78 +35,64 @@
       font-size: var(--font-content);
     }
 
-    /* ★ 佈局設定開始 ★ */
+    /* ★ 佈局設定 ★ */
     .app-container {
-      max-width: 98%; /* 將總寬度設為 98% 以利用螢幕空間 */
+      max-width: 98%; 
       margin: 20px auto;
       display: grid;
-      grid-template-columns: 1fr 450px; /* 右側統計表維持 450px */
+      grid-template-columns: 1fr 380px; /* 右側看板寬度 */
       gap: 25px;
       padding: 0 20px;
     }
 
-    /* 桌機版佈局重組 (關鍵修改) */
     @media (min-width: 851px) {
-      .main-content {
-        display: contents; /* 讓內部的卡片可以獨立參與 Grid 排版 */
-      }
-      
-      .form-card {
-        grid-column: 1 / 2; /* 左上：報到管理 */
-        grid-row: 1;
-      }
-      
-      .side-content {
-        grid-column: 2 / 3; /* 右上：統計看板 */
-        grid-row: 1;
-      }
-      
-      .result-card {
-        grid-column: 1 / -1; /* 下方：查詢結果 (跨越所有欄位，達到切齊效果) */
-        grid-row: 2;
-      }
+      .main-content { display: contents; }
+      .form-card { grid-column: 1 / 2; grid-row: 1; }
+      .side-content { grid-column: 2 / 3; grid-row: 1; }
+      .result-card { grid-column: 1 / -1; grid-row: 2; }
     }
 
-    /* 手機版維持滑動模式 */
     @media (max-width: 850px) {
       .app-container {
-        display: flex;
-        width: 100vw;
-        height: 100vh;
+        display: flex; width: 100vw; height: 100vh;
         margin: 0; padding: 0; gap: 0;
-        overflow-x: auto;
-        scroll-snap-type: x mandatory;
+        overflow-x: auto; scroll-snap-type: x mandatory;
         -webkit-overflow-scrolling: touch;
       }
       .main-content, .side-content {
-        flex: 0 0 100vw;
-        width: 100vw;
-        height: 100vh;
-        overflow-y: auto;
-        scroll-snap-align: start;
-        padding: 20px;
-        display: block; /* 手機版不需要 contents */
+        flex: 0 0 100vw; width: 100vw; height: 100vh;
+        overflow-y: auto; scroll-snap-align: start; padding: 20px; display: block;
       }
       h2 { font-size: 36px !important; }
     }
-    /* ★ 佈局設定結束 ★ */
 
-    /* 卡片設計 */
+    /* 卡片設計 - 支援拖放視覺效果 */
     .card {
       background: #fff;
       border-radius: 12px;
       box-shadow: var(--shadow);
       padding: 30px;
       margin-bottom: 20px;
-      border: 2px dashed transparent;
+      border: 3px dashed transparent; /* 預留邊框給拖放用 */
       transition: all 0.3s;
       position: relative;
     }
+    /* 當檔案拖進來時的樣式 */
     .card.dragover {
       border-color: var(--primary);
-      background-color: var(--secondary);
+      background-color: #f0f8ff;
       transform: scale(1.01);
+      box-shadow: 0 0 15px rgba(0, 123, 255, 0.4);
     }
+    /* 拖曳提示遮罩 */
+    .drag-overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(255, 255, 255, 0.9);
+      display: none; justify-content: center; align-items: center;
+      font-size: 30px; color: var(--primary); font-weight: bold;
+      border-radius: 12px; pointer-events: none;
+    }
+    .card.dragover .drag-overlay { display: flex; }
 
     h2 {
       margin-top: 0; color: var(--primary);
@@ -117,11 +103,8 @@
     }
 
     .version-tag {
-      font-size: var(--font-version);
-      color: #999;
-      margin-bottom: 20px;
-      margin-left: 30px;
-      font-weight: normal;
+      font-size: var(--font-version); color: #999;
+      margin-bottom: 20px; margin-left: 30px; font-weight: normal;
     }
 
     h3 {
@@ -132,8 +115,7 @@
     }
 
     .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       gap: 15px; margin-bottom: 25px;
     }
     .form-group label { display: block; font-weight: bold; margin-bottom: 6px; }
@@ -155,26 +137,17 @@
     .btn-reset { background-color: #8B0000; }
     .btn-clear { background-color: #6c757d; }
 
-    /* ★ 統計表樣式 (保留您調整好的高度) ★ */
-    .stats-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: var(--font-content);
-    }
+    /* ★ 統計表樣式 (保留您調整好的 3.6px 高度) ★ */
+    .stats-table { width: 100%; border-collapse: collapse; font-size: var(--font-content); }
     .stats-table th, .stats-table td {
-      padding: 3.6px 14px; /* 維持您設定的 3.6px */
-      border: 1px solid #eef2f7;
-      text-align: left;
+      padding: 3.6px 14px; /* 維持扁平高度 */
+      border: 1px solid #eef2f7; text-align: left;
     }
     .stats-header { background: var(--primary); color: white; }
     .highlight-pink { background-color: #fff0f5; }
 
-    /* 結果表格 */
     .result-container { overflow-x: auto; margin-top: 20px; }
-    .data-table {
-      width: 100%; border-collapse: collapse; min-width: 1000px;
-      font-size: var(--font-content);
-    }
+    .data-table { width: 100%; border-collapse: collapse; min-width: 1000px; font-size: var(--font-content); }
     .data-table th { background-color: var(--primary); color: white; padding: 15px; }
     .data-table td { padding: 12px; border-bottom: 1px solid #eee; text-align: center; }
     .data-table tr:hover { background-color: var(--secondary); }
@@ -199,13 +172,16 @@
 <div id="statusMessage"></div>
 
 <div class="app-container">
-  <!-- 左側內容區 (包含表單和結果) -->
+  <!-- 左側內容區 -->
   <div class="main-content">
     
-    <!-- 1. 報到管理卡片 (左上) -->
+    <!-- 1. 報到管理卡片 (支援拖放) -->
     <div class="card form-card" id="dropCard">
+      <!-- 拖曳提示遮罩 -->
+      <div class="drag-overlay">📂 放開滑鼠以匯入 Excel</div>
+
       <h2>鳳甲國中報到管理系統</h2>
-      <div class="version-tag">版本：v2026.01.26.4</div>
+      <div class="version-tag">版本：v2026.01.26.5</div>
       
       <div class="form-grid">
         <div class="form-group"><label>臨時編號</label><input type="text" id="tempId" placeholder="輸入臨時編號"></div>
@@ -231,11 +207,13 @@
         <button id="resetBtn" class="btn-reset">🗑️ 系統重設</button>
         <button id="clearBtn" class="btn-clear">🧹 清除欄位</button>
       </div>
-      <p style="font-size: 16px; color: #666; margin-top: 15px; font-weight: bold;">💡 拖曳 Excel 檔案至此卡片範圍即可自動匯入</p>
+      <p style="font-size: 16px; color: #666; margin-top: 15px; font-weight: bold;">
+        💡 提示：您可以點擊「匯入 Excel」或直接將檔案拖曳至此區域
+      </p>
       <input type="file" id="fileInput" style="display:none;" accept=".xlsx,.xls">
     </div>
 
-    <!-- 2. 查詢結果卡片 (下方全寬) -->
+    <!-- 2. 查詢結果卡片 -->
     <div class="card result-card">
       <h3>查詢結果</h3>
       <div id="resultArea" class="result-container">
@@ -244,7 +222,7 @@
     </div>
   </div>
 
-  <!-- 3. 統計看板 (右上) -->
+  <!-- 3. 統計看板 -->
   <div class="side-content">
     <div class="card">
       <h3>📊 即時統計看板</h3>
@@ -276,10 +254,11 @@
 <div id="pwdModal" class="modal">
   <div class="modal-content" style="max-width: 400px;">
     <h3>系統重設確認</h3>
+    <p style="color:red; font-weight:bold;">⚠️ 這將清除所有名單與報到紀錄！</p>
     <p>請輸入管理密碼：</p>
     <input type="password" id="sysPwd" placeholder="密碼" style="margin-bottom: 20px;">
     <div class="btn-group" style="justify-content: flex-end;">
-      <button onclick="doReset()" class="btn-reset">確認清空</button>
+      <button onclick="doReset()" class="btn-reset">確認執行</button>
       <button onclick="closeModal('pwdModal')" class="btn-clear">取消</button>
     </div>
   </div>
@@ -312,11 +291,15 @@
     document.getElementById("checkinBtn").onclick = () => handleCheck(true);
     document.getElementById("cancelCheckinBtn").onclick = () => handleCheckAction(false);
     
-    // 拖放功能
+    // 拖放功能事件綁定
     const dropCard = document.getElementById("dropCard");
     dropCard.ondragover = (e) => { e.preventDefault(); dropCard.classList.add("dragover"); };
     dropCard.ondragleave = () => dropCard.classList.remove("dragover");
-    dropCard.ondrop = (e) => { e.preventDefault(); dropCard.classList.remove("dragover"); handleFile(e.dataTransfer.files[0]); };
+    dropCard.ondrop = (e) => { 
+      e.preventDefault(); 
+      dropCard.classList.remove("dragover"); 
+      if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]);
+    };
   });
 
   function loadSchools() { callGAS('getPrimarySchools', {}, list => { const s = document.getElementById("primarySchool"); s.innerHTML = '<option value="">全部國小</option>'; if(Array.isArray(list)) list.forEach(i=>s.innerHTML+=`<option value="${i}">${i}</option>`); }); }
@@ -394,8 +377,15 @@
           p1: find(["電話１", "電話1"]),
           p2: find(["電話２", "電話2"])
         };
-        if (m.t === -1 || m.n === -1) return toast("無法辨識 Excel 欄位標題", "#D32F2F");
+        if (m.t === -1 || m.n === -1) return toast("無法辨識標題：請包含『編號』與『姓名』", "#D32F2F");
+        
         const final = d.slice(1).map(row => [row[m.t]||"", row[m.idNo]||row[m.i]||"", row[m.n]||"", row[m.g]||"", row[m.s]||"", row[m.p1]||"", row[m.p2]||""]).filter(r=>r[0]||r[2]);
+        
+        // 增加網址長度檢查
+        if (JSON.stringify(final).length > 6000) {
+          return toast("資料量過大 (超過網址限制)，請分批匯入 (建議 50 筆/次)", "#D32F2F");
+        }
+
         callGAS('importStudentData', final, res => { toast(res.success||res.error, res.success?"#28a745":"#D32F2F"); updateStats(); loadSchools(); });
       } catch (err) {
         toast("讀取檔案失敗，請確認格式是否正確", "#D32F2F");
