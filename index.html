@@ -35,16 +35,39 @@
       font-size: var(--font-content);
     }
 
-    /* ★ 寬度調整位置：修改 grid-template-columns 的第二個數值 ★ */
+    /* ★ 佈局設定開始 ★ */
     .app-container {
-      max-width: 1300px;
+      max-width: 98%; /* 將總寬度設為 98% 以利用螢幕空間 */
       margin: 20px auto;
       display: grid;
-      grid-template-columns: 1fr 450px; /* 原為 480px，縮小至 400px 讓看板更窄 */
+      grid-template-columns: 1fr 450px; /* 右側統計表維持 450px */
       gap: 25px;
       padding: 0 20px;
     }
 
+    /* 桌機版佈局重組 (關鍵修改) */
+    @media (min-width: 851px) {
+      .main-content {
+        display: contents; /* 讓內部的卡片可以獨立參與 Grid 排版 */
+      }
+      
+      .form-card {
+        grid-column: 1 / 2; /* 左上：報到管理 */
+        grid-row: 1;
+      }
+      
+      .side-content {
+        grid-column: 2 / 3; /* 右上：統計看板 */
+        grid-row: 1;
+      }
+      
+      .result-card {
+        grid-column: 1 / -1; /* 下方：查詢結果 (跨越所有欄位，達到切齊效果) */
+        grid-row: 2;
+      }
+    }
+
+    /* 手機版維持滑動模式 */
     @media (max-width: 850px) {
       .app-container {
         display: flex;
@@ -62,9 +85,11 @@
         overflow-y: auto;
         scroll-snap-align: start;
         padding: 20px;
+        display: block; /* 手機版不需要 contents */
       }
       h2 { font-size: 36px !important; }
     }
+    /* ★ 佈局設定結束 ★ */
 
     /* 卡片設計 */
     .card {
@@ -130,14 +155,14 @@
     .btn-reset { background-color: #8B0000; }
     .btn-clear { background-color: #6c757d; }
 
-    /* ★ 統計表樣式 - 已縮小上下內邊距 (Padding) 使表格更扁平 ★ */
+    /* ★ 統計表樣式 (保留您調整好的高度) ★ */
     .stats-table {
       width: 100%;
       border-collapse: collapse;
       font-size: var(--font-content);
     }
     .stats-table th, .stats-table td {
-      padding: 3.6px 14px; /* 從 8px 進一步縮小至 5px，讓整體更扁 */
+      padding: 3.6px 14px; /* 維持您設定的 3.6px */
       border: 1px solid #eef2f7;
       text-align: left;
     }
@@ -174,11 +199,13 @@
 <div id="statusMessage"></div>
 
 <div class="app-container">
-  <!-- 第一頁：操作區 -->
+  <!-- 左側內容區 (包含表單和結果) -->
   <div class="main-content">
-    <div class="card" id="dropCard">
+    
+    <!-- 1. 報到管理卡片 (左上) -->
+    <div class="card form-card" id="dropCard">
       <h2>鳳甲國中報到管理系統</h2>
-      <div class="version-tag">版本：v2026.01.26.2</div>
+      <div class="version-tag">版本：v2026.01.26.4</div>
       
       <div class="form-grid">
         <div class="form-group"><label>臨時編號</label><input type="text" id="tempId" placeholder="輸入臨時編號"></div>
@@ -208,7 +235,8 @@
       <input type="file" id="fileInput" style="display:none;" accept=".xlsx,.xls">
     </div>
 
-    <div class="card">
+    <!-- 2. 查詢結果卡片 (下方全寬) -->
+    <div class="card result-card">
       <h3>查詢結果</h3>
       <div id="resultArea" class="result-container">
         <p style="text-align: center; color: #999;">請輸入條件並執行查詢...</p>
@@ -216,7 +244,7 @@
     </div>
   </div>
 
-  <!-- 第二頁：統計看板 -->
+  <!-- 3. 統計看板 (右上) -->
   <div class="side-content">
     <div class="card">
       <h3>📊 即時統計看板</h3>
