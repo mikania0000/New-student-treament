@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>鳳甲國中新生報到管理系統</title>
-  <!-- 引入 Excel 處理函式庫 -->
+  <!-- 引入 Excel 處理函式庫 (SheetJS) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     :root {
@@ -21,6 +21,7 @@
       --font-main-title: 50px;
       --font-content: 20px;
       --font-sub-title: 32px;
+      --font-version: 14px;
     }
 
     * { box-sizing: border-box; }
@@ -34,12 +35,12 @@
       font-size: var(--font-content);
     }
 
-    /* 佈局設計 */
+    /* ★ 寬度調整位置：修改 grid-template-columns 的第二個數值 ★ */
     .app-container {
-      max-width: 1600px;
+      max-width: 900px;
       margin: 20px auto;
       display: grid;
-      grid-template-columns: 1fr 420px; /* 稍微加寬右側看板 */
+      grid-template-columns: 1fr 160px; /* 原為 480px，縮小至 400px 讓看板更窄 */
       gap: 25px;
       padding: 0 20px;
     }
@@ -65,15 +66,16 @@
       h2 { font-size: 36px !important; }
     }
 
-    /* 卡片與內容 */
+    /* 卡片設計 */
     .card {
       background: #fff;
       border-radius: 12px;
       box-shadow: var(--shadow);
       padding: 30px;
       margin-bottom: 20px;
-      border: 2px dashed transparent; /* 為拖放預留邊框 */
+      border: 2px dashed transparent;
       transition: all 0.3s;
+      position: relative;
     }
     .card.dragover {
       border-color: var(--primary);
@@ -84,15 +86,23 @@
     h2 {
       margin-top: 0; color: var(--primary);
       border-left: 10px solid var(--primary);
-      padding-left: 20px; margin-bottom: 25px;
+      padding-left: 20px; margin-bottom: 5px;
       font-size: var(--font-main-title);
       line-height: 1.2;
+    }
+
+    .version-tag {
+      font-size: var(--font-version);
+      color: #999;
+      margin-bottom: 20px;
+      margin-left: 30px;
+      font-weight: normal;
     }
 
     h3 {
       margin-top: 0; color: var(--primary);
       border-left: 6px solid var(--primary);
-      padding-left: 15px; margin-bottom: 20px;
+      padding-left: 15px; margin-bottom: 15px;
       font-size: var(--font-sub-title);
     }
 
@@ -120,14 +130,14 @@
     .btn-reset { background-color: #8B0000; }
     .btn-clear { background-color: #6c757d; }
 
-    /* ★ 統計表樣式 - 您關心的行距在此修改 ★ */
+    /* ★ 統計表樣式 - 已縮小上下內邊距 (Padding) 使表格更扁平 ★ */
     .stats-table {
       width: 100%;
       border-collapse: collapse;
       font-size: var(--font-content);
     }
     .stats-table th, .stats-table td {
-      padding: 16px 14px; /* <--- 第一個數值 20px 即為行距，可改大或小 */
+      padding: 5px 14px; /* 從 8px 進一步縮小至 5px，讓整體更扁 */
       border: 1px solid #eef2f7;
       text-align: left;
     }
@@ -140,7 +150,7 @@
       width: 100%; border-collapse: collapse; min-width: 1000px;
       font-size: var(--font-content);
     }
-    .data-table th { background: var(--primary); color: white; padding: 15px; }
+    .data-table th { background-color: var(--primary); color: white; padding: 15px; }
     .data-table td { padding: 12px; border-bottom: 1px solid #eee; text-align: center; }
     .data-table tr:hover { background-color: var(--secondary); }
 
@@ -168,6 +178,8 @@
   <div class="main-content">
     <div class="card" id="dropCard">
       <h2>鳳甲國中報到管理系統</h2>
+      <div class="version-tag">版本：v2026.01.26.2</div>
+      
       <div class="form-grid">
         <div class="form-group"><label>臨時編號</label><input type="text" id="tempId" placeholder="輸入臨時編號"></div>
         <div class="form-group"><label>身分證號</label><input type="text" id="idNumber" placeholder="輸入證號"></div>
@@ -182,6 +194,7 @@
           </select>
         </div>
       </div>
+      
       <div class="btn-group">
         <button id="searchBtn" class="btn-search">🔍 查詢</button>
         <button id="addBtn" class="btn-add">➕ 新增新生</button>
@@ -191,13 +204,15 @@
         <button id="resetBtn" class="btn-reset">🗑️ 系統重設</button>
         <button id="clearBtn" class="btn-clear">🧹 清除欄位</button>
       </div>
-      <p style="font-size: 14px; color: #888; margin-top: 10px;">提示：可直接將 Excel 檔案拖曳至此區域匯入</p>
+      <p style="font-size: 16px; color: #666; margin-top: 15px; font-weight: bold;">💡 拖曳 Excel 檔案至此卡片範圍即可自動匯入</p>
       <input type="file" id="fileInput" style="display:none;" accept=".xlsx,.xls">
     </div>
 
     <div class="card">
       <h3>查詢結果</h3>
-      <div id="resultArea" class="result-container"><p style="text-align: center; color: #999;">請執行查詢...</p></div>
+      <div id="resultArea" class="result-container">
+        <p style="text-align: center; color: #999;">請輸入條件並執行查詢...</p>
+      </div>
     </div>
   </div>
 
@@ -210,7 +225,7 @@
   </div>
 </div>
 
-<!-- 彈窗 -->
+<!-- 彈窗組 -->
 <div id="addModal" class="modal">
   <div class="modal-content">
     <h3>手動新增學生</h3>
@@ -224,7 +239,7 @@
       <input type="text" id="nP2" placeholder="電話 2">
     </div>
     <div class="btn-group" style="justify-content: flex-end; margin-top: 15px;">
-      <button onclick="saveStudent()" class="btn-search">存檔</button>
+      <button onclick="saveStudent()" class="btn-search">確認存檔</button>
       <button onclick="closeModal('addModal')" class="btn-clear">關閉</button>
     </div>
   </div>
@@ -233,7 +248,7 @@
 <div id="pwdModal" class="modal">
   <div class="modal-content" style="max-width: 400px;">
     <h3>系統重設確認</h3>
-    <p>請輸入管理密碼 (000000)：</p>
+    <p>請輸入管理密碼：</p>
     <input type="password" id="sysPwd" placeholder="密碼" style="margin-bottom: 20px;">
     <div class="btn-group" style="justify-content: flex-end;">
       <button onclick="doReset()" class="btn-reset">確認清空</button>
@@ -258,13 +273,16 @@
   document.addEventListener("DOMContentLoaded", () => {
     loadSchools(); updateStats(); setInterval(updateStats, 15000);
     document.getElementById("searchBtn").onclick = search;
-    document.getElementById("clearBtn").onclick = () => { document.querySelectorAll(".main-content input").forEach(i=>i.value=""); };
+    document.getElementById("clearBtn").onclick = () => { 
+      document.querySelectorAll(".main-content input").forEach(i=>i.value="");
+      document.getElementById("resultArea").innerHTML = '<p style="text-align: center; color: #999;">欄位已清空</p>';
+    };
     document.getElementById("addBtn").onclick = () => document.getElementById("addModal").style.display='flex';
     document.getElementById("resetBtn").onclick = () => document.getElementById("pwdModal").style.display='flex';
     document.getElementById("importBtn").onclick = () => document.getElementById("fileInput").click();
     document.getElementById("fileInput").onchange = (e) => handleFile(e.target.files[0]);
     document.getElementById("checkinBtn").onclick = () => handleCheck(true);
-    document.getElementById("cancelCheckinBtn").onclick = () => handleCheck(false);
+    document.getElementById("cancelCheckinBtn").onclick = () => handleCheckAction(false);
     
     // 拖放功能
     const dropCard = document.getElementById("dropCard");
@@ -278,7 +296,7 @@
 
   function search() {
     const f = { tempId: document.getElementById("tempId").value.trim(), idNumber: document.getElementById("idNumber").value.trim(), studentName: document.getElementById("studentName").value.trim(), primarySchool: document.getElementById("primarySchool").value, reportStatus: document.getElementById("reportStatus").value };
-    document.getElementById("resultArea").innerHTML = '<p style="text-align:center;">搜尋中...</p>';
+    document.getElementById("resultArea").innerHTML = '<p style="text-align:center;">正在載入結果...</p>';
     callGAS('queryStudentData', f, res => {
       if (!res.data.length) { document.getElementById("resultArea").innerHTML = "查無資料"; return; }
       let h = '<table class="data-table"><thead><tr>' + res.headers.map(v=>`<th>${v}</th>`).join('') + '<th>操作</th></tr></thead><tbody>';
@@ -309,11 +327,12 @@
   }
 
   function handleCheck(isIn) {
-    const id = document.getElementById("tempId").value.trim(); if(!id) return toast("請輸入編號", "#FFA500");
-    toast("處理中...", "#007BFF");
+    const id = document.getElementById("tempId").value.trim(); if(!id) return toast("請輸入臨時編號", "#FFA500");
+    toast("系統處理中...", "#007BFF");
     callGAS(isIn?'submitCheckIn':'cancelCheckIn', id, res => {
-      toast(typeof res==='string'?res.replace(/<[^>]*>/g,""):"連線異常", res.includes("成功")?"#28a745":"#D32F2F");
-      if(res.includes("成功")) { updateStats(); document.getElementById("tempId").value = ""; }
+      const msg = typeof res==='string'?res.replace(/<[^>]*>/g,""):"連線異常";
+      toast(msg, msg.includes("成功")?"#28a745":"#D32F2F");
+      if(msg.includes("成功")) { updateStats(); document.getElementById("tempId").value = ""; }
     });
   }
 
@@ -329,26 +348,30 @@
   }
 
   function handleFile(f) {
-    if(!f) return; toast("解析資料中...", "#007BFF");
+    if(!f) return; toast("解析 Excel 資料中...", "#007BFF");
     const r = new FileReader();
     r.onload = (ev) => {
-      const wb = XLSX.read(new Uint8Array(ev.target.result), {type:'array'});
-      const d = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1});
-      if(d.length < 2) return toast("Excel 無內容", "#D32F2F");
-      const h = d[0];
-      const find = (keywords) => h.findIndex(t => t && keywords.some(k => t.toString().includes(k)));
-      const m = { 
-        t: find(["臨時編班", "臨時編號"]), 
-        i: find(["身分證"]), 
-        n: find(["姓名"]), 
-        g: find(["性別"]), 
-        s: find(["畢業國小", "國小"]),
-        p1: find(["電話１", "電話1"]),
-        p2: find(["電話２", "電話2"])
-      };
-      if (m.t === -1 || m.n === -1) return toast("找不到『編號』或『姓名』標題", "#D32F2F");
-      const final = d.slice(1).map(row => [row[m.t]||"", row[m.i]||"", row[m.n]||"", row[m.g]||"", row[m.s]||"", row[m.p1]||"", row[m.p2]||""]).filter(r=>r[0]||r[2]);
-      callGAS('importStudentData', final, res => { toast(res.success||res.error, res.success?"#28a745":"#D32F2F"); updateStats(); loadSchools(); });
+      try {
+        const wb = XLSX.read(new Uint8Array(ev.target.result), {type:'array'});
+        const d = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1});
+        if(d.length < 2) return toast("Excel 檔案內無資料", "#D32F2F");
+        const h = d[0];
+        const find = (keywords) => h.findIndex(t => t && keywords.some(k => t.toString().includes(k)));
+        const m = { 
+          t: find(["臨時編班", "臨時編號", "編號"]), 
+          i: find(["身分證"]), 
+          n: find(["姓名"]), 
+          g: find(["性別"]), 
+          s: find(["畢業國小", "國小"]),
+          p1: find(["電話１", "電話1"]),
+          p2: find(["電話２", "電話2"])
+        };
+        if (m.t === -1 || m.n === -1) return toast("無法辨識 Excel 欄位標題", "#D32F2F");
+        const final = d.slice(1).map(row => [row[m.t]||"", row[m.idNo]||row[m.i]||"", row[m.n]||"", row[m.g]||"", row[m.s]||"", row[m.p1]||"", row[m.p2]||""]).filter(r=>r[0]||r[2]);
+        callGAS('importStudentData', final, res => { toast(res.success||res.error, res.success?"#28a745":"#D32F2F"); updateStats(); loadSchools(); });
+      } catch (err) {
+        toast("讀取檔案失敗，請確認格式是否正確", "#D32F2F");
+      }
     };
     r.readAsArrayBuffer(f);
   }
