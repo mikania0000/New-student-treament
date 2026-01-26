@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>鳳甲國中新生報到管理系統</title>
-  <!-- 引入 Excel 處理函式庫 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     :root {
@@ -190,7 +189,7 @@
           </div>
       </div>
       
-      <div class="version-tag">版本：v2026.01.26.17 (修復檔案選擇無反應)</div>
+      <div class="version-tag">版本：v2026.01.26.18 (優化批次上傳)</div>
       
       <div class="form-grid">
         <div class="form-group"><label>臨時編號</label><input type="text" id="tempId" placeholder="輸入臨時編號"></div>
@@ -545,7 +544,8 @@
     const final = data.slice(1).map(row => [ row[m.t]||"", row[m.i]||"", row[m.n]||"", row[m.g]||"", row[m.s]||"", row[m.p1]||"", row[m.p2]||"" ]).filter(r=>r[0]||r[2]);
     if (final.length === 0) return toast("沒有讀取到有效資料", "#FFA500");
 
-    const BATCH_SIZE = 10;
+    // ★ 修改：增加批次處理量至 30 (減少中斷)，且增加 delay
+    const BATCH_SIZE = 30;
     const totalBatches = Math.ceil(final.length / BATCH_SIZE);
     closeModal('importModal');
 
@@ -553,7 +553,13 @@
         const chunk = final.slice(i * BATCH_SIZE, (i + 1) * BATCH_SIZE);
         const mode = (i === 0) ? 'overwrite' : 'append';
         toast(`正在上傳第 ${i + 1}/${totalBatches} 批資料...`, "#007BFF");
-        try { await callGASPromise('importStudentData', { rows: chunk, mode: mode }); await new Promise(r => setTimeout(r, 800)); } catch(err) { return toast(`匯入中斷: ${err}`, "#D32F2F"); }
+        try { 
+            await callGASPromise('importStudentData', { rows: chunk, mode: mode }); 
+            // ★ 修改：等待時間從 800ms 增加到 1500ms
+            await new Promise(r => setTimeout(r, 1500)); 
+        } catch(err) { 
+            return toast(`匯入中斷: ${err}`, "#D32F2F"); 
+        }
     }
     toast(`匯入完成！共 ${final.length} 筆`, "#28a745");
     updateStats(); loadSchools();
