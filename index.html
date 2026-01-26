@@ -19,8 +19,6 @@
       --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       --font-main-title: 28px;
       --font-content: 16px;
-      --font-sub-title: 20px;
-      --font-version: 12px;
     }
 
     * { box-sizing: border-box; }
@@ -30,59 +28,44 @@
       margin: 0; padding: 0;
       color: var(--text);
       line-height: 1.6;
-      overflow-x: hidden;
       font-size: var(--font-content);
     }
 
-    /* ★ 佈局設定 ★ */
     .app-container {
       max-width: 98%;
       margin: 20px auto;
       padding: 0 20px;
     }
 
-    /* 上方控制區塊與統計看板的 Grid 佈局 */
+    /* 上方區塊佈局 */
     .dashboard-top {
       display: grid;
-      grid-template-columns: 1fr 420px; /* 左側彈性，右側統計固定 420px */
+      grid-template-columns: 1fr 420px;
       gap: 25px;
       margin-bottom: 25px;
     }
 
     @media (max-width: 950px) {
-      .dashboard-top {
-        grid-template-columns: 1fr; /* 手機版改為單欄 */
-        gap: 20px;
-      }
-      .app-container {
-        padding: 10px;
-        margin: 10px auto;
-      }
+      .dashboard-top { grid-template-columns: 1fr; gap: 20px; }
+      .app-container { padding: 10px; margin: 10px auto; }
       .scroll-hint { display: none !important; }
     }
 
-    /* 卡片設計 */
+    /* 卡片通用樣式 */
     .card {
       background: #fff;
       border-radius: 12px;
       box-shadow: var(--shadow);
       padding: 25px;
-      border: 3px dashed transparent;
       transition: all 0.3s;
       position: relative;
-      height: 100%; /* 讓 grid 內的卡片等高 */
+      height: 100%;
+      border: 3px dashed transparent;
     }
+    .card.result-card { height: auto; min-height: 300px; }
     
-    .card.result-card {
-        height: auto; /* 結果卡片高度自動 */
-        min-height: 300px;
-    }
-
-    .card.dragover {
-      border-color: var(--primary);
-      background-color: #f0f8ff;
-      transform: scale(1.01);
-    }
+    /* 拖曳效果 */
+    .card.dragover { border-color: var(--primary); background-color: #f0f8ff; transform: scale(1.01); }
     .drag-overlay {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(255,255,255,0.95);
@@ -100,139 +83,69 @@
       font-size: var(--font-main-title);
       line-height: 1.2;
     }
+    .version-tag { font-size: 12px; color: #999; margin-bottom: 20px; margin-left: 25px; }
+    h3 { margin-top: 0; color: var(--primary); border-left: 5px solid var(--primary); padding-left: 12px; margin-bottom: 15px; font-size: 20px; }
 
-    .version-tag {
-      font-size: var(--font-version);
-      color: #999;
-      margin-bottom: 20px;
-      margin-left: 25px;
-      font-weight: normal;
-    }
-
-    h3 {
-      margin-top: 0; color: var(--primary);
-      border-left: 5px solid var(--primary);
-      padding-left: 12px; margin-bottom: 15px;
-      font-size: var(--font-sub-title);
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px; margin-bottom: 25px;
-    }
+    /* 表單區塊 */
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
     .form-group label { display: block; font-weight: bold; margin-bottom: 6px; font-size: 14px; color: #555; }
-    input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: var(--font-content); }
+    input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; }
     input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,123,255,0.1); }
-    
-    /* 匯入彈窗專用樣式 */
-    .import-area {
-        width: 100%;
-        height: 200px;
-        padding: 15px;
-        border: 2px dashed #ccc;
-        border-radius: 8px;
-        font-family: monospace;
-        font-size: 14px;
-        resize: vertical;
-        margin-bottom: 15px;
-        background: #fafafa;
-    }
-    .import-area:focus {
-        border-color: var(--primary);
-        outline: none;
-        background: white;
-    }
-    .import-instructions {
-        font-size: 14px;
-        color: #666;
-        margin-bottom: 15px;
-        background: #f0f8ff;
-        padding: 10px;
-        border-radius: 6px;
-        border-left: 4px solid var(--primary);
-    }
-    .tag {
-        display: inline-block;
-        background: #e9ecef;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-size: 12px;
-        margin: 0 2px;
-        color: #495057;
-    }
 
+    /* 按鈕樣式 */
     .btn-group { display: flex; flex-wrap: wrap; gap: 10px; }
     button {
       padding: 10px 20px; border: none; border-radius: 6px;
-      font-size: 15px; font-weight: bold;
-      cursor: pointer; color: white; transition: all 0.2s;
+      font-size: 15px; font-weight: bold; cursor: pointer; color: white; transition: all 0.2s;
       display: inline-flex; align-items: center; justify-content: center; gap: 5px;
     }
     button:active { transform: scale(0.95); }
     button:disabled { opacity: 0.6; cursor: not-allowed; }
 
     .btn-search { background-color: var(--primary); }
-    .btn-search:hover { background-color: #0069d9; }
     .btn-add { background-color: var(--accent); }
-    .btn-add:hover { background-color: #e0559a; }
     .btn-checkin { background-color: var(--warning); color: #333; }
-    .btn-checkin:hover { background-color: #e09200; }
     .btn-cancel { background-color: var(--danger); }
-    .btn-cancel:hover { background-color: #c82333; }
     .btn-import { background-color: #483D8B; }
-    .btn-import:hover { background-color: #3b3275; }
     .btn-reset { background-color: #8B0000; }
-    .btn-reset:hover { background-color: #700000; }
     .btn-clear { background-color: #6c757d; }
-    .btn-clear:hover { background-color: #5a6268; }
     .btn-file { background-color: #20c997; }
 
-    /* ★ 統計表樣式 - 扁平化設定 ★ */
-    .stats-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-    }
-    .stats-table th, .stats-table td {
-      padding: 8px 10px;
-      border: 1px solid #eef2f7;
-      text-align: left;
-    }
+    /* 統計表樣式 */
+    .stats-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .stats-table th, .stats-table td { padding: 8px 10px; border: 1px solid #eef2f7; text-align: left; }
     .stats-header { background: var(--primary); color: white; }
-    .stats-header th { font-weight: 500; }
-    
-    /* ★ 重要事項粉紅底樣式 ★ */
-    .highlight-pink { 
-        background-color: #ffeef2;
-    }
-    .highlight-pink td {
-        border-top: 1px solid #ffccd5;
-        border-bottom: 1px solid #ffccd5;
-        color: #d63384;
-        font-weight: bold;
-    }
+    .highlight-pink { background-color: #ffeef2; }
+    .highlight-pink td { border-top: 1px solid #ffccd5; border-bottom: 1px solid #ffccd5; color: #d63384; font-weight: bold; }
 
-    /* 結果表格 */
+    /* 結果表格樣式 (Excel 風格) */
     .result-container { overflow-x: auto; margin-top: 10px; }
-    .data-table {
-      width: 100%; border-collapse: collapse; min-width: 800px;
-      font-size: 15px;
-    }
-    .data-table th { background-color: var(--primary); color: white; padding: 12px; text-align: center; white-space: nowrap; }
-    .data-table td { padding: 10px; border-bottom: 1px solid #eee; text-align: center; vertical-align: middle; }
+    .data-table { width: 100%; border-collapse: collapse; min-width: 800px; font-size: 12pt; border: 1px solid #000; }
+    .data-table th { background-color: var(--primary); color: white; padding: 12px; text-align: center; white-space: nowrap; border: 1px solid #333; }
+    .data-table td { padding: 10px; border: 1px solid #333; text-align: center; vertical-align: middle; white-space: normal; word-break: break-all; }
     .data-table tr:hover { background-color: var(--secondary); }
     .data-table tr:nth-child(even) { background-color: #fafbfc; }
 
+    /* 編輯模式 */
     .editable input { width: 100%; padding: 5px; font-size: 14px; text-align: center; border: 1px solid #aaa; }
+    .editing-row { background-color: #fff3cd !important; }
 
+    /* 匯入彈窗樣式 */
+    .import-area {
+        width: 100%; height: 200px; padding: 15px;
+        border: 2px dashed #ccc; border-radius: 8px;
+        font-family: monospace; font-size: 14px; resize: vertical;
+        margin-bottom: 15px; background: #fafafa;
+    }
+    .import-instructions { font-size: 14px; color: #666; margin-bottom: 15px; background: #f0f8ff; padding: 10px; border-radius: 6px; border-left: 4px solid var(--primary); }
+    .tag { display: inline-block; background: #e9ecef; padding: 2px 6px; border-radius: 4px; font-size: 12px; margin: 0 2px; color: #495057; }
+
+    /* 通用元件 */
     #statusMessage {
       position: fixed; top: 30px; left: 50%; transform: translateX(-50%);
       padding: 12px 25px; border-radius: 50px; color: white; font-weight: bold;
-      z-index: 3000; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-      font-size: 16px;
+      z-index: 3000; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); font-size: 16px;
     }
-
     .modal {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 2000;
@@ -240,22 +153,11 @@
     }
     .modal-content { 
       background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 600px; 
-      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-      animation: modalFadeIn 0.3s ease;
-      max-height: 90vh;
-      overflow-y: auto;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: modalFadeIn 0.3s ease;
+      max-height: 90vh; overflow-y: auto;
     }
-
-    @keyframes modalFadeIn {
-      from { opacity: 0; transform: translateY(-20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .scroll-hint {
-        display: none;
-        background: #333; color: #fff; padding: 5px; text-align: center;
-        font-size: 12px; position: fixed; bottom: 0; width: 100%; z-index: 100;
-    }
+    @keyframes modalFadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+    .scroll-hint { display: none; background: #333; color: #fff; padding: 5px; text-align: center; font-size: 12px; position: fixed; bottom: 0; width: 100%; z-index: 100; }
   </style>
 </head>
 <body>
@@ -265,17 +167,12 @@
 
 <div class="app-container">
   
-  <!-- 第一列：操作區(左) + 統計看板(右) -->
   <div class="dashboard-top">
-    
-    <!-- 操作區卡片 -->
+    <!-- 操作區 -->
     <div class="card form-card" id="dropCard">
-      <div class="drag-overlay">
-        <span>📂</span>
-        <span>放開滑鼠以匯入 Excel</span>
-      </div>
+      <div class="drag-overlay"><span>📂</span><span>放開滑鼠以匯入 Excel</span></div>
       <h2>鳳甲國中報到管理系統</h2>
-      <div class="version-tag">版本：v2026.01.26.9 (支援文字貼上匯入)</div>
+      <div class="version-tag">版本：v2026.01.26.12 (修復編輯功能)</div>
       
       <div class="form-grid">
         <div class="form-group"><label>臨時編號</label><input type="text" id="tempId" placeholder="輸入臨時編號"></div>
@@ -297,7 +194,6 @@
         <button id="addBtn" class="btn-add">➕ 新增新生</button>
         <button id="checkinBtn" class="btn-checkin">✅ 報到</button>
         <button id="cancelCheckinBtn" class="btn-cancel">❌ 取消報到</button>
-        <!-- 修改匯入按鈕功能 -->
         <button id="importBtn" class="btn-import">📥 匯入資料</button>
         <button id="resetBtn" class="btn-reset">🗑️ 系統重設</button>
         <button id="clearBtn" class="btn-clear">🧹 清除欄位</button>
@@ -305,11 +201,11 @@
       <p style="font-size: 14px; color: #666; margin-top: 15px; display: flex; align-items: center; gap: 5px;">
         💡 提示：點擊「匯入資料」可選擇貼上文字或上傳檔案
       </p>
-      <!-- 隱藏的檔案輸入框供拖曳使用 -->
+      <!-- 隱藏的檔案輸入框供拖曳與按鈕使用 -->
       <input type="file" id="hiddenFileInput" style="display:none;" accept=".xlsx,.xls,.csv">
     </div>
 
-    <!-- 統計看板卡片 (現在位於操作區右側) -->
+    <!-- 統計看板 -->
     <div class="card stats-card">
       <h3>📊 即時統計看板</h3>
       <div id="statsArea">
@@ -320,7 +216,7 @@
     </div>
   </div>
 
-  <!-- 第二列：查詢結果(全寬) -->
+  <!-- 查詢結果 -->
   <div class="card result-card">
     <h3>查詢結果</h3>
     <div id="resultArea" class="result-container">
@@ -329,10 +225,9 @@
       </div>
     </div>
   </div>
-
 </div>
 
-<!-- 彈窗組 -->
+<!-- 彈窗：手動新增 -->
 <div id="addModal" class="modal">
   <div class="modal-content">
     <h3>手動新增學生</h3>
@@ -352,28 +247,23 @@
   </div>
 </div>
 
-<!-- 新增：資料匯入彈窗 -->
+<!-- 彈窗：批次匯入 -->
 <div id="importModal" class="modal">
   <div class="modal-content">
     <h3>📥 批次匯入資料</h3>
-    
     <div class="import-instructions">
         <strong>使用說明：</strong><br>
         1. 請複製 Excel 資料表內容（含標題）並貼於下方，或點選按鈕上傳檔案。<br>
-        2. 系統自動識別標題關鍵字：<span class="tag">臨時編班/編號</span> <span class="tag">身分證</span> <span class="tag">姓名</span> <span class="tag">性別</span> <span class="tag">國小</span> <span class="tag">電話</span><br>
+        2. 系統識別關鍵字：<span class="tag">臨時編號/編班</span> <span class="tag">身分證</span> <span class="tag">姓名</span> <span class="tag">國小</span><br>
         3. 支援格式：Excel (.xlsx, .xls) 或 CSV。
     </div>
-
     <textarea id="pasteArea" class="import-area" placeholder="請在此貼上 Excel 資料...
 範例：
-臨時編班	身分證字號	姓名	性別	畢業國小	電話1	電話2
-101	A123456789	王小明	男	鳳甲國小	0912345678	071234567
-..."></textarea>
-
+臨時編號	身分證號	姓名	性別	畢業國小	電話1	電話2
+101	A123456789	王小明	男	鳳甲國小	0912345678	071234567"></textarea>
     <div class="btn-group" style="justify-content: space-between; align-items: center; margin-top: 10px;">
         <input type="file" id="modalFileInput" style="display:none;" accept=".xlsx,.xls,.csv">
         <button onclick="document.getElementById('modalFileInput').click()" class="btn-file">📂 選擇檔案 (Excel/CSV)</button>
-        
         <div style="display: flex; gap: 10px;">
             <button onclick="parsePastedData()" class="btn-search">🚀 開始解析與匯入</button>
             <button onclick="closeModal('importModal')" class="btn-clear">關閉</button>
@@ -383,12 +273,12 @@
   </div>
 </div>
 
+<!-- 彈窗：系統重設 -->
 <div id="pwdModal" class="modal">
   <div class="modal-content" style="max-width: 400px;">
     <h3>⚠️ 系統重設確認</h3>
     <p style="color: #666; margin-bottom: 15px;">此操作將清空所有後端資料庫內容，無法復原。</p>
-    <p>請輸入管理密碼：</p>
-    <input type="password" id="sysPwd" placeholder="密碼" style="margin-bottom: 20px;">
+    <input type="password" id="sysPwd" placeholder="請輸入管理密碼" style="margin-bottom: 20px;">
     <div class="btn-group" style="justify-content: flex-end;">
       <button onclick="doReset()" class="btn-reset">確認清空</button>
       <button onclick="closeModal('pwdModal')" class="btn-clear">取消</button>
@@ -396,11 +286,10 @@
   </div>
 </div>
 
-<style>
-@keyframes spin { 100% { transform: rotate(360deg); } }
-</style>
+<style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
 
 <script>
+  // 請確認此 ID 與您的 Google Apps Script 部署 ID 一致
   const DEPLOY_ID = "AKfycbxpY4iHHkEkdNsBvLdb2OJPqzn0eY14CWjLRiEoDJ0IBUhucE2Pp5dJepyZR5AxP_LO";
   const DEPLOY_URL = `https://script.google.com/macros/s/${DEPLOY_ID}/exec`;
 
@@ -437,50 +326,28 @@
     };
     document.getElementById("addBtn").onclick = () => document.getElementById("addModal").style.display='flex';
     document.getElementById("resetBtn").onclick = () => document.getElementById("pwdModal").style.display='flex';
-    
-    // 修改匯入按鈕行為：開啟彈窗
     document.getElementById("importBtn").onclick = () => {
         document.getElementById("importModal").style.display='flex';
-        document.getElementById("pasteArea").value = ''; // 清空上次內容
+        document.getElementById("pasteArea").value = ''; 
         document.getElementById("importStatus").innerText = '';
     };
 
     document.getElementById("checkinBtn").onclick = () => handleCheck(true);
     document.getElementById("cancelCheckinBtn").onclick = () => handleCheck(false);
     
-    // 綁定檔案輸入事件 (包含彈窗內的與隱藏的)
+    // 綁定檔案輸入事件 (彈窗內與隱藏的)
     document.getElementById("modalFileInput").onchange = (e) => handleFile(e.target.files[0]);
     document.getElementById("hiddenFileInput").onchange = (e) => handleFile(e.target.files[0]);
     
-    // 綁定拖放事件 (主卡片)
+    // 拖曳上傳
     const dropCard = document.getElementById("dropCard");
     dropCard.ondragover = (e) => { e.preventDefault(); dropCard.classList.add("dragover"); };
     dropCard.ondragleave = () => dropCard.classList.remove("dragover");
     dropCard.ondrop = (e) => { e.preventDefault(); dropCard.classList.remove("dragover"); if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]); };
   });
 
-  function loadSchools() { 
-      callGAS('getPrimarySchools', {}, list => { 
-          const s = document.getElementById("primarySchool"); 
-          s.innerHTML = '<option value="">全部國小</option>'; 
-          if(Array.isArray(list)) list.forEach(i=>s.innerHTML+=`<option value="${i}">${i}</option>`); 
-      }); 
-  }
-  
-  function updateStats() { 
-      callGAS('getStatisticsData', {}, d => { 
-          if(!d||!d.length) {
-             document.getElementById("statsArea").innerHTML = '<p style="text-align:center;color:#999">暫無統計資料</p>';
-             return; 
-          }
-          let h = '<table class="stats-table">'; 
-          d.forEach((r, i) => { 
-              const c = i<=1?'stats-header':([4,5,9,11,13].includes(i)?'highlight-pink':''); 
-              h+=`<tr class="${c}">` + r.map(v=>i===0?`<th>${v}</th>`:`<td>${v}</td>`).join('') + '</tr>'; 
-          }); 
-          document.getElementById("statsArea").innerHTML = h+'</table>'; 
-      }); 
-  }
+  function loadSchools() { callGAS('getPrimarySchools', {}, list => { const s = document.getElementById("primarySchool"); s.innerHTML = '<option value="">全部國小</option>'; if(Array.isArray(list)) list.forEach(i=>s.innerHTML+=`<option value="${i}">${i}</option>`); }); }
+  function updateStats() { callGAS('getStatisticsData', {}, d => { if(!d||!d.length) { document.getElementById("statsArea").innerHTML = '<p style="text-align:center;color:#999">暫無統計資料</p>'; return; } let h = '<table class="stats-table">'; d.forEach((r, i) => { const c = i<=1?'stats-header':([4,5,9,11,13].includes(i)?'highlight-pink':''); h+=`<tr class="${c}">` + r.map(v=>i===0?`<th>${v}</th>`:`<td>${v}</td>`).join('') + '</tr>'; }); document.getElementById("statsArea").innerHTML = h+'</table>'; }); }
 
   function search() {
     const f = { tempId: document.getElementById("tempId").value.trim(), idNumber: document.getElementById("idNumber").value.trim(), studentName: document.getElementById("studentName").value.trim(), primarySchool: document.getElementById("primarySchool").value, reportStatus: document.getElementById("reportStatus").value };
@@ -490,7 +357,8 @@
       let h = '<table class="data-table"><thead><tr>' + res.headers.map(v=>`<th>${v}</th>`).join('') + '<th>操作</th></tr></thead><tbody>';
       res.data.forEach(r => {
         h += '<tr>' + r.map((v, idx) => {
-          const edit = [4, 5, 7].includes(idx); 
+          // 允許編輯：身分證(1), 姓名(2), 性別(3), 國小(4), 電話(5,6), 備註(9)
+          const edit = [1, 2, 3, 4, 5, 6, 9].includes(idx); 
           return `<td class="${edit?'editable':''}"><span>${v}</span>${edit?`<input type="text" value="${v}" style="display:none">`:''}</td>`;
         }).join('') + '<td><button class="btn-search" style="font-size:13px;padding:6px 12px;" onclick="toggleEdit(this)">修正</button></td></tr>';
       });
@@ -499,17 +367,48 @@
   }
 
   function toggleEdit(btn) {
-    const tr = btn.closest("tr"); const editables = tr.querySelectorAll(".editable"); const isSaving = btn.innerText === "儲存";
+    const tr = btn.closest("tr");
+    const editables = tr.querySelectorAll(".editable");
+    const isSaving = btn.innerText === "儲存";
+
     if (!isSaving) {
       btn.innerText = "儲存"; btn.style.background = "#28a745";
+      tr.classList.add("editing-row");
       editables.forEach(td => { td.querySelector("span").style.display="none"; td.querySelector("input").style.display="block"; });
     } else {
       btn.disabled = true; btn.innerText = "存檔中...";
-      const rowData = Array.from(tr.cells).map(td => td.querySelector("input") ? td.querySelector("input").value : (td.querySelector("span")?.innerText || td.innerText)).slice(0,8);
+      
+      // 收集整列資料 (包括不可編輯的欄位如編號)
+      // tr.cells 包含所有 td，最後一個是操作按鈕，需排除
+      const allCells = Array.from(tr.cells);
+      const dataCells = allCells.slice(0, allCells.length - 1);
+      
+      const rowData = dataCells.map(td => {
+        const input = td.querySelector("input");
+        const span = td.querySelector("span");
+        // 如果有 input 且顯示中，取 input 值，否則取 span 文字，若都無則取 td 內文
+        if (input && input.style.display !== 'none') return input.value;
+        return span ? span.innerText : td.innerText;
+      });
+
+      // 傳送 rowData 給後端，後端會抓取 rowData[0] (臨時編號) 進行比對
       callGAS('updateStudentData', rowData, msg => {
-        toast(msg, "#28a745"); btn.disabled = false; btn.innerText = "修正"; btn.style.background = "";
-        editables.forEach(td => { const v = td.querySelector("input").value; td.querySelector("span").innerText = v; td.querySelector("span").style.display="inline"; td.querySelector("input").style.display="none"; });
-        updateStats();
+        const isSuccess = msg.success;
+        toast(isSuccess || msg.error, isSuccess ? "#28a745" : "#D32F2F");
+        
+        btn.disabled = false; btn.innerText = "修正"; btn.style.background = "";
+        tr.classList.remove("editing-row");
+        
+        if (isSuccess) {
+           editables.forEach(td => { 
+             const input = td.querySelector("input");
+             const span = td.querySelector("span");
+             span.innerText = input.value; 
+             span.style.display="inline"; 
+             input.style.display="none"; 
+           });
+           updateStats();
+        }
       });
     }
   }
@@ -539,92 +438,45 @@
     callGAS('clearAllData', p, res => { toast(res.success||res.error, res.success?"#28a745":"#D32F2F"); if(res.success) { closeModal('pwdModal'); updateStats(); } });
   }
 
-  // ★ 新增：解析貼上的文字資料 ★
   function parsePastedData() {
     const text = document.getElementById("pasteArea").value.trim();
     if (!text) return toast("請先貼上資料", "#FFA500");
-
-    // 簡單的 CSV/Tab 解析器
-    const rows = text.split(/\r\n|\n/).map(line => line.split(/\t|,/)); // 支援 Tab 或逗號分隔
+    const rows = text.split(/\r\n|\n/).map(line => line.split(/\t|,/));
     processImportData(rows);
   }
 
-  // ★ 共用：資料匯入核心邏輯 ★
   async function processImportData(data) {
     if(data.length < 2) return toast("資料無內容或格式錯誤", "#D32F2F");
-        
     const h = data[0];
     const find = (keywords) => h.findIndex(t => t && keywords.some(k => t.toString().includes(k)));
-    
-    // 欄位對應邏輯：增加容錯率
-    const m = { 
-        t: find(["編號", "臨時", "編班"]), // 臨時編班, 臨時編號
-        i: find(["身分證", "證號"]),        // 身分證字號
-        n: find(["姓名"]), 
-        g: find(["性別"]), 
-        s: find(["國小", "畢業"]), 
-        p1: find(["電話1", "電話１"]), 
-        p2: find(["電話2", "電話２"]) 
-    };
-    
-    // 檢查關鍵欄位
+    const m = { t: find(["編號", "臨時", "編班"]), i: find(["身分證", "證號"]), n: find(["姓名"]), g: find(["性別"]), s: find(["國小", "畢業"]), p1: find(["電話1", "電話１"]), p2: find(["電話2", "電話２"]) };
     if (m.t === -1 || m.n === -1) {
         toast("無法辨識標題：請確認包含『臨時編班』與『姓名』", "#D32F2F");
         document.getElementById("importStatus").innerText = "❌ 失敗：找不到關鍵標題列";
         return;
     }
-    
-    const final = data.slice(1).map(row => [
-        row[m.t]||"", row[m.i]||"", row[m.n]||"", 
-        row[m.g]||"", row[m.s]||"", row[m.p1]||"", row[m.p2]||""
-    ]).filter(r=>r[0]||r[2]); // 過濾空行
-
+    const final = data.slice(1).map(row => [ row[m.t]||"", row[m.i]||"", row[m.n]||"", row[m.g]||"", row[m.s]||"", row[m.p1]||"", row[m.p2]||"" ]).filter(r=>r[0]||r[2]);
     if (final.length === 0) return toast("沒有讀取到有效資料", "#FFA500");
 
-    // 開始分批上傳
     const BATCH_SIZE = 10;
     const totalBatches = Math.ceil(final.length / BATCH_SIZE);
-    
-    // 關閉輸入彈窗，改為顯示 toast 進度
     closeModal('importModal');
 
     for (let i = 0; i < totalBatches; i++) {
         const chunk = final.slice(i * BATCH_SIZE, (i + 1) * BATCH_SIZE);
         const mode = (i === 0) ? 'overwrite' : 'append';
-        toast(`正在上傳第 ${i + 1}/${totalBatches} 批資料 (${Math.round((i+1)/totalBatches*100)}%)...`, "#007BFF");
-        
-        try {
-        await callGASPromise('importStudentData', { rows: chunk, mode: mode });
-        await new Promise(r => setTimeout(r, 800)); // 避免觸發 API 限制
-        } catch(err) {
-        return toast(`匯入中斷於第 ${i+1} 批: ${err}`, "#D32F2F");
-        }
+        toast(`正在上傳第 ${i + 1}/${totalBatches} 批資料...`, "#007BFF");
+        try { await callGASPromise('importStudentData', { rows: chunk, mode: mode }); await new Promise(r => setTimeout(r, 800)); } catch(err) { return toast(`匯入中斷: ${err}`, "#D32F2F"); }
     }
-
-    toast(`全數匯入完成！共 ${final.length} 筆`, "#28a745");
+    toast(`匯入完成！共 ${final.length} 筆`, "#28a745");
     updateStats(); loadSchools();
-    
-    // 重置輸入框
-    document.getElementById("modalFileInput").value = ""; 
-    document.getElementById("hiddenFileInput").value = "";
-    document.getElementById("pasteArea").value = "";
+    document.getElementById("modalFileInput").value = ""; document.getElementById("hiddenFileInput").value = ""; document.getElementById("pasteArea").value = "";
   }
 
-  // ★ 檔案讀取 (整合 SheetJS) ★
   async function handleFile(f) {
-    if(!f) return; 
-    toast("解析檔案中...", "#007BFF");
+    if(!f) return; toast("解析檔案中...", "#007BFF");
     const r = new FileReader();
-    r.onload = async (ev) => {
-      try {
-        const wb = XLSX.read(new Uint8Array(ev.target.result), {type:'array'});
-        const d = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1});
-        processImportData(d);
-      } catch (err) {
-        console.error(err);
-        toast("讀取檔案失敗: " + err, "#D32F2F");
-      }
-    };
+    r.onload = async (ev) => { try { const wb = XLSX.read(new Uint8Array(ev.target.result), {type:'array'}); const d = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1}); processImportData(d); } catch (err) { toast("失敗: " + err, "#D32F2F"); } };
     r.readAsArrayBuffer(f);
   }
 
