@@ -31,6 +31,8 @@
       color: var(--text);
       line-height: 1.6;
       font-size: var(--font-content);
+      /* 防止底部導覽列遮擋內容 */
+      padding-bottom: 80px; 
     }
 
     .app-container {
@@ -49,10 +51,30 @@
       width: 100%;
     }
 
+    /* 手機版樣式調整 */
     @media (max-width: 950px) {
-      .dashboard-top { grid-template-columns: 1fr; gap: 20px; }
-      .app-container { padding: 10px; margin: 10px auto; gap: 20px; }
+      .dashboard-top { 
+          display: block; /* 取消 grid，改為區塊顯示以便控制隱藏 */
+      }
+      .app-container { 
+          padding: 10px; 
+          margin: 10px auto; 
+          gap: 20px; 
+      }
       .scroll-hint { display: none !important; }
+      
+      /* 手機版預設隱藏統計卡片 */
+      #statsCardContainer { display: none; margin-bottom: 20px; }
+      #dropCard { display: block; margin-bottom: 20px; }
+    }
+    
+    /* 電腦版：隱藏底部導覽列，並強制顯示所有卡片 */
+    @media (min-width: 951px) {
+        .mobile-nav { display: none !important; }
+        #statsCardContainer { display: block !important; }
+        #dropCard { display: block !important; }
+        #resultCardContainer { display: block !important; }
+        body { padding-bottom: 0; }
     }
 
     .card {
@@ -84,7 +106,6 @@
     }
     .card.dragover .drag-overlay { display: flex; }
 
-    /* 標題與狀態燈 */
     .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
     h2 {
       margin: 0; color: var(--primary);
@@ -154,25 +175,19 @@
     .btn-search { background-color: var(--primary); }
     .btn-add { background-color: var(--accent); }
     .btn-import { background-color: #483D8B; }
-    .btn-sports { background-color: #fd7e14; } /* 橘色按鈕 */
+    .btn-sports { background-color: #fd7e14; }
     .btn-reset { background-color: #8B0000; }
     .btn-clear { background-color: #6c757d; }
     .btn-file { background-color: #20c997; }
 
-    /* 行內按鈕樣式 */
     .btn-row-edit { background-color: #17a2b8; padding: 6px 12px; font-size: 16px; border-radius: 4px; margin-right: 5px; }
     .btn-row-checkin { background-color: var(--success); padding: 6px 12px; font-size: 16px; border-radius: 4px; margin-right: 5px; }
     .btn-row-cancel { background-color: var(--danger); padding: 6px 12px; font-size: 16px; border-radius: 4px; margin-right: 5px; }
     .btn-row-delete { background-color: #343a40; padding: 6px 12px; font-size: 16px; border-radius: 4px; color: white; }
     .btn-row-delete:hover { background-color: #23272b; }
 
-    /* 統計表樣式 */
     .stats-table { width: 100%; border-collapse: collapse; font-size: 18px; }
-    .stats-table th, .stats-table td { 
-        padding: 3px 8px; 
-        border: 1px solid #eef2f7; 
-        text-align: left; 
-    }
+    .stats-table th, .stats-table td { padding: 3px 8px; border: 1px solid #eef2f7; text-align: left; }
     .stats-header { background: var(--primary); color: white; }
     .stats-header th { font-weight: normal; }
     .highlight-pink { background-color: #ffeef2; }
@@ -204,18 +219,62 @@
       max-height: 95vh; overflow-y: auto;
     }
     @keyframes modalFadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-    .scroll-hint { display: none; background: #333; color: #fff; padding: 5px; text-align: center; font-size: 12px; position: fixed; bottom: 0; width: 100%; z-index: 100; }
+    
+    /* ★ 手機版底部導覽列樣式 ★ */
+    .mobile-nav {
+        display: none; /* 預設隱藏 (桌面版) */
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: white;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        z-index: 9999;
+        justify-content: space-around;
+        padding-bottom: env(safe-area-inset-bottom);
+        border-top: 1px solid #eee;
+    }
+    .mobile-nav-btn {
+        flex: 1;
+        background: none;
+        border: none;
+        padding: 15px;
+        font-size: 16px;
+        color: #888;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        cursor: pointer;
+    }
+    .mobile-nav-btn.active {
+        color: var(--primary);
+        font-weight: bold;
+        background-color: #f0f8ff;
+    }
+    
+    @media (max-width: 950px) {
+        .mobile-nav { display: flex; } /* 手機版顯示 */
+    }
   </style>
 </head>
 <body>
 
 <div id="statusMessage"></div>
-<div class="scroll-hint">⬅️ 左右滑動：切換「操作區」與「統計看板」 ➡️</div>
+<!-- 手機版導覽列 -->
+<div class="mobile-nav">
+    <button class="mobile-nav-btn active" id="tabHome" onclick="switchTab('home')">
+        <span>🏠</span> 報到首頁
+    </button>
+    <button class="mobile-nav-btn" id="tabStats" onclick="switchTab('stats')">
+        <span>📊</span> 統計看板
+    </button>
+</div>
 
 <div class="app-container">
   
   <div class="dashboard-top">
-    <!-- 操作區 -->
+    <!-- 操作區 (手機版首頁顯示) -->
     <div class="card form-card" id="dropCard">
       <div class="drag-overlay"><span>📂</span><span>放開滑鼠以匯入 Excel</span></div>
       
@@ -226,7 +285,7 @@
           </div>
       </div>
       
-      <div class="version-tag">版本：v2026.01.27.11 (正式版)</div>
+      <div class="version-tag">版本：v2026.01.27.13 (正式版)</div>
       
       <div class="form-grid">
         <div class="form-group"><label>臨時編號</label><input type="text" id="tempId" placeholder="輸入臨時編號"></div>
@@ -247,7 +306,6 @@
         <button id="searchBtn" class="btn-search">🔍 查詢</button>
         <button id="addBtn" class="btn-add">➕ 新增新生</button>
         <button id="importBtn" class="btn-import">📥 匯入學生資料</button>
-        <!-- 新增體育班匯入按鈕 -->
         <button id="importSportsBtn" class="btn-sports">🏀 匯入體育班</button>
         <button id="resetBtn" class="btn-reset">🗑️ 系統重設</button>
         <button id="clearBtn" class="btn-clear">🧹 清除欄位</button>
@@ -258,8 +316,8 @@
       <input type="file" id="hiddenFileInput" style="display:none;" accept=".xlsx,.xls,.csv" onclick="this.value=null">
     </div>
 
-    <!-- 統計看板 -->
-    <div class="card stats-card">
+    <!-- 統計看板 (手機版第二頁顯示) -->
+    <div class="card stats-card" id="statsCardContainer">
       <div class="stats-header-row">
           <h3>📊 即時統計看板</h3>
           <button onclick="updateStats()" class="refresh-btn" title="手動更新">↻ 重新整理</button>
@@ -272,8 +330,8 @@
     </div>
   </div>
 
-  <!-- 下半部：查詢結果 (強制換行，寬度 100%) -->
-  <div class="card result-card">
+  <!-- 下半部：查詢結果 (手機版首頁顯示) -->
+  <div class="card result-card" id="resultCardContainer">
     <h3>查詢結果</h3>
     <div id="resultArea" class="result-container">
       <div style="padding: 40px; text-align: center; color: #999; background: #fafafa; border-radius: 8px;">
@@ -375,7 +433,7 @@
   let isUpdatingStats = false;
   let confirmCallback = null;
   let deleteTargetId = null;
-  let currentImportType = 'student'; // 'student' or 'sports'
+  let currentImportType = 'student'; 
 
   function setStatus(isOk, text) {
       const el = document.getElementById("connectionStatus");
@@ -386,6 +444,36 @@
       } else {
           el.className = "status-indicator status-err";
           txt.innerText = text || "連線異常";
+      }
+  }
+
+  // ★ 新增：手機版頁面切換函式
+  function switchTab(tab) {
+      const isMobile = window.innerWidth <= 950;
+      if (!isMobile) return; // 電腦版不動作
+
+      const tabHome = document.getElementById('tabHome');
+      const tabStats = document.getElementById('tabStats');
+      const dropCard = document.getElementById('dropCard');
+      const resultCard = document.getElementById('resultCardContainer');
+      const statsCard = document.getElementById('statsCardContainer');
+
+      if (tab === 'home') {
+          // 顯示報到首頁，隱藏統計
+          tabHome.classList.add('active');
+          tabStats.classList.remove('active');
+          dropCard.style.display = 'block';
+          resultCard.style.display = 'block';
+          statsCard.style.display = 'none';
+      } else {
+          // 顯示統計看板，隱藏報到操作
+          tabHome.classList.remove('active');
+          tabStats.classList.add('active');
+          dropCard.style.display = 'none';
+          resultCard.style.display = 'none';
+          statsCard.style.display = 'block';
+          // 切換時順便刷新統計
+          updateStats();
       }
   }
 
@@ -420,6 +508,11 @@
   document.addEventListener("DOMContentLoaded", () => {
     loadSchools(); updateStats(); setInterval(updateStats, 15000);
     
+    // 初始化手機版 Tab (預設在首頁)
+    if(window.innerWidth <= 950) {
+        switchTab('home');
+    }
+
     document.getElementById("searchBtn").onclick = search;
     document.getElementById("clearBtn").onclick = () => { document.querySelectorAll(".form-card input").forEach(i=>i.value=""); document.getElementById("resultArea").innerHTML = '<p style="text-align: center; color: #999;">欄位已清空</p>'; };
     
@@ -431,7 +524,6 @@
 
     document.getElementById("resetBtn").onclick = () => document.getElementById("pwdModal").style.display='flex';
     
-    // 匯入學生資料
     document.getElementById("importBtn").onclick = () => { 
         currentImportType = 'student';
         document.getElementById("importTitle").innerText = "📥 匯入學生資料 (POST)";
@@ -441,7 +533,6 @@
         document.getElementById("importStatus").innerText = ''; 
     };
     
-    // 匯入體育班
     document.getElementById("importSportsBtn").onclick = () => { 
         currentImportType = 'sports';
         document.getElementById("importTitle").innerText = "🏀 匯入體育班資料 (POST)";
