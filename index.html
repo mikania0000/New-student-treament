@@ -213,7 +213,7 @@
           </div>
       </div>
       
-      <div class="version-tag">版本：v2026.01.26.25 (POST 極速上傳版)</div>
+      <div class="version-tag">版本：v2026.01.27.01 (新增時清空欄位)</div>
       
       <div class="form-grid">
         <div class="form-group"><label>臨時編號</label><input type="text" id="tempId" placeholder="輸入臨時編號"></div>
@@ -384,7 +384,14 @@
     
     document.getElementById("searchBtn").onclick = search;
     document.getElementById("clearBtn").onclick = () => { document.querySelectorAll(".form-card input").forEach(i=>i.value=""); document.getElementById("resultArea").innerHTML = '<p style="text-align: center; color: #999;">欄位已清空</p>'; };
-    document.getElementById("addBtn").onclick = () => document.getElementById("addModal").style.display='flex';
+    
+    // ★ 修改：點擊新增按鈕時，先清空欄位
+    document.getElementById("addBtn").onclick = () => {
+        document.querySelectorAll("#addModal input").forEach(i => i.value = "");
+        document.getElementById("nG").value = "男";
+        document.getElementById("addModal").style.display = 'flex';
+    };
+
     document.getElementById("resetBtn").onclick = () => document.getElementById("pwdModal").style.display='flex';
     document.getElementById("importBtn").onclick = () => { document.getElementById("importModal").style.display='flex'; document.getElementById("pasteArea").value = ''; document.getElementById("importStatus").innerText = ''; };
     document.getElementById("checkinBtn").onclick = () => handleCheck(true);
@@ -482,7 +489,16 @@
   function saveStudent() {
     const d = { nT: document.getElementById("nT").value.trim(), nI: document.getElementById("nI").value.trim(), nN: document.getElementById("nN").value.trim(), nG: document.getElementById("nG").value, nS: document.getElementById("nS").value.trim(), nP1: document.getElementById("nP1").value.trim(), nP2: document.getElementById("nP2").value.trim() };
     if(!d.nT||!d.nI||!d.nN) return toast("必填欄位不可空白", "#D32F2F");
-    callGAS('addNewStudent', d, res => { toast(res.success||res.error, res.success?"#28a745":"#D32F2F"); closeModal('addModal'); updateStats(); });
+    callGAS('addNewStudent', d, res => { 
+        if(res.error) { toast(res.error, "#D32F2F"); return; }
+        toast(res.success, "#28a745"); 
+        
+        // 清空欄位
+        document.querySelectorAll("#addModal input").forEach(el => el.value = "");
+        document.getElementById("nG").value = "男";
+        
+        closeModal('addModal'); updateStats(); 
+    });
   }
 
   function doReset() {
