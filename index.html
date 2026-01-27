@@ -121,13 +121,25 @@
     .import-instructions { font-size: 14px; color: #666; margin-bottom: 15px; background: #f0f8ff; padding: 12px; border-radius: 8px; border-left: 5px solid var(--primary); line-height: 1.6; }
     .tag { display: inline-block; background: #e9ecef; padding: 2px 6px; border-radius: 4px; font-size: 12px; margin: 0 4px; color: #495057; }
 
-    .btn-group { display: flex; flex-wrap: wrap; gap: 12px; }
+    /* ★ 按鈕區塊修正：強制不換行，支援橫向捲動 ★ */
+    .btn-group { 
+        display: flex; 
+        flex-wrap: nowrap; /* 強制不換行 */
+        gap: 10px; 
+        overflow-x: auto; /* 寬度不足時出現橫向卷軸 */
+        padding-bottom: 5px; /* 預留卷軸空間 */
+    }
+    /* 自訂卷軸樣式 (讓卷軸比較好看) */
+    .btn-group::-webkit-scrollbar { height: 6px; }
+    .btn-group::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+    
     button {
       padding: 10px 20px; border: none; border-radius: 8px;
       font-size: var(--font-btn); 
       font-weight: bold; cursor: pointer; color: white; transition: all 0.2s;
       display: inline-flex; align-items: center; justify-content: center; gap: 8px;
       white-space: nowrap;
+      flex-shrink: 0; /* 防止按鈕被壓縮 */
     }
     button:active { transform: scale(0.95); }
     button:disabled { opacity: 0.6; cursor: not-allowed; }
