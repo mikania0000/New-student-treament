@@ -225,7 +225,7 @@
           </div>
       </div>
       
-      <div class="version-tag">版本：v2026.01.27.09 (新增刪除按鈕)</div>
+      <div class="version-tag">版本：v2026.01.27.10 (正式版)</div>
       
       <div class="form-grid">
         <div class="form-group"><label>臨時編號</label><input type="text" id="tempId" placeholder="輸入臨時編號"></div>
@@ -283,7 +283,7 @@
 <!-- 彈窗：手動新增 -->
 <div id="addModal" class="modal">
   <div class="modal-content">
-    <h3>手動新增學生</h3>
+    <h3>新增學生</h3>
     <div class="form-grid" style="grid-template-columns: 1fr;">
       <input type="text" id="nT" placeholder="臨時編號 (必填)">
       <input type="text" id="nI" placeholder="身分證號 (必填)">
@@ -309,7 +309,7 @@
         1. 請複製 Excel 資料表內容（含標題）並貼於下方，或點選按鈕上傳檔案。<br>
         2. 系統識別關鍵字：<span class="tag">臨時編號/編班</span> <span class="tag">身分證</span> <span class="tag">姓名</span> <span class="tag">國小</span><br>
         3. 支援格式：Excel (.xlsx, .xls) 或 CSV。<br>
-        4. <strong>注意：</strong>此模式為整批上傳，請確認後端已更新支援 POST。
+        4. <strong>注意：</strong>此模式為整批上傳。
     </div>
     <textarea id="pasteArea" class="import-area" placeholder="請在此貼上 Excel 資料..."></textarea>
     <div class="btn-group" style="justify-content: space-between; align-items: center; margin-top: 10px;">
@@ -349,7 +349,7 @@
   </div>
 </div>
 
-<!-- ★ 新增：刪除確認彈窗 (含密碼) ★ -->
+<!-- 彈窗：刪除確認 (含密碼) -->
 <div id="deletePwdModal" class="modal">
   <div class="modal-content" style="max-width: 400px; text-align: center;">
     <h3 style="color: var(--danger); margin-bottom: 15px;">⚠️ 確認刪除</h3>
@@ -537,7 +537,6 @@
       });
   }
 
-  // ★ 新增：刪除按鈕邏輯
   function doRowDelete(id, name) {
       deleteTargetId = id;
       document.getElementById("delStudentName").innerText = name;
@@ -556,8 +555,8 @@
           if (res.error) toast(res.error, "#D32F2F");
           else {
               toast(res.success, "#28a745");
-              search(); // 重新搜尋更新列表
-              updateStats(); // 更新統計
+              search(); 
+              updateStats(); 
           }
       });
   }
