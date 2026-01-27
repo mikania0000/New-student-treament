@@ -84,6 +84,7 @@
     }
     .card.dragover .drag-overlay { display: flex; }
 
+    /* 標題與狀態燈 */
     .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
     h2 {
       margin: 0; color: var(--primary);
@@ -153,6 +154,7 @@
     .btn-search { background-color: var(--primary); }
     .btn-add { background-color: var(--accent); }
     .btn-import { background-color: #483D8B; }
+    .btn-sports { background-color: #fd7e14; } /* 橘色按鈕 */
     .btn-reset { background-color: #8B0000; }
     .btn-clear { background-color: #6c757d; }
     .btn-file { background-color: #20c997; }
@@ -161,7 +163,6 @@
     .btn-row-edit { background-color: #17a2b8; padding: 6px 12px; font-size: 16px; border-radius: 4px; margin-right: 5px; }
     .btn-row-checkin { background-color: var(--success); padding: 6px 12px; font-size: 16px; border-radius: 4px; margin-right: 5px; }
     .btn-row-cancel { background-color: var(--danger); padding: 6px 12px; font-size: 16px; border-radius: 4px; margin-right: 5px; }
-    /* 刪除按鈕樣式 (深灰色) */
     .btn-row-delete { background-color: #343a40; padding: 6px 12px; font-size: 16px; border-radius: 4px; color: white; }
     .btn-row-delete:hover { background-color: #23272b; }
 
@@ -225,7 +226,7 @@
           </div>
       </div>
       
-      <div class="version-tag">版本：v2026.01.27.10 (正式版)</div>
+      <div class="version-tag">版本：v2026.01.27.11 (正式版)</div>
       
       <div class="form-grid">
         <div class="form-group"><label>臨時編號</label><input type="text" id="tempId" placeholder="輸入臨時編號"></div>
@@ -245,7 +246,9 @@
       <div class="btn-group">
         <button id="searchBtn" class="btn-search">🔍 查詢</button>
         <button id="addBtn" class="btn-add">➕ 新增新生</button>
-        <button id="importBtn" class="btn-import">📥 匯入資料</button>
+        <button id="importBtn" class="btn-import">📥 匯入學生資料</button>
+        <!-- 新增體育班匯入按鈕 -->
+        <button id="importSportsBtn" class="btn-sports">🏀 匯入體育班</button>
         <button id="resetBtn" class="btn-reset">🗑️ 系統重設</button>
         <button id="clearBtn" class="btn-clear">🧹 清除欄位</button>
       </div>
@@ -283,7 +286,7 @@
 <!-- 彈窗：手動新增 -->
 <div id="addModal" class="modal">
   <div class="modal-content">
-    <h3>新增學生</h3>
+    <h3>手動新增學生</h3>
     <div class="form-grid" style="grid-template-columns: 1fr;">
       <input type="text" id="nT" placeholder="臨時編號 (必填)">
       <input type="text" id="nI" placeholder="身分證號 (必填)">
@@ -303,13 +306,13 @@
 <!-- 彈窗：批次匯入 -->
 <div id="importModal" class="modal">
   <div class="modal-content">
-    <h3>📥 批次匯入資料 (POST)</h3>
+    <h3 id="importTitle">📥 批次匯入資料 (POST)</h3>
     <div class="import-instructions">
         <strong>使用說明：</strong><br>
         1. 請複製 Excel 資料表內容（含標題）並貼於下方，或點選按鈕上傳檔案。<br>
-        2. 系統識別關鍵字：<span class="tag">臨時編號/編班</span> <span class="tag">身分證</span> <span class="tag">姓名</span> <span class="tag">國小</span><br>
+        2. <span id="importHint">系統識別關鍵字：<span class="tag">臨時編號/編班</span> <span class="tag">身分證</span> <span class="tag">姓名</span> <span class="tag">國小</span> <span class="tag">電話1</span> <span class="tag">電話2</span></span><br>
         3. 支援格式：Excel (.xlsx, .xls) 或 CSV。<br>
-        4. <strong>注意：</strong>此模式為整批上傳。
+        4. <strong>注意：</strong>此模式為整批上傳，請確認後端已更新支援 POST。
     </div>
     <textarea id="pasteArea" class="import-area" placeholder="請在此貼上 Excel 資料..."></textarea>
     <div class="btn-group" style="justify-content: space-between; align-items: center; margin-top: 10px;">
@@ -337,7 +340,7 @@
   </div>
 </div>
 
-<!-- 彈窗：確認操作 (一般報到/取消報到) -->
+<!-- 彈窗：確認操作 -->
 <div id="confirmModal" class="modal">
   <div class="modal-content" style="max-width: 400px; text-align: center;">
     <h3 style="color: var(--primary); margin-bottom: 15px;">確認操作</h3>
@@ -349,7 +352,7 @@
   </div>
 </div>
 
-<!-- 彈窗：刪除確認 (含密碼) -->
+<!-- 彈窗：刪除確認 -->
 <div id="deletePwdModal" class="modal">
   <div class="modal-content" style="max-width: 400px; text-align: center;">
     <h3 style="color: var(--danger); margin-bottom: 15px;">⚠️ 確認刪除</h3>
@@ -372,6 +375,7 @@
   let isUpdatingStats = false;
   let confirmCallback = null;
   let deleteTargetId = null;
+  let currentImportType = 'student'; // 'student' or 'sports'
 
   function setStatus(isOk, text) {
       const el = document.getElementById("connectionStatus");
@@ -426,7 +430,26 @@
     };
 
     document.getElementById("resetBtn").onclick = () => document.getElementById("pwdModal").style.display='flex';
-    document.getElementById("importBtn").onclick = () => { document.getElementById("importModal").style.display='flex'; document.getElementById("pasteArea").value = ''; document.getElementById("importStatus").innerText = ''; };
+    
+    // 匯入學生資料
+    document.getElementById("importBtn").onclick = () => { 
+        currentImportType = 'student';
+        document.getElementById("importTitle").innerText = "📥 匯入學生資料 (POST)";
+        document.getElementById("importHint").innerHTML = `系統識別關鍵字：<span class="tag">臨時編號/編班</span> <span class="tag">身分證</span> <span class="tag">姓名</span> <span class="tag">國小</span> <span class="tag">電話1</span> <span class="tag">電話2</span>`;
+        document.getElementById("importModal").style.display='flex'; 
+        document.getElementById("pasteArea").value = ''; 
+        document.getElementById("importStatus").innerText = ''; 
+    };
+    
+    // 匯入體育班
+    document.getElementById("importSportsBtn").onclick = () => { 
+        currentImportType = 'sports';
+        document.getElementById("importTitle").innerText = "🏀 匯入體育班資料 (POST)";
+        document.getElementById("importHint").innerHTML = `系統識別關鍵字：<span class="tag">姓名</span> <span class="tag">性別</span> <span class="tag">身分證號</span>`;
+        document.getElementById("importModal").style.display='flex'; 
+        document.getElementById("pasteArea").value = ''; 
+        document.getElementById("importStatus").innerText = ''; 
+    };
     
     document.getElementById("modalFileInput").onchange = (e) => handleFile(e.target.files[0]);
     document.getElementById("hiddenFileInput").onchange = (e) => handleFile(e.target.files[0]);
@@ -480,10 +503,8 @@
       let h = '<table class="data-table"><thead><tr>' + res.headers.map(v=>`<th>${v}</th>`).join('') + '<th>操作</th></tr></thead><tbody>';
       
       res.data.forEach(r => {
-        // H欄為 r[7] (第8欄)，若非0則代表已報到
         const statusVal = String(r[7] || "0").trim();
         const isCheckedIn = (statusVal !== "0" && statusVal !== "");
-        
         const tempId = r[0];
         const name = r[2];
 
@@ -604,31 +625,57 @@
 
   async function processImportData(data) {
     if(data.length < 2) return toast("資料無內容或格式錯誤", "#D32F2F");
-    const h = data[0];
-    const find = (keywords) => h.findIndex(t => t && keywords.some(k => t.toString().includes(k)));
-    const m = { t: find(["編號", "臨時", "編班"]), i: find(["身分證", "證號"]), n: find(["姓名"]), g: find(["性別"]), s: find(["國小", "畢業"]), p1: find(["電話1", "電話１"]), p2: find(["電話2", "電話２"]) };
-    if (m.t === -1 || m.n === -1) {
-        toast("無法辨識標題：請確認包含『臨時編班』與『姓名』", "#D32F2F");
-        document.getElementById("importStatus").innerText = "❌ 失敗：找不到關鍵標題列";
-        return;
-    }
-    const final = data.slice(1).map(row => [ row[m.t]||"", row[m.i]||"", row[m.n]||"", row[m.g]||"", row[m.s]||"", row[m.p1]||"", row[m.p2]||"" ]).filter(r=>r[0]||r[2]);
-    if (final.length === 0) return toast("沒有讀取到有效資料", "#FFA500");
-
-    closeModal('importModal');
-    toast(`🚀 正在整批上傳 ${final.length} 筆資料...`, "#007BFF");
-
-    try {
-        await callGAS_POST('importStudentData', { rows: final, mode: 'overwrite' });
-        toast(`✅ 匯入完成！共 ${final.length} 筆`, "#28a745");
-        updateStats(); 
-        loadSchools();
-        document.getElementById("modalFileInput").value = ""; 
-        document.getElementById("hiddenFileInput").value = ""; 
-        document.getElementById("pasteArea").value = "";
-    } catch (err) {
-        console.error(err);
-        toast(`❌ 匯入失敗: ${err} (請確認後端已更新支援 POST)`, "#D32F2F");
+    
+    // 依據模式切換欄位檢查與處理
+    if (currentImportType === 'student') {
+        const h = data[0];
+        const find = (keywords) => h.findIndex(t => t && keywords.some(k => t.toString().includes(k)));
+        const m = { t: find(["編號", "臨時", "編班"]), i: find(["身分證", "證號"]), n: find(["姓名"]), g: find(["性別"]), s: find(["國小", "畢業"]), p1: find(["電話1", "電話１"]), p2: find(["電話2", "電話２"]) };
+        
+        if (m.t === -1 || m.n === -1) {
+            toast("學生資料格式錯誤：找不到關鍵標題列", "#D32F2F");
+            return;
+        }
+        
+        const final = data.slice(1).map(row => [ row[m.t]||"", row[m.i]||"", row[m.n]||"", row[m.g]||"", row[m.s]||"", row[m.p1]||"", row[m.p2]||"" ]).filter(r=>r[0]||r[2]);
+        if (final.length === 0) return toast("沒有有效資料", "#FFA500");
+        
+        closeModal('importModal');
+        toast(`🚀 正在匯入學生資料 (${final.length} 筆)...`, "#007BFF");
+        
+        try {
+            await callGAS_POST('importStudentData', { rows: final, mode: 'overwrite' });
+            toast(`✅ 學生資料匯入完成！`, "#28a745");
+            updateStats(); loadSchools();
+        } catch(err) {
+            console.error(err);
+            toast(`❌ 匯入失敗: ${err}`, "#D32F2F");
+        }
+        
+    } else if (currentImportType === 'sports') {
+        // 體育班模式：姓名、性別、身分證號
+        const h = data[0];
+        const find = (keywords) => h.findIndex(t => t && keywords.some(k => t.toString().includes(k)));
+        const m = { n: find(["姓名"]), g: find(["性別"]), i: find(["身分證", "證號"]) };
+        
+        if (m.n === -1 || m.i === -1) {
+            toast("體育班格式錯誤：找不到 '姓名' 或 '身分證'", "#D32F2F");
+            return;
+        }
+        
+        const final = data.slice(1).map(row => [ row[m.n]||"", row[m.g]||"", row[m.i]||"" ]).filter(r=>r[0]||r[2]);
+        if (final.length === 0) return toast("沒有有效資料", "#FFA500");
+        
+        closeModal('importModal');
+        toast(`🏀 正在匯入體育班資料 (${final.length} 筆)...`, "#007BFF");
+        
+        try {
+            await callGAS_POST('importSportsData', { rows: final });
+            toast(`✅ 體育班匯入完成！`, "#28a745");
+        } catch(err) {
+            console.error(err);
+            toast(`❌ 匯入失敗: ${err}`, "#D32F2F");
+        }
     }
   }
 
