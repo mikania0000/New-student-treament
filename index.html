@@ -37,15 +37,15 @@
       max-width: 98%;
       margin: 20px auto;
       padding: 0 20px;
-      display: flex;       /* 使用 Flex 佈局來控制垂直排列 */
+      display: flex;       
       flex-direction: column; 
-      gap: 25px;           /* 上下區塊間距 */
+      gap: 25px;           
     }
 
     /* 上半部：操作區(左) + 統計(右) */
     .dashboard-top {
       display: grid;
-      grid-template-columns: 1fr 420px; /* 左側自適應，右側固定 420px */
+      grid-template-columns: 1fr 420px;
       gap: 25px;
       width: 100%;
     }
@@ -63,15 +63,14 @@
       padding: 25px;
       transition: all 0.3s;
       position: relative;
-      height: 100%; /* 讓左右兩卡片等高 */
+      height: 100%;
       border: 3px dashed transparent;
     }
     
-    /* 結果卡片設定 */
     .card.result-card { 
         height: auto; 
         min-height: 300px; 
-        width: 100%; /* 確保佔滿寬度 */
+        width: 100%; 
     }
 
     .card.dragover { border-color: var(--primary); background-color: #f0f8ff; transform: scale(1.01); }
@@ -123,16 +122,7 @@
     input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: var(--font-content); }
     input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,123,255,0.1); }
 
-    .import-area {
-        width: 100%; height: 300px; padding: 15px;
-        border: 2px dashed #ccc; border-radius: 8px;
-        font-family: monospace; font-size: 14px; resize: vertical;
-        margin-bottom: 15px; background: #fafafa; line-height: 1.5;
-    }
-    .import-instructions { font-size: 14px; color: #666; margin-bottom: 15px; background: #f0f8ff; padding: 12px; border-radius: 8px; border-left: 5px solid var(--primary); line-height: 1.6; }
-    .tag { display: inline-block; background: #e9ecef; padding: 2px 6px; border-radius: 4px; font-size: 12px; margin: 0 4px; color: #495057; }
-
-    /* 按鈕區塊修正：強制不換行，支援橫向捲動 */
+    /* 按鈕區塊 */
     .btn-group { 
         display: flex; 
         flex-wrap: nowrap; 
@@ -156,14 +146,17 @@
 
     .btn-search { background-color: var(--primary); }
     .btn-add { background-color: var(--accent); }
-    .btn-checkin { background-color: var(--warning); color: #333; }
-    .btn-cancel { background-color: var(--danger); }
     .btn-import { background-color: #483D8B; }
     .btn-reset { background-color: #8B0000; }
     .btn-clear { background-color: #6c757d; }
     .btn-file { background-color: #20c997; }
 
-    /* 統計表樣式修正：高度壓縮 */
+    /* 行內按鈕樣式 */
+    .btn-row-edit { background-color: #17a2b8; padding: 6px 12px; font-size: 16px; border-radius: 4px; margin-right: 5px; }
+    .btn-row-checkin { background-color: var(--success); padding: 6px 12px; font-size: 16px; border-radius: 4px; }
+    .btn-row-cancel { background-color: var(--danger); padding: 6px 12px; font-size: 16px; border-radius: 4px; }
+
+    /* 統計表樣式 */
     .stats-table { width: 100%; border-collapse: collapse; font-size: 18px; }
     .stats-table th, .stats-table td { 
         padding: 3px 8px; 
@@ -202,6 +195,14 @@
     }
     @keyframes modalFadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
     .scroll-hint { display: none; background: #333; color: #fff; padding: 5px; text-align: center; font-size: 12px; position: fixed; bottom: 0; width: 100%; z-index: 100; }
+    .import-area {
+        width: 100%; height: 300px; padding: 15px;
+        border: 2px dashed #ccc; border-radius: 8px;
+        font-family: monospace; font-size: 14px; resize: vertical;
+        margin-bottom: 15px; background: #fafafa; line-height: 1.5;
+    }
+    .import-instructions { font-size: 14px; color: #666; margin-bottom: 15px; background: #f0f8ff; padding: 12px; border-radius: 8px; border-left: 5px solid var(--primary); line-height: 1.6; }
+    .tag { display: inline-block; background: #e9ecef; padding: 2px 6px; border-radius: 4px; font-size: 12px; margin: 0 4px; color: #495057; }
   </style>
 </head>
 <body>
@@ -211,7 +212,6 @@
 
 <div class="app-container">
   
-  <!-- 上半部：操作區(左) + 統計(右) -->
   <div class="dashboard-top">
     <!-- 操作區 -->
     <div class="card form-card" id="dropCard">
@@ -224,7 +224,7 @@
           </div>
       </div>
       
-      <div class="version-tag">版本：v2026.01.27.03 (結果區塊修正版)</div>
+      <div class="version-tag">版本：v2026.01.27.06 (行內報到功能)</div>
       
       <div class="form-grid">
         <div class="form-group"><label>臨時編號</label><input type="text" id="tempId" placeholder="輸入臨時編號"></div>
@@ -244,8 +244,7 @@
       <div class="btn-group">
         <button id="searchBtn" class="btn-search">🔍 查詢</button>
         <button id="addBtn" class="btn-add">➕ 新增新生</button>
-        <button id="checkinBtn" class="btn-checkin">✅ 報到</button>
-        <button id="cancelCheckinBtn" class="btn-cancel">❌ 取消報到</button>
+        <!-- 移除舊的報到按鈕 -->
         <button id="importBtn" class="btn-import">📥 匯入資料</button>
         <button id="resetBtn" class="btn-reset">🗑️ 系統重設</button>
         <button id="clearBtn" class="btn-clear">🧹 清除欄位</button>
@@ -358,7 +357,6 @@
       }
   }
 
-  // 標準 GET 請求
   function callGAS(func, params, cb) {
     const cbName = 'gas_cb_' + Math.floor(Math.random() * 1000000);
     window[cbName] = (res) => { cb(res); delete window[cbName]; document.getElementById(cbName)?.remove(); };
@@ -371,11 +369,8 @@
     document.body.appendChild(s);
   }
 
-  // ★ 新增：POST 請求函式 (用於匯入大量資料)
-  // 注意：需要更新後端 doPost
   function callGAS_POST(func, params) {
     return new Promise((resolve, reject) => {
-        // 使用 text/plain 避免 preflight 複雜度，後端需用 JSON.parse(e.postData.contents) 解析
         fetch(DEPLOY_URL, {
             method: "POST",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -396,7 +391,6 @@
     document.getElementById("searchBtn").onclick = search;
     document.getElementById("clearBtn").onclick = () => { document.querySelectorAll(".form-card input").forEach(i=>i.value=""); document.getElementById("resultArea").innerHTML = '<p style="text-align: center; color: #999;">欄位已清空</p>'; };
     
-    // ★ 修改：點擊新增按鈕時，先清空欄位
     document.getElementById("addBtn").onclick = () => {
         document.querySelectorAll("#addModal input").forEach(i => i.value = "");
         document.getElementById("nG").value = "男";
@@ -405,8 +399,9 @@
 
     document.getElementById("resetBtn").onclick = () => document.getElementById("pwdModal").style.display='flex';
     document.getElementById("importBtn").onclick = () => { document.getElementById("importModal").style.display='flex'; document.getElementById("pasteArea").value = ''; document.getElementById("importStatus").innerText = ''; };
-    document.getElementById("checkinBtn").onclick = () => handleCheck(true);
-    document.getElementById("cancelCheckinBtn").onclick = () => handleCheck(false);
+    
+    // 移除舊的 Checkin/Cancel 綁定
+    
     document.getElementById("modalFileInput").onchange = (e) => handleFile(e.target.files[0]);
     document.getElementById("hiddenFileInput").onchange = (e) => handleFile(e.target.files[0]);
     
@@ -450,15 +445,72 @@
     callGAS('queryStudentData', f, res => {
       if (res.error) { document.getElementById("resultArea").innerHTML = `<p style="text-align:center;padding:20px;color:#d32f2f">查詢錯誤：${res.error}</p>`; return; }
       if (!res.data || !res.data.length) { document.getElementById("resultArea").innerHTML = '<p style="text-align:center;padding:20px;color:#d32f2f">查無資料</p>'; return; }
+      
       let h = '<table class="data-table"><thead><tr>' + res.headers.map(v=>`<th>${v}</th>`).join('') + '<th>操作</th></tr></thead><tbody>';
+      
       res.data.forEach(r => {
+        // H欄為 r[7] (第8欄)，若非0則代表已報到
+        const statusVal = String(r[7] || "0").trim();
+        const isCheckedIn = (statusVal !== "0" && statusVal !== "");
+        
+        // 臨時編號 (r[0]), 姓名 (r[2])
+        const tempId = r[0];
+        const name = r[2];
+
         h += '<tr>' + r.map((v, idx) => {
+          // 可編輯欄位：身分證(1), 姓名(2), 性別(3), 國小(4), 電話(5,6), 備註(9)
           const edit = [1, 2, 3, 4, 5, 6, 9].includes(idx); 
           return `<td class="${edit?'editable':''}"><span>${v}</span>${edit?`<input type="text" value="${v}" style="display:none">`:''}</td>`;
-        }).join('') + '<td><button class="btn-search" style="font-size:16px;padding:6px 12px;" onclick="toggleEdit(this)">修正</button></td></tr>';
+        }).join('') + `
+          <td style="white-space:nowrap;">
+            <button class="btn-row-edit" onclick="toggleEdit(this)">修正</button>
+            ${!isCheckedIn ? 
+              `<button class="btn-row-checkin" onclick="doRowCheckIn('${tempId}', '${name}')">報到</button>` : 
+              `<button class="btn-row-cancel" onclick="doRowCancel('${tempId}', '${name}')">取消報到</button>`
+            }
+          </td>
+        </tr>`;
       });
       document.getElementById("resultArea").innerHTML = h+'</tbody></table>';
     });
+  }
+
+  // ★ 新增：行內報到功能
+  function doRowCheckIn(id, name) {
+      // 簡單確認
+      if(!confirm(`確定要為【${id} ${name}】進行報到嗎？`)) return;
+      
+      // 顯示讀取中
+      toast("處理中...", "#007BFF");
+      
+      // 呼叫後端
+      callGAS('submitCheckIn', id, res => {
+          if(res.error) {
+              toast("錯誤: " + res.error, "#D32F2F");
+          } else {
+              toast(res.message, "#28a745");
+              // 成功後重新搜尋並更新統計，以顯示最新狀態
+              search();
+              updateStats();
+          }
+      });
+  }
+
+  // ★ 新增：行內取消報到功能
+  function doRowCancel(id, name) {
+      if(!confirm(`⚠️ 確定要取消【${id} ${name}】的報到狀態嗎？\n(這會刪除報到紀錄表中的資料)`)) return;
+      
+      toast("處理中...", "#007BFF");
+      
+      callGAS('cancelCheckIn', id, res => {
+          if(res.error) {
+              toast("錯誤: " + res.error, "#D32F2F");
+          } else {
+              toast(res.message, "#28a745");
+              search();
+              updateStats();
+          }
+      });
   }
 
   function toggleEdit(btn) {
@@ -475,26 +527,12 @@
         const input = td.querySelector("input");
         return (input && input.style.display !== 'none') ? input.value : td.querySelector("span")?.innerText || td.innerText;
       });
-      // 這裡繼續用 callGAS (GET) 因為單筆資料量小，沒問題
       callGAS('updateStudentData', rowData, msg => {
         toast(msg.success || msg.error, msg.success ? "#28a745" : "#D32F2F");
         btn.disabled = false; btn.innerText = "修正"; btn.style.background = ""; tr.classList.remove("editing-row");
         if (msg.success) { editables.forEach(td => { const inp = td.querySelector("input"); td.querySelector("span").innerText = inp.value; td.querySelector("span").style.display="inline"; inp.style.display="none"; }); updateStats(); }
       });
     }
-  }
-
-  function handleCheck(isIn) {
-    const id = document.getElementById("tempId").value.trim(); 
-    if(!id) return toast("請輸入臨時編號", "#FFA500");
-    toast("系統處理中...", "#007BFF");
-    callGAS(isIn?'submitCheckIn':'cancelCheckIn', id, res => {
-      let msg = typeof res==='string' ? res : (res.message || JSON.stringify(res));
-      msg = msg.replace(/<[^>]*>/g,"");
-      const isSuccess = msg.includes("成功");
-      toast(msg, isSuccess ? "#28a745" : "#D32F2F");
-      if(isSuccess) { updateStats(); document.getElementById("tempId").value = ""; search(); }
-    });
   }
 
   function saveStudent() {
@@ -516,7 +554,6 @@
     processImportData(rows);
   }
 
-  // ★★★ 核心修正：使用 callGAS_POST 整批上傳，移除分批迴圈 ★★★
   async function processImportData(data) {
     if(data.length < 2) return toast("資料無內容或格式錯誤", "#D32F2F");
     const h = data[0];
@@ -534,7 +571,6 @@
     toast(`🚀 正在整批上傳 ${final.length} 筆資料...`, "#007BFF");
 
     try {
-        // 直接使用 POST 一次傳送所有資料 (overwrite 模式)
         await callGAS_POST('importStudentData', { rows: final, mode: 'overwrite' });
         toast(`✅ 匯入完成！共 ${final.length} 筆`, "#28a745");
         updateStats(); 
