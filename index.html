@@ -37,18 +37,22 @@
       max-width: 98%;
       margin: 20px auto;
       padding: 0 20px;
+      display: flex;       /* 使用 Flex 佈局來控制垂直排列 */
+      flex-direction: column; 
+      gap: 25px;           /* 上下區塊間距 */
     }
 
+    /* 上半部：操作區(左) + 統計(右) */
     .dashboard-top {
       display: grid;
-      grid-template-columns: 1fr 420px;
+      grid-template-columns: 1fr 420px; /* 左側自適應，右側固定 420px */
       gap: 25px;
-      margin-bottom: 25px;
+      width: 100%;
     }
 
     @media (max-width: 950px) {
       .dashboard-top { grid-template-columns: 1fr; gap: 20px; }
-      .app-container { padding: 10px; margin: 10px auto; }
+      .app-container { padding: 10px; margin: 10px auto; gap: 20px; }
       .scroll-hint { display: none !important; }
     }
 
@@ -59,10 +63,17 @@
       padding: 25px;
       transition: all 0.3s;
       position: relative;
-      height: 100%;
+      height: 100%; /* 讓左右兩卡片等高 */
       border: 3px dashed transparent;
     }
-    .card.result-card { height: auto; min-height: 300px; }
+    
+    /* 結果卡片設定 */
+    .card.result-card { 
+        height: auto; 
+        min-height: 300px; 
+        width: 100%; /* 確保佔滿寬度 */
+    }
+
     .card.dragover { border-color: var(--primary); background-color: #f0f8ff; transform: scale(1.01); }
     
     .drag-overlay {
@@ -121,15 +132,14 @@
     .import-instructions { font-size: 14px; color: #666; margin-bottom: 15px; background: #f0f8ff; padding: 12px; border-radius: 8px; border-left: 5px solid var(--primary); line-height: 1.6; }
     .tag { display: inline-block; background: #e9ecef; padding: 2px 6px; border-radius: 4px; font-size: 12px; margin: 0 4px; color: #495057; }
 
-    /* ★ 按鈕區塊修正：強制不換行，支援橫向捲動 ★ */
+    /* 按鈕區塊修正：強制不換行，支援橫向捲動 */
     .btn-group { 
         display: flex; 
-        flex-wrap: nowrap; /* 強制不換行 */
+        flex-wrap: nowrap; 
         gap: 10px; 
-        overflow-x: auto; /* 寬度不足時出現橫向卷軸 */
-        padding-bottom: 5px; /* 預留卷軸空間 */
+        overflow-x: auto; 
+        padding-bottom: 5px; 
     }
-    /* 自訂卷軸樣式 (讓卷軸比較好看) */
     .btn-group::-webkit-scrollbar { height: 6px; }
     .btn-group::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
     
@@ -139,7 +149,7 @@
       font-weight: bold; cursor: pointer; color: white; transition: all 0.2s;
       display: inline-flex; align-items: center; justify-content: center; gap: 8px;
       white-space: nowrap;
-      flex-shrink: 0; /* 防止按鈕被壓縮 */
+      flex-shrink: 0; 
     }
     button:active { transform: scale(0.95); }
     button:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -153,10 +163,10 @@
     .btn-clear { background-color: #6c757d; }
     .btn-file { background-color: #20c997; }
 
-    /* ★ 統計表樣式修正：高度壓縮至 3px ★ */
+    /* 統計表樣式修正：高度壓縮 */
     .stats-table { width: 100%; border-collapse: collapse; font-size: 18px; }
     .stats-table th, .stats-table td { 
-        padding: 2px 7px; 
+        padding: 3px 8px; 
         border: 1px solid #eef2f7; 
         text-align: left; 
     }
@@ -201,6 +211,7 @@
 
 <div class="app-container">
   
+  <!-- 上半部：操作區(左) + 統計(右) -->
   <div class="dashboard-top">
     <!-- 操作區 -->
     <div class="card form-card" id="dropCard">
@@ -213,7 +224,7 @@
           </div>
       </div>
       
-      <div class="version-tag">版本：v2026.01.27.01 (新增時清空欄位)</div>
+      <div class="version-tag">版本：v2026.01.27.03 (結果區塊修正版)</div>
       
       <div class="form-grid">
         <div class="form-group"><label>臨時編號</label><input type="text" id="tempId" placeholder="輸入臨時編號"></div>
@@ -259,7 +270,7 @@
     </div>
   </div>
 
-  <!-- 查詢結果 -->
+  <!-- 下半部：查詢結果 (強制換行，寬度 100%) -->
   <div class="card result-card">
     <h3>查詢結果</h3>
     <div id="resultArea" class="result-container">
@@ -489,16 +500,7 @@
   function saveStudent() {
     const d = { nT: document.getElementById("nT").value.trim(), nI: document.getElementById("nI").value.trim(), nN: document.getElementById("nN").value.trim(), nG: document.getElementById("nG").value, nS: document.getElementById("nS").value.trim(), nP1: document.getElementById("nP1").value.trim(), nP2: document.getElementById("nP2").value.trim() };
     if(!d.nT||!d.nI||!d.nN) return toast("必填欄位不可空白", "#D32F2F");
-    callGAS('addNewStudent', d, res => { 
-        if(res.error) { toast(res.error, "#D32F2F"); return; }
-        toast(res.success, "#28a745"); 
-        
-        // 清空欄位
-        document.querySelectorAll("#addModal input").forEach(el => el.value = "");
-        document.getElementById("nG").value = "男";
-        
-        closeModal('addModal'); updateStats(); 
-    });
+    callGAS('addNewStudent', d, res => { toast(res.success||res.error, res.success?"#28a745":"#D32F2F"); closeModal('addModal'); updateStats(); });
   }
 
   function doReset() {
