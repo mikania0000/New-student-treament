@@ -200,8 +200,13 @@
     .data-table tr:hover { background-color: var(--secondary); }
     .data-table tr:nth-child(even) { background-color: #fafbfc; }
 
-    .editable input { width: 100%; padding: 8px; font-size: 18px; text-align: center; border: 1px solid #aaa; }
-    .editing-row { background-color: #fff3cd !important; }
+    /* ★ 轉出學生專屬樣式 (備註欄有內容時觸發) ★ */
+    .transfer-row { background-color: #dc3545 !important; color: #fff !important; }
+    .transfer-row:hover { background-color: #c82333 !important; }
+    .transfer-row td { border-color: #e57373 !important; }
+    
+    .editable input { width: 100%; padding: 8px; font-size: 18px; text-align: center; border: 1px solid #aaa; color: #333; }
+    .editing-row { background-color: #fff3cd !important; color: #333 !important; }
 
     #statusMessage {
       position: fixed; top: 40px; left: 50%; transform: translateX(-50%);
@@ -599,7 +604,12 @@
         const tempId = r[0];
         const name = r[2];
 
-        h += '<tr>' + r.map((v, idx) => {
+        // ★ 檢查第 10 欄(索引 9)「備註欄」是否有內容，來決定是否套用紅底白字 ★
+        const remarkVal = String(r[9] || "").trim();
+        const isTransfer = remarkVal.length > 0;
+        const rowClass = isTransfer ? 'transfer-row' : '';
+
+        h += `<tr class="${rowClass}">` + r.map((v, idx) => {
           const edit = [1, 2, 3, 4, 5, 6, 9].includes(idx); 
           return `<td class="${edit?'editable':''}"><span>${v}</span>${edit?`<input type="text" value="${v}" style="display:none">`:''}</td>`;
         }).join('') + `
