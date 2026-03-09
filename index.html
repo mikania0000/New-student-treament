@@ -200,10 +200,15 @@
     .data-table tr:hover { background-color: var(--secondary); }
     .data-table tr:nth-child(even) { background-color: #fafbfc; }
 
+    /* ★ 指定特定欄位寬度與不換行 ★ */
+    .data-table .col-id { min-width: 14ch; white-space: nowrap !important; word-break: keep-all !important; }
+    .data-table .col-name { min-width: 9em; }
+    .data-table .col-gender { min-width: 5em; white-space: nowrap !important; }
+
     /* ★ 轉出學生專屬樣式 (備註欄有內容時觸發) ★ */
-    .transfer-row { background-color: #dc3545 !important; color: #fff !important; }
-    .transfer-row:hover { background-color: #c82333 !important; }
-    .transfer-row td { border-color: #e57373 !important; }
+    .transfer-row { background-color: #ffc0cb !important; color: #333 !important; }
+    .transfer-row:hover { background-color: #ffb6c1 !important; }
+    .transfer-row td { border-color: #ff99a8 !important; }
     
     .editable input { width: 100%; padding: 8px; font-size: 18px; text-align: center; border: 1px solid #aaa; color: #333; }
     .editing-row { background-color: #fff3cd !important; color: #333 !important; }
@@ -290,7 +295,7 @@
           </div>
       </div>
       
-      <div class="version-tag">版本：v2026.01.27.13 (正式版)</div>
+      <div class="version-tag">版本：v2026.03.09.01 (正式版)</div>
       
       <div class="form-grid">
         <div class="form-group"><label>臨時編號</label><input type="text" id="tempId" placeholder="輸入臨時編號"></div>
@@ -596,7 +601,13 @@
       if (res.error) { document.getElementById("resultArea").innerHTML = `<p style="text-align:center;padding:20px;color:#d32f2f">查詢錯誤：${res.error}</p>`; return; }
       if (!res.data || !res.data.length) { document.getElementById("resultArea").innerHTML = '<p style="text-align:center;padding:20px;color:#d32f2f">查無資料</p>'; return; }
       
-      let h = '<table class="data-table"><thead><tr>' + res.headers.map(v=>`<th>${v}</th>`).join('') + '<th>操作</th></tr></thead><tbody>';
+      let h = '<table class="data-table"><thead><tr>' + res.headers.map((v, idx) => {
+        let cls = "";
+        if (idx === 1) cls = "col-id";
+        if (idx === 2) cls = "col-name";
+        if (idx === 3) cls = "col-gender";
+        return `<th class="${cls}">${v}</th>`;
+      }).join('') + '<th>操作</th></tr></thead><tbody>';
       
       res.data.forEach(r => {
         const statusVal = String(r[7] || "0").trim();
@@ -611,7 +622,12 @@
 
         h += `<tr class="${rowClass}">` + r.map((v, idx) => {
           const edit = [1, 2, 3, 4, 5, 6, 9].includes(idx); 
-          return `<td class="${edit?'editable':''}"><span>${v}</span>${edit?`<input type="text" value="${v}" style="display:none">`:''}</td>`;
+          let cls = edit ? 'editable' : '';
+          if (idx === 1) cls += (cls ? ' ' : '') + 'col-id';
+          if (idx === 2) cls += (cls ? ' ' : '') + 'col-name';
+          if (idx === 3) cls += (cls ? ' ' : '') + 'col-gender';
+          
+          return `<td class="${cls}"><span>${v}</span>${edit?`<input type="text" value="${v}" style="display:none">`:''}</td>`;
         }).join('') + `
           <td style="white-space:nowrap;">
             <button class="btn-row-edit" onclick="toggleEdit(this)">修正</button>
