@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>鳳甲國中新生報到管理系統</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- ★ 載入 Google 登入驗證服務 API ★ -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     :root {
       --primary: #007BFF;
@@ -33,6 +35,43 @@
       font-size: var(--font-content);
       /* 防止底部導覽列遮擋內容 */
       padding-bottom: 80px; 
+    }
+
+    /* ★ 登入畫面遮罩樣式 ★ */
+    .login-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background-color: var(--bg);
+      z-index: 10000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(5px);
+    }
+    .login-box {
+      background: white;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+      text-align: center;
+      width: 90%;
+      max-width: 400px;
+      animation: modalFadeIn 0.5s ease;
+    }
+    .login-box h2 {
+      border-left: none;
+      padding-left: 0;
+      margin-bottom: 10px;
+      font-size: 32px;
+      color: var(--primary);
+    }
+    .login-box p { color: #666; margin-bottom: 25px; font-size: 18px; }
+    .login-box input {
+      text-align: center;
+      font-size: 24px;
+      letter-spacing: 5px;
+      padding: 15px;
+      margin-bottom: 20px;
     }
 
     .app-container {
@@ -270,6 +309,19 @@
 </head>
 <body>
 
+<!-- ★ 系統登入遮罩 ★ -->
+<div id="loginOverlay" class="login-overlay">
+  <div class="login-box">
+    <h2>鳳甲國中</h2>
+    <p>新生報到管理系統</p>
+    
+    <!-- ★ Google 登入按鈕容器 ★ -->
+    <div id="googleButtonDiv" style="display: flex; justify-content: center; margin-bottom: 15px;"></div>
+    
+    <p id="entryError" style="color: var(--danger); display: none; margin-top: 15px; margin-bottom: 0; font-size: 16px; font-weight: bold;">驗證失敗，請重試</p>
+  </div>
+</div>
+
 <div id="statusMessage"></div>
 <!-- 手機版導覽列 -->
 <div class="mobile-nav">
@@ -290,12 +342,15 @@
       
       <div class="header-row">
           <h2>鳳甲國中報到管理系統</h2>
-          <div id="connectionStatus" class="status-indicator">
-              <span class="pulse"></span> <span id="statusText">連線中...</span>
+          <div style="display: flex; gap: 10px; align-items: center;">
+              <button id="logoutBtn" style="display:none; background: #6c757d; padding: 6px 12px; font-size: 14px; border-radius: 4px; border: none; color: white; cursor: pointer; white-space: nowrap;" onclick="logout()">登出</button>
+              <div id="connectionStatus" class="status-indicator status-err">
+                  <span class="pulse"></span> <span id="statusText">尚未連線</span>
+              </div>
           </div>
       </div>
       
-      <div class="version-tag">版本：v2026.03.09.01 (正式版)</div>
+      <div class="version-tag">版本：v2026.03.09.03 (支援自動登入驗證)</div>
       
       <div class="form-grid">
         <div class="form-group"><label>臨時編號</label><input type="text" id="tempId" placeholder="輸入臨時編號"></div>
@@ -317,6 +372,7 @@
         <button id="addBtn" class="btn-add">➕ 新增新生</button>
         <button id="importBtn" class="btn-import">📥 匯入學生資料</button>
         <button id="importSportsBtn" class="btn-sports">🏀 匯入體育班</button>
+        <button id="accountBtn" class="btn-import" style="background-color: #6f42c1;">👥 帳號管理</button>
         <button id="resetBtn" class="btn-reset">🗑️ 系統重設</button>
         <button id="clearBtn" class="btn-clear">🧹 清除欄位</button>
       </div>
@@ -334,7 +390,7 @@
       </div>
       <div id="statsArea">
           <p style="text-align: center; color: #666; padding: 20px;">
-              <span style="display: inline-block; animation: spin 1s infinite linear;">↻</span> 連線至 Google 資料庫中...
+              等候系統連線中...
           </p>
       </div>
     </div>
@@ -434,6 +490,23 @@
   </div>
 </div>
 
+<!-- 彈窗：帳號管理 -->
+<div id="accountModal" class="modal">
+  <div class="modal-content">
+    <h3>👥 帳號管理 (白名單)</h3>
+    <div style="display:flex; gap: 10px; margin-bottom: 15px;">
+       <input type="text" id="newAccountEmail" placeholder="輸入新的 Google 帳號 (Email)">
+       <button onclick="addAccount()" class="btn-add">新增</button>
+    </div>
+    <div id="accountListArea" style="max-height: 400px; overflow-y: auto;">
+       <!-- 帳號列表會載入在此 -->
+    </div>
+    <div class="btn-group" style="justify-content: flex-end; margin-top: 15px;">
+      <button onclick="closeModal('accountModal')" class="btn-clear">關閉</button>
+    </div>
+  </div>
+</div>
+
 <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
 
 <script>
@@ -444,6 +517,110 @@
   let confirmCallback = null;
   let deleteTargetId = null;
   let currentImportType = 'student'; 
+  
+  // ==========================================
+  // ★ Google 帳號授權設定 ★
+  // ==========================================
+  const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID_HERE.apps.googleusercontent.com"; // ⚠️ 必須填入您申請的 Client ID
+
+  // 畫面載入時初始化 Google 登入模組與自動登入檢查
+  window.onload = function () {
+      const storedEmail = localStorage.getItem('userEmail');
+      if (storedEmail) {
+          // 若之前已登入過，檢查該帳號是否仍在白名單
+          const errorMsg = document.getElementById("entryError");
+          errorMsg.innerText = "自動驗證中...";
+          errorMsg.style.display = "block";
+          errorMsg.style.color = "#007BFF";
+          
+          callGAS('checkEmailWhitelist', storedEmail, res => {
+              if (res.allowed) {
+                  document.getElementById("logoutBtn").style.display = "block";
+                  unlockSystem("歡迎回來，" + storedEmail);
+              } else {
+                  // 白名單已失效，清除紀錄並重新顯示登入按鈕
+                  localStorage.removeItem('userEmail');
+                  errorMsg.style.display = "none";
+                  initGoogleAuth();
+              }
+          });
+      } else {
+          initGoogleAuth();
+      }
+  };
+
+  function initGoogleAuth() {
+      if (typeof google !== 'undefined' && google.accounts) {
+          google.accounts.id.initialize({
+              client_id: GOOGLE_CLIENT_ID,
+              callback: handleCredentialResponse
+          });
+          google.accounts.id.renderButton(
+              document.getElementById("googleButtonDiv"),
+              { theme: "outline", size: "large", width: 320 }  // 設定按鈕外觀
+          );
+      }
+  }
+
+  // 處理 Google 登入後的回傳資料 (JWT Token 解析)
+  function handleCredentialResponse(response) {
+      const data = parseJwt(response.credential);
+      console.log("嘗試登入的 Google 帳號: ", data.email);
+      
+      const errorMsg = document.getElementById("entryError");
+      // 檢查是否尚未設定 Client ID 
+      if (GOOGLE_CLIENT_ID === "YOUR_GOOGLE_CLIENT_ID_HERE.apps.googleusercontent.com") {
+          errorMsg.innerText = "請先至程式碼設定 GOOGLE_CLIENT_ID 才能啟用此功能。";
+          errorMsg.style.display = "block";
+          return;
+      }
+
+      errorMsg.innerText = "驗證中...";
+      errorMsg.style.display = "block";
+      errorMsg.style.color = "#007BFF";
+
+      // 呼叫後端檢查是否在白名單
+      callGAS('checkEmailWhitelist', data.email, res => {
+          if (res.allowed) {
+              // 記錄到 LocalStorage 以便下次自動登入
+              localStorage.setItem('userEmail', data.email);
+              document.getElementById("logoutBtn").style.display = "block";
+              unlockSystem("Google 帳號驗證成功");
+          } else {
+              errorMsg.style.color = "var(--danger)";
+              errorMsg.innerText = "無權限：此帳號不在白名單內 (" + data.email + ")";
+          }
+      });
+  }
+
+  // 解析 JWT Token 的輔助函式
+  function parseJwt(token) {
+      var base64Url = token.split('.')[1];
+      var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      return JSON.parse(jsonPayload);
+  }
+
+  // 登出功能
+  function logout() {
+      localStorage.removeItem('userEmail');
+      location.reload();
+  }
+
+  // 共用的解鎖進入系統函式
+  function unlockSystem(successMsg) {
+      document.getElementById("loginOverlay").style.display = "none";
+      toast(successMsg + "，正在載入資料...", "#28a745");
+      
+      document.getElementById("statsArea").innerHTML = `<p style="text-align: center; color: #666; padding: 20px;"><span style="display: inline-block; animation: spin 1s infinite linear;">↻</span> 連線至 Google 資料庫中...</p>`;
+      setStatus(false, "連線中...");
+      
+      loadSchools(); 
+      updateStats(); 
+      setInterval(updateStats, 15000); // 啟動自動刷新
+  }
 
   function setStatus(isOk, text) {
       const el = document.getElementById("connectionStatus");
@@ -457,7 +634,7 @@
       }
   }
 
-  // ★ 新增：手機版頁面切換函式
+  // 手機版頁面切換函式
   function switchTab(tab) {
       const isMobile = window.innerWidth <= 950;
       if (!isMobile) return; // 電腦版不動作
@@ -516,8 +693,6 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    loadSchools(); updateStats(); setInterval(updateStats, 15000);
-    
     // 初始化手機版 Tab (預設在首頁)
     if(window.innerWidth <= 950) {
         switchTab('home');
@@ -541,6 +716,12 @@
         document.getElementById("importModal").style.display='flex'; 
         document.getElementById("pasteArea").value = ''; 
         document.getElementById("importStatus").innerText = ''; 
+    };
+
+    // 帳號管理按鈕事件
+    document.getElementById("accountBtn").onclick = () => {
+        document.getElementById("accountModal").style.display = 'flex';
+        loadAccounts();
     };
     
     document.getElementById("importSportsBtn").onclick = () => { 
@@ -807,6 +988,81 @@
 
   function toast(t, c) { const m = document.getElementById("statusMessage"); m.style.backgroundColor = c; m.innerHTML = t; m.style.display = 'block'; setTimeout(() => m.style.display = 'none', 5000); }
   function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+  // ==========================================
+  // ★ 帳號管理功能 ★
+  // ==========================================
+  function loadAccounts() {
+      document.getElementById("accountListArea").innerHTML = '<p style="text-align:center; padding: 20px;"><span style="display:inline-block;animation:spin 1s infinite linear">↻</span> 載入帳號清單中...</p>';
+      callGAS('getWhitelist', {}, res => {
+          if(res.error) { document.getElementById("accountListArea").innerHTML = res.error; return; }
+          let h = '<table class="data-table" style="min-width:100%;"><thead><tr><th>Google 帳號 (Email)</th><th style="width:150px;">操作</th></tr></thead><tbody>';
+          if(res.emails.length === 0) h += '<tr><td colspan="2">目前無資料</td></tr>';
+          res.emails.forEach(email => {
+              h += `<tr>
+                      <td><span class="acc-span">${email}</span><input type="text" class="acc-input" value="${email}" style="display:none; width:100%; text-align:center; padding:5px;"></td>
+                      <td style="white-space:nowrap;">
+                          <button class="btn-row-edit" onclick="toggleAccountEdit(this, '${email}')">修改</button>
+                          <button class="btn-row-delete" onclick="deleteAccount('${email}')">刪除</button>
+                      </td>
+                    </tr>`;
+          });
+          h += '</tbody></table>';
+          document.getElementById("accountListArea").innerHTML = h;
+      });
+  }
+
+  function addAccount() {
+      const email = document.getElementById("newAccountEmail").value.trim();
+      if(!email) return toast("請輸入 Email", "#D32F2F");
+      toast("新增中...", "#007BFF");
+      callGAS('addWhitelistEmail', email, res => {
+          toast(res.success || res.error, res.success ? "#28a745" : "#D32F2F");
+          if(res.success) {
+              document.getElementById("newAccountEmail").value = "";
+              loadAccounts();
+          }
+      });
+  }
+
+  function toggleAccountEdit(btn, oldEmail) {
+      const tr = btn.closest('tr');
+      const span = tr.querySelector('.acc-span');
+      const input = tr.querySelector('.acc-input');
+      const isSaving = btn.innerText === "儲存";
+
+      if(!isSaving) {
+          btn.innerText = "儲存";
+          btn.style.background = "#28a745";
+          span.style.display = "none";
+          input.style.display = "block";
+      } else {
+          const newEmail = input.value.trim();
+          if(!newEmail) return toast("Email 不可為空", "#D32F2F");
+          btn.disabled = true;
+          btn.innerText = "儲存中...";
+          callGAS('updateWhitelistEmail', {oldEmail, newEmail}, res => {
+              toast(res.success || res.error, res.success ? "#28a745" : "#D32F2F");
+              if(res.success) {
+                  loadAccounts(); // 重新載入列表
+              } else {
+                  btn.disabled = false;
+                  btn.innerText = "修改";
+                  btn.style.background = "#17a2b8";
+              }
+          });
+      }
+  }
+
+  function deleteAccount(email) {
+      showConfirmModal(`確定要刪除帳號 ${email} 嗎？`, () => {
+          toast("刪除中...", "#007BFF");
+          callGAS('deleteWhitelistEmail', email, res => {
+              toast(res.success || res.error, res.success ? "#28a745" : "#D32F2F");
+              if(res.success) loadAccounts();
+          });
+      });
+  }
 </script>
 </body>
 </html>
