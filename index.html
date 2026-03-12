@@ -105,6 +105,13 @@
       /* 手機版預設隱藏統計卡片 */
       #statsCardContainer { display: none; margin-bottom: 20px; }
       #dropCard { display: block; margin-bottom: 20px; }
+      
+      /* 調整手機版頭部按鈕列 */
+      .top-actions {
+          flex-wrap: wrap;
+          justify-content: flex-end;
+          margin-top: 10px;
+      }
     }
     
     /* 電腦版：隱藏底部導覽列，並強制顯示所有卡片 */
@@ -145,7 +152,7 @@
     }
     .card.dragover .drag-overlay { display: flex; }
 
-    .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 15px; }
     h2 {
       margin: 0; color: var(--primary);
       border-left: 10px solid var(--primary);
@@ -154,6 +161,13 @@
       line-height: 1.2;
       font-weight: 800;
     }
+    
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
     .status-indicator {
       font-size: 14px; padding: 6px 12px; border-radius: 20px; background: #eee; color: #666; font-weight: bold; display: flex; align-items: center; gap: 8px;
     }
@@ -215,9 +229,18 @@
     .btn-add { background-color: var(--accent); }
     .btn-import { background-color: #483D8B; }
     .btn-sports { background-color: #fd7e14; }
-    .btn-reset { background-color: #8B0000; }
     .btn-clear { background-color: #6c757d; }
     .btn-file { background-color: #20c997; }
+    
+    /* 頂部小按鈕樣式 */
+    .btn-sm-top {
+      padding: 6px 12px; 
+      font-size: 14px; 
+      border-radius: 6px;
+    }
+    .btn-account { background-color: #6f42c1; }
+    .btn-reset { background-color: #8B0000; }
+    .btn-logout { background-color: #6c757d; }
 
     .btn-row-edit { background-color: #17a2b8; padding: 6px 12px; font-size: 16px; border-radius: 4px; margin-right: 5px; }
     .btn-row-checkin { background-color: var(--success); padding: 6px 12px; font-size: 16px; border-radius: 4px; margin-right: 5px; }
@@ -342,15 +365,19 @@
       
       <div class="header-row">
           <h2>鳳甲國中報到管理系統</h2>
-          <div style="display: flex; gap: 10px; align-items: center;">
-              <button id="logoutBtn" style="display:none; background: #6c757d; padding: 6px 12px; font-size: 14px; border-radius: 4px; border: none; color: white; cursor: pointer; white-space: nowrap;" onclick="logout()">登出</button>
+          
+          <!-- ★ 將管理按鈕與登出按鈕放在一起 ★ -->
+          <div class="top-actions">
+              <button id="accountBtn" class="btn-account btn-sm-top" style="display:none;">👥 帳號管理</button>
+              <button id="resetBtn" class="btn-reset btn-sm-top" style="display:none;">🗑️ 系統重設</button>
+              <button id="logoutBtn" class="btn-logout btn-sm-top" style="display:none;" onclick="logout()">登出</button>
               <div id="connectionStatus" class="status-indicator status-err">
                   <span class="pulse"></span> <span id="statusText">尚未連線</span>
               </div>
           </div>
       </div>
       
-      <div class="version-tag">版本：v2026.03.09.03 (支援自動登入驗證)</div>
+      <div class="version-tag">版本：v2026.03.12.04 (介面優化版)</div>
       
       <div class="form-grid">
         <div class="form-group"><label>臨時編號</label><input type="text" id="tempId" placeholder="輸入臨時編號"></div>
@@ -372,8 +399,6 @@
         <button id="addBtn" class="btn-add">➕ 新增新生</button>
         <button id="importBtn" class="btn-import">📥 匯入學生資料</button>
         <button id="importSportsBtn" class="btn-sports">🏀 匯入體育班</button>
-        <button id="accountBtn" class="btn-import" style="background-color: #6f42c1;">👥 帳號管理</button>
-        <button id="resetBtn" class="btn-reset">🗑️ 系統重設</button>
         <button id="clearBtn" class="btn-clear">🧹 清除欄位</button>
       </div>
       <p style="font-size: 16px; color: #666; margin-top: 15px; display: flex; align-items: center; gap: 5px;">
@@ -521,9 +546,7 @@
   // ==========================================
   // ★ Google 帳號授權設定 ★
   // ==========================================
-const GOOGLE_CLIENT_ID = "553016940521-araovlp30ctbqn6um5rr49q3es5jm4jg.apps.googleusercontent.com";
-
- // ⚠️ 必須填入您申請的 Client ID
+  const GOOGLE_CLIENT_ID = "553016940521-araovlp30ctbqn6um5rr49q3es5jm4jg.apps.googleusercontent.com";
 
   // 畫面載入時初始化 Google 登入模組與自動登入檢查
   window.onload = function () {
@@ -537,7 +560,7 @@ const GOOGLE_CLIENT_ID = "553016940521-araovlp30ctbqn6um5rr49q3es5jm4jg.apps.goo
           
           callGAS('checkEmailWhitelist', storedEmail, res => {
               if (res.allowed) {
-                  document.getElementById("logoutBtn").style.display = "block";
+                  showTopActions(); // 登入成功後顯示上方按鈕
                   unlockSystem("歡迎回來，" + storedEmail);
               } else {
                   // 白名單已失效，清除紀錄並重新顯示登入按鈕
@@ -570,7 +593,7 @@ const GOOGLE_CLIENT_ID = "553016940521-araovlp30ctbqn6um5rr49q3es5jm4jg.apps.goo
       console.log("嘗試登入的 Google 帳號: ", data.email);
       
       const errorMsg = document.getElementById("entryError");
-      // 檢查是否尚未設定 Client ID 
+      
       if (GOOGLE_CLIENT_ID === "YOUR_GOOGLE_CLIENT_ID_HERE.apps.googleusercontent.com") {
           errorMsg.innerText = "請先至程式碼設定 GOOGLE_CLIENT_ID 才能啟用此功能。";
           errorMsg.style.display = "block";
@@ -586,13 +609,20 @@ const GOOGLE_CLIENT_ID = "553016940521-araovlp30ctbqn6um5rr49q3es5jm4jg.apps.goo
           if (res.allowed) {
               // 記錄到 LocalStorage 以便下次自動登入
               localStorage.setItem('userEmail', data.email);
-              document.getElementById("logoutBtn").style.display = "block";
+              showTopActions(); // 登入成功後顯示上方按鈕
               unlockSystem("Google 帳號驗證成功");
           } else {
               errorMsg.style.color = "var(--danger)";
               errorMsg.innerText = "無權限：此帳號不在白名單內 (" + data.email + ")";
           }
       });
+  }
+
+  // 顯示右上角的控制按鈕
+  function showTopActions() {
+      document.getElementById("accountBtn").style.display = "inline-flex";
+      document.getElementById("resetBtn").style.display = "inline-flex";
+      document.getElementById("logoutBtn").style.display = "inline-flex";
   }
 
   // 解析 JWT Token 的輔助函式
@@ -709,6 +739,7 @@ const GOOGLE_CLIENT_ID = "553016940521-araovlp30ctbqn6um5rr49q3es5jm4jg.apps.goo
         document.getElementById("addModal").style.display = 'flex';
     };
 
+    // 系統重設按鈕 (已移至上方)
     document.getElementById("resetBtn").onclick = () => document.getElementById("pwdModal").style.display='flex';
     
     document.getElementById("importBtn").onclick = () => { 
@@ -720,7 +751,7 @@ const GOOGLE_CLIENT_ID = "553016940521-araovlp30ctbqn6um5rr49q3es5jm4jg.apps.goo
         document.getElementById("importStatus").innerText = ''; 
     };
 
-    // 帳號管理按鈕事件
+    // 帳號管理按鈕事件 (已移至上方)
     document.getElementById("accountBtn").onclick = () => {
         document.getElementById("accountModal").style.display = 'flex';
         loadAccounts();
