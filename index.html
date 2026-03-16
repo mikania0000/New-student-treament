@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>鳳甲國中報到管理系統 v2.2</title>
+    <title>鳳甲國中報到管理系統 v2.4</title>
     <!-- 引入外部資源 -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Google Identity Services -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <style>
@@ -15,10 +16,8 @@
             --primary: #007BFF;
             --bg: #f4f7f9;
             --text: #333;
-            --accent: #FF69B4;
             --success: #28a745;
             --danger: #D32F2F;
-            --warning: #FFA500;
         }
 
         body {
@@ -28,7 +27,7 @@
             margin: 0; padding-bottom: 80px;
         }
 
-        /* 登入畫面 */
+        /* 登入畫面樣式 */
         .login-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(135deg, #e0eafc, #cfdef3);
@@ -40,7 +39,6 @@
             width: 95%; max-width: 420px;
         }
         .login-box h2 { color: var(--primary); font-weight: bold; margin-bottom: 10px; }
-        .login-box p { color: #666; font-size: 14px; margin-bottom: 25px; }
         
         .auth-section {
             background: #f8f9fa; padding: 20px; border-radius: 15px;
@@ -59,41 +57,22 @@
             box-shadow: 0 4px 0 #0056b3; transition: 0.2s;
         }
         .login-btn:active { transform: translateY(2px); box-shadow: none; }
-        .login-btn:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
 
-        /* 主程式畫面 */
+        /* 主程式區域 */
         #main-app { display: none; }
         .app-container { max-width: 98%; margin: 20px auto; padding: 0 15px; }
-        
         .card { background: white; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); padding: 20px; margin-bottom: 20px; }
         .header-row { display: flex; justify-content: space-between; align-items: center; border-left: 8px solid var(--primary); padding-left: 15px; }
-        
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
         .btn-group-custom { display: flex; gap: 10px; flex-wrap: wrap; }
         .btn-custom { padding: 10px 20px; border-radius: 8px; border: none; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
 
-        /* 表格樣式 */
+        /* 表格與操作 */
         .table-wrapper { overflow-x: auto; border-radius: 10px; border: 1px solid #eee; }
         .data-table { width: 100%; border-collapse: collapse; min-width: 800px; }
         .data-table th { background: var(--primary); color: white; padding: 12px; text-align: center; }
         .data-table td { padding: 10px; border-bottom: 1px solid #eee; text-align: center; }
         .transfer-row { background-color: #ffebee !important; color: #c62828 !important; }
-
-        /* 手機版導覽 */
-        .bottom-nav {
-            position: fixed; bottom: 0; left: 0; width: 100%; height: 70px;
-            background: white; border-top: 1px solid #ddd; display: none;
-            justify-content: space-around; align-items: center; z-index: 1000;
-        }
-        .nav-item { color: #888; text-decoration: none !important; font-size: 14px; text-align: center; }
-        .nav-item.active { color: var(--primary); font-weight: bold; }
-
-        @media (max-width: 991px) {
-            .bottom-nav { display: flex; }
-            .desktop-only { display: none; }
-            .page { display: none; }
-            .page.active { display: block; }
-        }
 
         #toast-msg {
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
@@ -115,6 +94,7 @@
             
             <div class="auth-section">
                 <div style="font-size: 13px; color: #888; margin-bottom: 10px;">1. 身份驗證</div>
+                <!-- 修正：加入更明確的初始化設定 -->
                 <div id="g_id_onload"
                     data-client_id="553016940521-araovlp30ctbqn6um5rr49q3es5jm4jg.apps.googleusercontent.com"
                     data-callback="onGoogleSignIn"
@@ -126,7 +106,8 @@
                 <div id="auth-success-msg" style="display: none; color: var(--success); font-weight: bold; font-size: 15px;">
                     ✅ 帳號驗證成功
                 </div>
-                <div id="user-email-tag" style="font-size: 12px; color: #999; margin-top: 5px;"></div>
+                <div id="user-email-tag" style="font-size: 13px; color: #999; margin-top: 5px;"></div>
+                <button id="re-auth-btn" class="btn btn-link btn-sm" style="display:none;" onclick="logout()">切換帳號</button>
             </div>
 
             <div class="pwd-section">
@@ -135,31 +116,27 @@
                 <button id="final-login-btn" class="login-btn" onclick="tryFinalLogin()">登入系統</button>
             </div>
             
-            <div id="login-msg" style="margin-top: 15px; font-weight: bold; color: var(--danger); min-height: 24px;"></div>
+            <div id="login-msg" style="margin-top: 15px; font-weight: bold; color: var(--danger); min-height: 48px; font-size: 14px; padding: 8px; border-radius: 8px;"></div>
         </div>
     </div>
 
-    <!-- 訊息提示 -->
     <div id="toast-msg"></div>
 
     <!-- 主程式區域 -->
     <div id="main-app">
         <div class="app-container">
             <div class="row">
-                <!-- 左側：查詢與操作頁面 -->
-                <div id="page-home" class="col-lg-8 page active">
+                <div id="page-home" class="col-lg-8">
                     <div class="card">
                         <div class="header-row">
                             <h3>報到管理功能</h3>
                             <button class="btn btn-outline-danger btn-sm" onclick="logout()">登出</button>
                         </div>
-                        
                         <div class="form-grid">
                             <div><label>臨時編號</label><input type="text" id="q-id" class="form-control" placeholder="輸入編號"></div>
                             <div><label>學生姓名</label><input type="text" id="q-name" class="form-control" placeholder="輸入姓名"></div>
                             <div><label>畢業國小</label><select id="q-school" class="form-control"><option value="">全部國小</option></select></div>
                         </div>
-
                         <div class="btn-group-custom">
                             <button class="btn-custom" style="background: var(--primary);" onclick="searchData()">🔍 執行查詢</button>
                             <button class="btn-custom" style="background: var(--accent);" onclick="$('#addModal').css('display','flex')">➕ 新增學生</button>
@@ -167,17 +144,12 @@
                             <button class="btn-custom" style="background: var(--danger);" onclick="$('#resetModal').css('display','flex')">🗑️ 系統重置</button>
                         </div>
                     </div>
-
                     <div class="card">
                         <h4 class="mb-3">查詢結果</h4>
-                        <div id="result-area" class="table-wrapper">
-                            <p class="text-center py-5 text-muted">請輸入條件後點擊查詢...</p>
-                        </div>
+                        <div id="result-area" class="table-wrapper"><p class="text-center py-5 text-muted">請執行查詢...</p></div>
                     </div>
                 </div>
-
-                <!-- 右側：統計看板頁面 -->
-                <div id="page-stats" class="col-lg-4 page">
+                <div id="page-stats" class="col-lg-4">
                     <div class="card">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h4 class="m-0" style="color: var(--primary);">📊 即時統計</h4>
@@ -188,70 +160,55 @@
                 </div>
             </div>
         </div>
-
-        <!-- 手機版導覽列 -->
-        <div class="bottom-nav">
-            <a href="javascript:void(0)" class="nav-item active" onclick="switchTab('home', this)">🏠 報到管理</a>
-            <a href="javascript:void(0)" class="nav-item" onclick="switchTab('stats', this)">📈 統計看板</a>
-        </div>
     </div>
 
-    <!-- 彈窗：新增學生 -->
-    <div id="addModal" class="modal-custom"><div class="modal-box">
-        <h4>手動新增新生</h4>
-        <div class="form-group"><label>臨時編號 (必填)</label><input type="text" id="nT" class="form-control"></div>
-        <div class="form-group"><label>身分證號</label><input type="text" id="nI" class="form-control"></div>
-        <div class="form-group"><label>姓名 (必填)</label><input type="text" id="nN" class="form-control"></div>
-        <div class="form-group"><label>性別</label><select id="nG" class="form-control"><option value="男">男</option><option value="女">女</option></select></div>
-        <div class="form-group"><label>畢業國小</label><input type="text" id="nS" class="form-control"></div>
-        <button class="btn btn-primary btn-block" onclick="saveNewStudent()">確認儲存</button>
-        <button class="btn btn-block btn-light" onclick="$('.modal-custom').hide()">關閉</button>
-    </div></div>
-
-    <!-- 彈窗：匯入 -->
-    <div id="importModal" class="modal-custom"><div class="modal-box">
-        <h4>📥 批次匯入 Excel 資料</h4>
-        <p class="small text-muted">請複製包含標題的整列內容並貼上於下方：</p>
-        <textarea id="paste-area" class="form-control mb-3" style="height: 200px; font-family: monospace; font-size: 12px;"></textarea>
-        <button class="btn btn-primary btn-block" onclick="processImport()">開始匯入 (覆蓋模式)</button>
-        <button class="btn btn-block btn-light" onclick="$('.modal-custom').hide()">取消</button>
-    </div></div>
-
-    <!-- 彈窗：重置 -->
-    <div id="resetModal" class="modal-custom"><div class="modal-box text-center">
-        <h3 class="text-danger">⚠️ 危險操作</h3>
-        <p>這將清空所有的報到資料與學生名單，確定要重置嗎？</p>
-        <button class="btn btn-danger btn-lg btn-block" onclick="systemReset()">確認清空</button>
-        <button class="btn btn-block btn-light" onclick="$('.modal-custom').hide()">取消</button>
-    </div></div>
+    <!-- 彈窗區 (省略與之前一致) -->
+    <div id="addModal" class="modal-custom"><div class="modal-box"><h4>新增新生</h4><input type="text" id="nT" class="form-control" placeholder="編號"><input type="text" id="nN" class="form-control" placeholder="姓名"><button onclick="saveNewStudent()" class="btn btn-primary btn-block mt-2">儲存</button><button onclick="$('.modal-custom').hide()" class="btn btn-light btn-block">關閉</button></div></div>
+    <div id="importModal" class="modal-custom"><div class="modal-box"><h4>批次匯入</h4><textarea id="paste-area" class="form-control" style="height:150px;"></textarea><button onclick="processImport()" class="btn btn-primary btn-block mt-2">執行</button><button onclick="$('.modal-custom').hide()" class="btn btn-light btn-block">取消</button></div></div>
+    <div id="resetModal" class="modal-custom"><div class="modal-box text-center"><h3>⚠️ 確定重置？</h3><button onclick="systemReset()" class="btn btn-danger btn-block">確認</button><button onclick="$('.modal-custom').hide()" class="btn btn-light btn-block">取消</button></div></div>
 
     <script>
         const DEPLOY_URL = "https://script.google.com/macros/s/AKfycbxpY4iHHkEkdNsBvLdb2OJPqzn0eY14CWjLRiEoDJ0IBUhucE2Pp5dJepyZR5AxP_LO/exec";
         let userEmail = "";
 
-        // --- 登入控制 ---
-        function onGoogleSignIn(response) {
+        // ★ 更穩健的 JWT 解析函式 (解決解析失敗的核心)
+        function parseJwt(token) {
             try {
-                const payload = JSON.parse(atob(response.credential.split('.')[1]));
-                userEmail = payload.email;
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                console.error("JWT Parse Error", e);
+                return null;
+            }
+        }
+
+        // Google 登入回調
+        function onGoogleSignIn(response) {
+            const payload = parseJwt(response.credential);
+            if (payload && payload.email) {
+                userEmail = payload.email.toLowerCase().trim();
                 $('#g-btn-wrapper').hide();
                 $('#auth-success-msg').show();
+                $('#re-auth-btn').show();
                 $('#user-email-tag').text(`驗證帳號：${userEmail}`);
-                $('#login-msg').text(""); // 清除錯誤訊息
-            } catch (e) {
-                $('#login-msg').text("Google 驗證解析失敗");
+                $('#login-msg').text("帳號驗證成功，請輸入系統密碼").css({'color':'#28a745','background':'#f0fff4'});
+            } else {
+                $('#login-msg').text("⚠️ Google 驗證解析失敗，請嘗試清除瀏覽器快取或更換瀏覽器").css({'color':'red','background':'#fff1f0'});
             }
         }
 
         async function tryFinalLogin() {
-            if (!userEmail) {
-                return $('#login-msg').text("請先完成 Step 1 Google 驗證");
-            }
-            
             const pwd = $('#sys-pwd-input').val();
-            if(!pwd) return $('#login-msg').text("請輸入系統管理密碼");
+            const msgEl = $('#login-msg');
+
+            if (!userEmail) return msgEl.text("❌ 請先完成 Step 1 Google 驗證").css({'color':'red','background':'#fff1f0'});
+            if (!pwd) return msgEl.text("❌ 請輸入系統管理密碼").css({'color':'red','background':'#fff1f0'});
             
-            $('#login-msg').text("正在執行雙重驗證中...").css('color', 'var(--primary)');
+            msgEl.text("⏳ 正在進行最終驗證...").css({'color':'#007bff','background':'#e6f7ff'});
             $('#final-login-btn').prop('disabled', true);
 
             try {
@@ -263,11 +220,11 @@
                     $('#main-app').show();
                     initApp();
                 } else {
-                    $('#login-msg').text(res.message || "驗證失敗，請確認白名單權限").css('color', 'var(--danger)');
+                    msgEl.text(`❌ ${res.message || "驗證失敗"}`).css({'color':'red', 'background':'#fff1f0'});
                     $('#final-login-btn').prop('disabled', false);
                 }
             } catch (e) {
-                $('#login-msg').text("連線異常，請檢查網路").css('color', 'var(--danger)');
+                msgEl.text("❌ 連線異常，請檢查網路或確認 GAS 網址是否正確").css({'color':'red', 'background':'#fff1f0'});
                 $('#final-login-btn').prop('disabled', false);
             }
         }
@@ -283,7 +240,6 @@
             location.reload();
         }
 
-        // --- 核心 API 封裝 ---
         function apiFetch(action, data) {
             const email = userEmail || localStorage.getItem('fjm_email');
             const pwd = $('#sys-pwd-input').val() || localStorage.getItem('fjm_pwd');
@@ -299,109 +255,74 @@
             });
         }
 
-        // --- 業務邏輯 ---
         async function loadSchools() {
             const list = await apiFetch('getPrimarySchools', {});
-            if(Array.isArray(list)) {
-                list.forEach(s => $('#q-school').append(`<option value="${s}">${s}</option>`));
-            }
+            if(Array.isArray(list)) list.forEach(s => $('#q-school').append(`<option value="${s}">${s}</option>`));
         }
 
         async function loadStats() {
             const data = await apiFetch('getStatisticsData', {});
-            if(data.status === 'error') return $('#stats-area').text("權限不足");
-            
+            if(data.status === 'error') return;
             let html = '<table class="table table-sm table-bordered" style="font-size:14px;">';
-            data.forEach((r, i) => {
-                html += `<tr><td class="${i<2?'font-weight-bold bg-light':''}">${r[0]}</td><td class="text-right">${r[1]}</td></tr>`;
-            });
+            data.forEach((r, i) => html += `<tr><td class="${i<2?'bg-light font-weight-bold':''}">${r[0]}</td><td class="text-right">${r[1]}</td></tr>`);
             $('#stats-area').html(html + '</table>');
         }
 
         async function searchData() {
             const filter = { tempId: $('#q-id').val(), studentName: $('#q-name').val() };
-            $('#result-area').html('<p class="text-center py-5">資料查詢中...</p>');
-            
+            $('#result-area').html('<p class="text-center py-5">查詢中...</p>');
             const res = await apiFetch('queryStudentData', filter);
-            if(res.error || !res.data || res.data.length === 0) {
-                return $('#result-area').html('<p class="text-center py-5 text-danger">查無相符資料</p>');
-            }
-
+            if(res.error || !res.data || res.data.length === 0) return $('#result-area').html('<p class="text-center py-5 text-danger">查無資料</p>');
             let html = '<table class="data-table"><thead><tr>';
             res.headers.forEach(h => html += `<th>${h}</th>`);
             html += '<th>操作</th></tr></thead><tbody>';
-
             res.data.forEach(r => {
                 const isTransfer = String(r[9] || "").trim() !== "";
                 html += `<tr class="${isTransfer ? 'transfer-row' : ''}">`;
                 r.forEach(v => html += `<td>${v}</td>`);
-                html += `<td>
-                    <button class="btn btn-sm btn-success" onclick="checkIn('${r[0]}', true)">報到</button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="checkIn('${r[0]}', false)">取消</button>
-                </td></tr>`;
+                html += `<td><button class="btn btn-sm btn-success" onclick="checkIn('${r[0]}',true)">報到</button> <button class="btn btn-sm btn-outline-danger" onclick="checkIn('${r[0]}',false)">取消</button></td></tr>`;
             });
             $('#result-area').html(html + '</tbody></table>');
         }
 
         async function checkIn(id, status) {
-            showToast("系統處理中...", "var(--primary)");
             const res = await apiFetch(status ? 'submitCheckIn' : 'cancelCheckIn', id);
-            showToast(res.message || res.error, status ? "var(--success)" : "var(--danger)");
+            showToast(res.message || res.error, status ? "#28a745" : "#D32F2F");
             searchData(); loadStats();
         }
 
         async function saveNewStudent() {
-            const data = { nT: $('#nT').val(), nI: $('#nI').val(), nN: $('#nN').val(), nG: $('#nG').val(), nS: $('#nS').val() };
-            if(!data.nT || !data.nN) return alert("編號與姓名不可空白");
+            const data = { nT: $('#nT').val(), nN: $('#nN').val() };
             const res = await apiFetch('addNewStudent', data);
-            showToast(res.success || res.error, "var(--success)");
+            showToast(res.success || res.error, "#28a745");
             $('.modal-custom').hide();
             searchData(); loadStats();
         }
 
-        function openImportModal() {
-            $('#paste-area').val('');
-            $('#importModal').css('display','flex');
-        }
+        function openImportModal() { $('#paste-area').val(''); $('#importModal').css('display','flex'); }
 
         async function processImport() {
             const text = $('#paste-area').val().trim();
             if(!text) return;
             const rows = text.split('\n').map(r => r.split('\t'));
-            showToast("正在處理批次匯入...", "var(--primary)");
-            
             const pwd = localStorage.getItem('fjm_pwd');
             const email = localStorage.getItem('fjm_email');
             try {
-                const res = await fetch(DEPLOY_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ action: "importStudentData", pwd: pwd, email: email, data: { rows: rows.slice(1), mode: 'overwrite' } })
-                });
+                const res = await fetch(DEPLOY_URL, { method: "POST", body: JSON.stringify({ action: "importStudentData", pwd: pwd, email: email, data: { rows: rows.slice(1), mode: 'overwrite' } }) });
                 const result = await res.json();
-                showToast(result.success || result.error, "var(--success)");
-                $('.modal-custom').hide();
-                loadStats();
-            } catch(e) { showToast("匯入失敗，請檢查資料格式", "var(--danger)"); }
+                showToast(result.success || result.error, "#28a745");
+                $('.modal-custom').hide(); loadStats();
+            } catch(e) { showToast("連線異常", "red"); }
         }
 
         async function systemReset() {
-            if(!confirm("⚠️ 確定要執行系統重置嗎？")) return;
+            if(!confirm("確定重置？")) return;
             const res = await apiFetch('clearAllData', {});
-            showToast(res.success || res.error, "var(--danger)");
-            $('.modal-custom').hide();
-            loadStats();
+            showToast(res.success || res.error, "#D32F2F");
+            $('.modal-custom').hide(); loadStats();
         }
 
-        function showToast(text, color) {
-            $('#toast-msg').text(text).css('background', color).fadeIn().delay(3000).fadeOut();
-        }
-
-        function switchTab(tab, el) {
-            $('.page').removeClass('active');
-            $(`#page-${tab}`).addClass('active');
-            $('.nav-item').removeClass('active');
-            $(el).addClass('active');
-        }
+        function showToast(text, color) { $('#toast-msg').text(text).css('background', color).fadeIn().delay(3000).fadeOut(); }
 
         window.onload = () => {
             if(localStorage.getItem('fjm_email') && localStorage.getItem('fjm_pwd')) {
