@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>鳳甲國中報到管理系統 v2.6</title>
+    <title>鳳甲國中報到管理系統 v2.7</title>
     <!-- 引入外部資源 -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -76,16 +76,25 @@
         .btn-custom:hover { opacity: 0.9; }
         .btn-custom:active { transform: scale(0.96); }
 
-        /* --- 表格與操作 --- */
-        .table-wrapper { overflow-x: auto; border-radius: 10px; border: 1px solid #eee; background: #fff; }
-        .data-table { width: 100%; border-collapse: collapse; min-width: 900px; font-size: 15px; }
-        .data-table th { background: var(--primary); color: white; padding: 12px; text-align: center; white-space: nowrap; border: 1px solid #dee2e6; }
-        .data-table td { padding: 10px; border: 1px solid #dee2e6; text-align: center; vertical-align: middle; }
-        .data-table tr:nth-child(even) { background-color: #f8f9fa; }
+        /* --- 查詢結果表格 (撐滿設計) --- */
+        .table-wrapper { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid #dee2e6; background: #fff; }
+        .data-table { width: 100%; border-collapse: collapse; min-width: 1000px; font-size: 15px; margin: 0; }
+        .data-table th { background: var(--primary); color: white; padding: 12px 10px; text-align: center; white-space: nowrap; border: 1px solid #b8daff; font-weight: bold; }
+        .data-table td { padding: 12px 10px; border: 1px solid #dee2e6; text-align: center; vertical-align: middle; }
+        .data-table tbody tr:hover { background-color: #f4f8ff; }
         
         /* 轉出/特殊狀態學生標示 (紅底) */
         .transfer-row { background-color: #ffebee !important; color: #c62828 !important; font-weight: bold; }
         .transfer-row td { border-color: #ffcdd2; }
+
+        /* --- 即時統計表格 (緊湊圓角設計) --- */
+        .stats-wrapper { border-radius: 8px; border: 1px solid #dee2e6; overflow: hidden; background: white; }
+        .stats-table { width: 100%; border-collapse: collapse; font-size: 15px; margin: 0; }
+        .stats-table td { padding: 8px 12px; border-bottom: 1px solid #dee2e6; vertical-align: middle; }
+        .stats-table tr:last-child td { border-bottom: none; }
+        .stats-table td:first-child { width: 50%; color: #666; border-right: 1px solid #dee2e6; }
+        .stats-table td.val-col { text-align: right; font-weight: bold; color: #333; }
+        .stats-table .highlight-row td { color: var(--primary); font-weight: bold; background-color: #f8f9fa; }
 
         /* --- 提示訊息與彈窗 --- */
         #toast-msg {
@@ -207,7 +216,9 @@
                             <h4 class="m-0" style="color: var(--primary);">📊 即時統計</h4>
                             <button class="btn btn-sm btn-light border" onclick="loadStats()">↻ 刷新</button>
                         </div>
-                        <div id="stats-area" class="table-wrapper text-center py-4 text-muted">載入中...</div>
+                        <div id="stats-area">
+                            <p class="text-center py-4 text-muted">載入中...</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -371,18 +382,19 @@
 
         async function loadStats() {
             const data = await apiFetch('getStatisticsData', {});
-            if(data.status === 'error') return $('#stats-area').text("權限不足，無法讀取");
+            if(data.status === 'error') return $('#stats-area').html('<p class="text-center py-4 text-danger">權限不足，無法讀取</p>');
             
-            let html = '<table class="table table-sm table-bordered m-0" style="font-size:15px;"><tbody>';
+            // ★ 修改這裡：套用緊湊的 stats-table CSS ★
+            let html = '<div class="stats-wrapper"><table class="stats-table"><tbody>';
             data.forEach((r, i) => {
-                const isHeader = i < 2;
-                html += `<tr>
-                            <td class="${isHeader ? 'bg-light font-weight-bold text-primary' : 'text-secondary'}">${r[0]}</td>
-                            <td class="text-right ${isHeader ? 'bg-light font-weight-bold text-primary' : 'font-weight-bold'}">${r[1]}</td>
+                const isHeader = i < 2; // 前兩列為藍色高亮
+                html += `<tr class="${isHeader ? 'highlight-row' : ''}">
+                            <td>${r[0]}</td>
+                            <td class="val-col">${r[1]}</td>
                          </tr>`;
             });
-            html += '</tbody></table>';
-            $('#stats-area').html(html).removeClass('text-center py-4 text-muted');
+            html += '</tbody></table></div>';
+            $('#stats-area').html(html);
         }
 
         function clearFields() {
