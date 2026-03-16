@@ -133,13 +133,24 @@
                         </div>
                         <div class="form-grid">
                             <div><label>臨時編號</label><input type="text" id="q-id" class="form-control" placeholder="輸入編號"></div>
+                            <div><label>身分證號</label><input type="text" id="q-idnum" class="form-control" placeholder="輸入證號"></div>
                             <div><label>學生姓名</label><input type="text" id="q-name" class="form-control" placeholder="輸入姓名"></div>
                             <div><label>畢業國小</label><select id="q-school" class="form-control"><option value="">全部國小</option></select></div>
+                            <div>
+                                <label>報到狀態</label>
+                                <select id="q-status" class="form-control">
+                                    <option value="">全部</option>
+                                    <option value="已報到">已報到</option>
+                                    <option value="未報到">未報到</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="btn-group-custom">
                             <button class="btn-custom" style="background: var(--primary);" onclick="searchData()">🔍 執行查詢</button>
                             <button class="btn-custom" style="background: var(--accent);" onclick="$('#addModal').css('display','flex')">➕ 新增學生</button>
-                            <button class="btn-custom" style="background: #483D8B;" onclick="openImportModal()">📥 批次匯入</button>
+                            <button class="btn-custom" style="background: #483D8B;" onclick="openImportModal('student')">📥 匯入學生資料</button>
+                            <button class="btn-custom" style="background: #fd7e14;" onclick="openImportModal('sports')">🏀 匯入體育班</button>
+                            <button class="btn-custom" style="background: #6c757d;" onclick="clearFields()">🧹 清除欄位</button>
                             <button class="btn-custom" style="background: var(--danger);" onclick="$('#resetModal').css('display','flex')">🗑️ 系統重置</button>
                         </div>
                     </div>
@@ -162,13 +173,25 @@
     </div>
 
     <!-- 彈窗區 -->
-    <div id="addModal" class="modal-custom"><div class="modal-box"><h4>新增新生</h4><input type="text" id="nT" class="form-control" placeholder="編號"><input type="text" id="nN" class="form-control" placeholder="姓名"><button onclick="saveNewStudent()" class="btn btn-primary btn-block mt-2">儲存</button><button onclick="$('.modal-custom').hide()" class="btn btn-light btn-block">關閉</button></div></div>
-    <div id="importModal" class="modal-custom"><div class="modal-box"><h4>批次匯入</h4><textarea id="paste-area" class="form-control" style="height:150px;"></textarea><button onclick="processImport()" class="btn btn-primary btn-block mt-2">執行</button><button onclick="$('.modal-custom').hide()" class="btn btn-light btn-block">取消</button></div></div>
+    <div id="addModal" class="modal-custom"><div class="modal-box">
+        <h4>手動新增新生</h4>
+        <div class="form-group"><label>臨時編號 (必填)</label><input type="text" id="nT" class="form-control" placeholder="編號"></div>
+        <div class="form-group"><label>身分證號</label><input type="text" id="nI" class="form-control" placeholder="身分證號"></div>
+        <div class="form-group"><label>姓名 (必填)</label><input type="text" id="nN" class="form-control" placeholder="姓名"></div>
+        <div class="form-group"><label>性別</label><select id="nG" class="form-control"><option value="男">男</option><option value="女">女</option></select></div>
+        <div class="form-group"><label>畢業國小</label><input type="text" id="nS" class="form-control" placeholder="畢業國小"></div>
+        <div class="form-group"><label>電話 1</label><input type="text" id="nP1" class="form-control" placeholder="聯絡電話 1"></div>
+        <div class="form-group"><label>電話 2</label><input type="text" id="nP2" class="form-control" placeholder="聯絡電話 2"></div>
+        <button onclick="saveNewStudent()" class="btn btn-primary btn-block mt-2">確認儲存</button>
+        <button onclick="$('.modal-custom').hide()" class="btn btn-light btn-block">關閉</button>
+    </div></div>
+    <div id="importModal" class="modal-custom"><div class="modal-box"><h4 id="import-title">批次匯入</h4><textarea id="paste-area" class="form-control" style="height:150px;"></textarea><button onclick="processImport()" class="btn btn-primary btn-block mt-2">執行</button><button onclick="$('.modal-custom').hide()" class="btn btn-light btn-block">取消</button></div></div>
     <div id="resetModal" class="modal-custom"><div class="modal-box text-center"><h3>⚠️ 確定重置？</h3><button onclick="systemReset()" class="btn btn-danger btn-block">確認</button><button onclick="$('.modal-custom').hide()" class="btn btn-light btn-block">取消</button></div></div>
 
     <script>
         const DEPLOY_URL = "https://script.google.com/macros/s/AKfycbxpY4iHHkEkdNsBvLdb2OJPqzn0eY14CWjLRiEoDJ0IBUhucE2Pp5dJepyZR5AxP_LO/exec";
         let userEmail = "";
+        let currentImportType = 'student';
 
         // ★ 最穩健的 Base64Url 解碼函式
         function parseJwt(token) {
@@ -272,8 +295,19 @@
             $('#stats-area').html(html + '</table>');
         }
 
+        function clearFields() {
+            $('#q-id, #q-idnum, #q-name, #q-school, #q-status').val('');
+            $('#result-area').html('<p class="text-center py-5 text-muted">欄位已清空，請重新輸入條件執行查詢...</p>');
+        }
+
         async function searchData() {
-            const filter = { tempId: $('#q-id').val(), studentName: $('#q-name').val() };
+            const filter = { 
+                tempId: $('#q-id').val(), 
+                idNumber: $('#q-idnum').val(),
+                studentName: $('#q-name').val(),
+                primarySchool: $('#q-school').val(),
+                reportStatus: $('#q-status').val()
+            };
             $('#result-area').html('<p class="text-center py-5">查詢中...</p>');
             const res = await apiFetch('queryStudentData', filter);
             if(res.error || !res.data || res.data.length === 0) return $('#result-area').html('<p class="text-center py-5 text-danger">查無資料</p>');
@@ -296,14 +330,23 @@
         }
 
         async function saveNewStudent() {
-            const data = { nT: $('#nT').val(), nN: $('#nN').val() };
+            const data = { 
+                nT: $('#nT').val(), nI: $('#nI').val(), nN: $('#nN').val(), 
+                nG: $('#nG').val(), nS: $('#nS').val(), nP1: $('#nP1').val(), nP2: $('#nP2').val() 
+            };
+            if(!data.nT || !data.nN) return alert("編號與姓名為必填");
             const res = await apiFetch('addNewStudent', data);
             showToast(res.success || res.error, "#28a745");
             $('.modal-custom').hide();
             searchData(); loadStats();
         }
 
-        function openImportModal() { $('#paste-area').val(''); $('#importModal').css('display','flex'); }
+        function openImportModal(type) { 
+            currentImportType = type;
+            $('#import-title').text(type === 'student' ? '📥 批次匯入學生資料' : '🏀 批次匯入體育班');
+            $('#paste-area').val(''); 
+            $('#importModal').css('display','flex'); 
+        }
 
         async function processImport() {
             const text = $('#paste-area').val().trim();
@@ -311,8 +354,9 @@
             const rows = text.split('\n').map(r => r.split('\t'));
             const pwd = localStorage.getItem('fjm_pwd');
             const email = localStorage.getItem('fjm_email');
+            const actionName = currentImportType === 'student' ? "importStudentData" : "importSportsData";
             try {
-                const res = await fetch(DEPLOY_URL, { method: "POST", body: JSON.stringify({ action: "importStudentData", pwd: pwd, email: email, data: { rows: rows.slice(1), mode: 'overwrite' } }) });
+                const res = await fetch(DEPLOY_URL, { method: "POST", body: JSON.stringify({ action: actionName, pwd: pwd, email: email, data: { rows: rows.slice(1), mode: 'overwrite' } }) });
                 const result = await res.json();
                 showToast(result.success || result.error, "#28a745");
                 $('.modal-custom').hide(); loadStats();
