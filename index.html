@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>鳳甲國中報到管理系統 v2.1</title>
+    <title>鳳甲國中報到管理系統 v2.2</title>
     <!-- 引入外部資源 -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -37,19 +37,29 @@
         .login-box {
             background: white; padding: 40px; border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center;
-            width: 90%; max-width: 400px;
+            width: 95%; max-width: 420px;
         }
-        .login-box h2 { color: var(--primary); font-weight: bold; margin-bottom: 25px; }
-        .step-tag { font-size: 14px; color: #666; margin-bottom: 10px; font-weight: bold; }
+        .login-box h2 { color: var(--primary); font-weight: bold; margin-bottom: 10px; }
+        .login-box p { color: #666; font-size: 14px; margin-bottom: 25px; }
         
+        .auth-section {
+            background: #f8f9fa; padding: 20px; border-radius: 15px;
+            border: 1px solid #eee; margin-bottom: 20px;
+        }
+
         .sys-input {
             width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px;
-            font-size: 18px; text-align: center; margin-bottom: 15px; outline: none;
+            font-size: 18px; text-align: center; margin-bottom: 15px; outline: none; transition: 0.3s;
         }
+        .sys-input:focus { border-color: var(--primary); }
+        
         .login-btn {
             width: 100%; background: var(--primary); color: white; border: none;
-            padding: 12px; border-radius: 10px; font-weight: bold; font-size: 18px; cursor: pointer;
+            padding: 14px; border-radius: 10px; font-weight: bold; font-size: 18px; cursor: pointer;
+            box-shadow: 0 4px 0 #0056b3; transition: 0.2s;
         }
+        .login-btn:active { transform: translateY(2px); box-shadow: none; }
+        .login-btn:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
 
         /* 主程式畫面 */
         #main-app { display: none; }
@@ -61,7 +71,6 @@
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
         .btn-group-custom { display: flex; gap: 10px; flex-wrap: wrap; }
         .btn-custom { padding: 10px 20px; border-radius: 8px; border: none; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-custom:active { transform: scale(0.98); }
 
         /* 表格樣式 */
         .table-wrapper { overflow-x: auto; border-radius: 10px; border: 1px solid #eee; }
@@ -98,30 +107,35 @@
 </head>
 <body>
 
-    <!-- 雙重驗證畫面 -->
+    <!-- 整合式雙重驗證畫面 -->
     <div id="login-overlay" class="login-overlay">
         <div class="login-box">
             <h2>鳳甲國中報到系統</h2>
+            <p>請完成 Google 驗證並輸入系統密碼</p>
             
-            <div id="step1-box">
-                <div class="step-tag">Step 1. 請使用 Google 帳號授權</div>
+            <div class="auth-section">
+                <div style="font-size: 13px; color: #888; margin-bottom: 10px;">1. 身份驗證</div>
                 <div id="g_id_onload"
                     data-client_id="553016940521-araovlp30ctbqn6um5rr49q3es5jm4jg.apps.googleusercontent.com"
                     data-callback="onGoogleSignIn"
                     data-auto_prompt="false">
                 </div>
-                <div class="g_id_signin" data-type="standard" data-size="large" data-width="320"></div>
+                <div id="g-btn-wrapper" style="display: flex; justify-content: center;">
+                    <div class="g_id_signin" data-type="standard" data-size="large" data-width="320"></div>
+                </div>
+                <div id="auth-success-msg" style="display: none; color: var(--success); font-weight: bold; font-size: 15px;">
+                    ✅ 帳號驗證成功
+                </div>
+                <div id="user-email-tag" style="font-size: 12px; color: #999; margin-top: 5px;"></div>
             </div>
 
-            <div id="step2-box" style="display: none;">
-                <div class="step-tag">Step 2. 輸入系統管理密碼</div>
-                <p id="auth-email-hint" style="font-size: 14px; color: var(--success); margin-bottom: 15px;"></p>
-                <input type="password" id="sys-pwd-input" class="sys-input" placeholder="請輸入密碼">
-                <button class="login-btn" onclick="tryFinalLogin()">登入系統</button>
-                <button class="btn btn-link btn-sm mt-2" onclick="location.reload()">更換帳號</button>
+            <div class="pwd-section">
+                <div style="font-size: 13px; color: #888; margin-bottom: 10px;">2. 管理授權</div>
+                <input type="password" id="sys-pwd-input" class="sys-input" placeholder="請輸入管理密碼">
+                <button id="final-login-btn" class="login-btn" onclick="tryFinalLogin()">登入系統</button>
             </div>
             
-            <div id="login-msg" style="margin-top: 15px; font-weight: bold; color: var(--danger);"></div>
+            <div id="login-msg" style="margin-top: 15px; font-weight: bold; color: var(--danger); min-height: 24px;"></div>
         </div>
     </div>
 
@@ -197,7 +211,7 @@
     <!-- 彈窗：匯入 -->
     <div id="importModal" class="modal-custom"><div class="modal-box">
         <h4>📥 批次匯入 Excel 資料</h4>
-        <p class="small text-muted">請從 Excel 複製包含標題的整列內容並貼上於下方：</p>
+        <p class="small text-muted">請複製包含標題的整列內容並貼上於下方：</p>
         <textarea id="paste-area" class="form-control mb-3" style="height: 200px; font-family: monospace; font-size: 12px;"></textarea>
         <button class="btn btn-primary btn-block" onclick="processImport()">開始匯入 (覆蓋模式)</button>
         <button class="btn btn-block btn-light" onclick="$('.modal-custom').hide()">取消</button>
@@ -217,29 +231,44 @@
 
         // --- 登入控制 ---
         function onGoogleSignIn(response) {
-            const payload = JSON.parse(atob(response.credential.split('.')[1]));
-            userEmail = payload.email;
-            $('#step1-box').hide();
-            $('#auth-email-hint').text(`授權帳號：${userEmail}`);
-            $('#step2-box').fadeIn();
+            try {
+                const payload = JSON.parse(atob(response.credential.split('.')[1]));
+                userEmail = payload.email;
+                $('#g-btn-wrapper').hide();
+                $('#auth-success-msg').show();
+                $('#user-email-tag').text(`驗證帳號：${userEmail}`);
+                $('#login-msg').text(""); // 清除錯誤訊息
+            } catch (e) {
+                $('#login-msg').text("Google 驗證解析失敗");
+            }
         }
 
         async function tryFinalLogin() {
+            if (!userEmail) {
+                return $('#login-msg').text("請先完成 Step 1 Google 驗證");
+            }
+            
             const pwd = $('#sys-pwd-input').val();
-            if(!pwd) return showToast("請輸入系統密碼", "var(--danger)");
+            if(!pwd) return $('#login-msg').text("請輸入系統管理密碼");
             
-            showToast("正在進行雙重驗證...", "var(--primary)");
-            const res = await apiFetch('verify', {});
-            
-            if(res.authorized) {
-                localStorage.setItem('fjm_email', userEmail);
-                localStorage.setItem('fjm_pwd', pwd);
-                $('#login-overlay').fadeOut();
-                $('#main-app').show();
-                initApp();
-            } else {
-                $('#login-msg').text(res.message || "驗證失敗，請檢查權限");
-                showToast("驗證失敗", "var(--danger)");
+            $('#login-msg').text("正在執行雙重驗證中...").css('color', 'var(--primary)');
+            $('#final-login-btn').prop('disabled', true);
+
+            try {
+                const res = await apiFetch('verify', {});
+                if(res.authorized) {
+                    localStorage.setItem('fjm_email', userEmail);
+                    localStorage.setItem('fjm_pwd', pwd);
+                    $('#login-overlay').fadeOut();
+                    $('#main-app').show();
+                    initApp();
+                } else {
+                    $('#login-msg').text(res.message || "驗證失敗，請確認白名單權限").css('color', 'var(--danger)');
+                    $('#final-login-btn').prop('disabled', false);
+                }
+            } catch (e) {
+                $('#login-msg').text("連線異常，請檢查網路").css('color', 'var(--danger)');
+                $('#final-login-btn').prop('disabled', false);
             }
         }
 
@@ -254,7 +283,7 @@
             location.reload();
         }
 
-        // --- 核心 API 封裝 (帶入雙重驗證參數) ---
+        // --- 核心 API 封裝 ---
         function apiFetch(action, data) {
             const email = userEmail || localStorage.getItem('fjm_email');
             const pwd = $('#sys-pwd-input').val() || localStorage.getItem('fjm_pwd');
@@ -280,7 +309,7 @@
 
         async function loadStats() {
             const data = await apiFetch('getStatisticsData', {});
-            if(data.status === 'error') return $('#stats-area').text("權限不足，無法讀取統計");
+            if(data.status === 'error') return $('#stats-area').text("權限不足");
             
             let html = '<table class="table table-sm table-bordered" style="font-size:14px;">';
             data.forEach((r, i) => {
@@ -291,11 +320,11 @@
 
         async function searchData() {
             const filter = { tempId: $('#q-id').val(), studentName: $('#q-name').val() };
-            $('#result-area').html('<p class="text-center py-5">正在查詢資料庫...</p>');
+            $('#result-area').html('<p class="text-center py-5">資料查詢中...</p>');
             
             const res = await apiFetch('queryStudentData', filter);
             if(res.error || !res.data || res.data.length === 0) {
-                return $('#result-area').html('<p class="text-center py-5 text-danger">查無資料</p>');
+                return $('#result-area').html('<p class="text-center py-5 text-danger">查無相符資料</p>');
             }
 
             let html = '<table class="data-table"><thead><tr>';
@@ -303,7 +332,7 @@
             html += '<th>操作</th></tr></thead><tbody>';
 
             res.data.forEach(r => {
-                const isTransfer = String(r[9] || "").trim() !== ""; // 備註有字代表轉出
+                const isTransfer = String(r[9] || "").trim() !== "";
                 html += `<tr class="${isTransfer ? 'transfer-row' : ''}">`;
                 r.forEach(v => html += `<td>${v}</td>`);
                 html += `<td>
@@ -315,7 +344,7 @@
         }
 
         async function checkIn(id, status) {
-            showToast("處理中...", "var(--primary)");
+            showToast("系統處理中...", "var(--primary)");
             const res = await apiFetch(status ? 'submitCheckIn' : 'cancelCheckIn', id);
             showToast(res.message || res.error, status ? "var(--success)" : "var(--danger)");
             searchData(); loadStats();
@@ -323,7 +352,7 @@
 
         async function saveNewStudent() {
             const data = { nT: $('#nT').val(), nI: $('#nI').val(), nN: $('#nN').val(), nG: $('#nG').val(), nS: $('#nS').val() };
-            if(!data.nT || !data.nN) return alert("編號與姓名為必填");
+            if(!data.nT || !data.nN) return alert("編號與姓名不可空白");
             const res = await apiFetch('addNewStudent', data);
             showToast(res.success || res.error, "var(--success)");
             $('.modal-custom').hide();
@@ -339,9 +368,8 @@
             const text = $('#paste-area').val().trim();
             if(!text) return;
             const rows = text.split('\n').map(r => r.split('\t'));
-            showToast("正在匯入並覆蓋資料...", "var(--primary)");
+            showToast("正在處理批次匯入...", "var(--primary)");
             
-            // 使用 Fetch POST 處理大量資料
             const pwd = localStorage.getItem('fjm_pwd');
             const email = localStorage.getItem('fjm_email');
             try {
@@ -357,14 +385,13 @@
         }
 
         async function systemReset() {
-            if(!confirm("這將刪除所有內容，您確定嗎？")) return;
+            if(!confirm("⚠️ 確定要執行系統重置嗎？")) return;
             const res = await apiFetch('clearAllData', {});
             showToast(res.success || res.error, "var(--danger)");
             $('.modal-custom').hide();
             loadStats();
         }
 
-        // --- 工具功能 ---
         function showToast(text, color) {
             $('#toast-msg').text(text).css('background', color).fadeIn().delay(3000).fadeOut();
         }
@@ -376,7 +403,6 @@
             $(el).addClass('active');
         }
 
-        // 頁面載入檢查
         window.onload = () => {
             if(localStorage.getItem('fjm_email') && localStorage.getItem('fjm_pwd')) {
                 userEmail = localStorage.getItem('fjm_email');
