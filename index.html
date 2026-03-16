@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>鳳甲國中報到管理系統 v2.5</title>
+    <title>鳳甲國中報到管理系統 v2.6</title>
     <!-- 引入外部資源 -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -16,8 +16,10 @@
             --primary: #007BFF;
             --bg: #f4f7f9;
             --text: #333;
+            --accent: #FF69B4;
             --success: #28a745;
             --danger: #D32F2F;
+            --warning: #FFA500;
         }
 
         body {
@@ -27,7 +29,7 @@
             margin: 0; padding-bottom: 80px;
         }
 
-        /* 登入畫面樣式 */
+        /* --- 登入畫面樣式 --- */
         .login-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(135deg, #e0eafc, #cfdef3);
@@ -49,7 +51,7 @@
             width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px;
             font-size: 18px; text-align: center; margin-bottom: 15px; outline: none; transition: 0.3s;
         }
-        .sys-input:focus { border-color: var(--primary); }
+        .sys-input:focus { border-color: var(--primary); box-shadow: 0 0 5px rgba(0,123,255,0.3); }
         
         .login-btn {
             width: 100%; background: var(--primary); color: white; border: none;
@@ -58,30 +60,59 @@
         }
         .login-btn:active { transform: translateY(2px); box-shadow: none; }
 
-        /* 主程式區域 */
+        /* --- 主程式區域 --- */
         #main-app { display: none; }
         .app-container { max-width: 98%; margin: 20px auto; padding: 0 15px; }
-        .card { background: white; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); padding: 20px; margin-bottom: 20px; }
-        .header-row { display: flex; justify-content: space-between; align-items: center; border-left: 8px solid var(--primary); padding-left: 15px; }
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
-        .btn-group-custom { display: flex; gap: 10px; flex-wrap: wrap; }
-        .btn-custom { padding: 10px 20px; border-radius: 8px; border: none; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .card { background: white; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); padding: 20px; margin-bottom: 20px; border: none; }
+        .header-row { display: flex; justify-content: space-between; align-items: center; border-left: 8px solid var(--primary); padding-left: 15px; margin-bottom: 15px; }
+        
+        /* 搜尋條件網格 */
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .form-grid label { font-weight: bold; color: #555; margin-bottom: 5px; font-size: 14px; }
+        
+        /* 按鈕群組 */
+        .btn-group-custom { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+        .btn-custom { padding: 10px 20px; border-radius: 8px; border: none; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+        .btn-custom:hover { opacity: 0.9; }
+        .btn-custom:active { transform: scale(0.96); }
 
-        /* 表格與操作 */
-        .table-wrapper { overflow-x: auto; border-radius: 10px; border: 1px solid #eee; }
-        .data-table { width: 100%; border-collapse: collapse; min-width: 800px; }
-        .data-table th { background: var(--primary); color: white; padding: 12px; text-align: center; }
-        .data-table td { padding: 10px; border-bottom: 1px solid #eee; text-align: center; }
-        .transfer-row { background-color: #ffebee !important; color: #c62828 !important; }
+        /* --- 表格與操作 --- */
+        .table-wrapper { overflow-x: auto; border-radius: 10px; border: 1px solid #eee; background: #fff; }
+        .data-table { width: 100%; border-collapse: collapse; min-width: 900px; font-size: 15px; }
+        .data-table th { background: var(--primary); color: white; padding: 12px; text-align: center; white-space: nowrap; border: 1px solid #dee2e6; }
+        .data-table td { padding: 10px; border: 1px solid #dee2e6; text-align: center; vertical-align: middle; }
+        .data-table tr:nth-child(even) { background-color: #f8f9fa; }
+        
+        /* 轉出/特殊狀態學生標示 (紅底) */
+        .transfer-row { background-color: #ffebee !important; color: #c62828 !important; font-weight: bold; }
+        .transfer-row td { border-color: #ffcdd2; }
 
+        /* --- 提示訊息與彈窗 --- */
         #toast-msg {
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            padding: 12px 25px; border-radius: 50px; color: white; font-weight: bold;
-            z-index: 100000; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            padding: 12px 30px; border-radius: 50px; color: white; font-weight: bold;
+            z-index: 100000; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); font-size: 16px;
         }
         
-        .modal-custom { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; }
-        .modal-box { background: white; padding: 25px; border-radius: 15px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
+        .modal-custom { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
+        .modal-box { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .modal-box h4 { color: var(--primary); font-weight: bold; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
+
+        /* --- 手機版導覽 --- */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 70px;
+            background: white; border-top: 1px solid #ddd; display: none;
+            justify-content: space-around; align-items: center; z-index: 1000;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+        .nav-item { color: #888; text-decoration: none !important; font-size: 15px; text-align: center; flex: 1; padding: 10px 0; }
+        .nav-item.active { color: var(--primary); font-weight: bold; background: #f0f7ff; border-radius: 10px; }
+
+        @media (max-width: 991px) {
+            .bottom-nav { display: flex; }
+            .page { display: none; }
+            .page.active { display: block; }
+        }
     </style>
 </head>
 <body>
@@ -90,10 +121,10 @@
     <div id="login-overlay" class="login-overlay">
         <div class="login-box">
             <h2>鳳甲國中報到系統</h2>
-            <p>請完成 Google 驗證並輸入系統密碼</p>
+            <p class="text-muted">請完成 Google 驗證並輸入系統密碼</p>
             
             <div class="auth-section">
-                <div style="font-size: 13px; color: #888; margin-bottom: 10px;">1. 身份驗證</div>
+                <div style="font-size: 13px; color: #888; margin-bottom: 10px; font-weight: bold;">1. 身份驗證</div>
                 <div id="g_id_onload"
                     data-client_id="553016940521-araovlp30ctbqn6um5rr49q3es5jm4jg.apps.googleusercontent.com"
                     data-callback="onGoogleSignIn"
@@ -102,15 +133,15 @@
                 <div id="g-btn-wrapper" style="display: flex; justify-content: center;">
                     <div class="g_id_signin" data-type="standard" data-size="large" data-width="320"></div>
                 </div>
-                <div id="auth-success-msg" style="display: none; color: var(--success); font-weight: bold; font-size: 15px;">
+                <div id="auth-success-msg" style="display: none; color: var(--success); font-weight: bold; font-size: 16px;">
                     ✅ 帳號驗證成功
                 </div>
-                <div id="user-email-tag" style="font-size: 13px; color: #999; margin-top: 5px;"></div>
-                <button id="re-auth-btn" class="btn btn-link btn-sm" style="display:none;" onclick="logout()">切換帳號</button>
+                <div id="user-email-tag" style="font-size: 13px; color: #666; margin-top: 5px;"></div>
+                <button id="re-auth-btn" class="btn btn-link btn-sm mt-1" style="display:none;" onclick="logout()">切換帳號</button>
             </div>
 
             <div class="pwd-section">
-                <div style="font-size: 13px; color: #888; margin-bottom: 10px;">2. 管理授權</div>
+                <div style="font-size: 13px; color: #888; margin-bottom: 10px; font-weight: bold;">2. 管理授權</div>
                 <input type="password" id="sys-pwd-input" class="sys-input" placeholder="請輸入管理密碼">
                 <button id="final-login-btn" class="login-btn" onclick="tryFinalLogin()">登入系統</button>
             </div>
@@ -119,18 +150,22 @@
         </div>
     </div>
 
+    <!-- 訊息提示 -->
     <div id="toast-msg"></div>
 
     <!-- 主程式區域 -->
     <div id="main-app">
         <div class="app-container">
             <div class="row">
-                <div id="page-home" class="col-lg-8">
+                <!-- 左側：管理與查詢 -->
+                <div id="page-home" class="col-lg-8 page active">
                     <div class="card">
                         <div class="header-row">
-                            <h3>報到管理功能</h3>
-                            <button class="btn btn-outline-danger btn-sm" onclick="logout()">登出</button>
+                            <h3 class="m-0">報到管理功能</h3>
+                            <button class="btn btn-outline-danger btn-sm" onclick="logout()">登出系統</button>
                         </div>
+                        
+                        <!-- 搜尋欄位 (5 個條件) -->
                         <div class="form-grid">
                             <div><label>臨時編號</label><input type="text" id="q-id" class="form-control" placeholder="輸入編號"></div>
                             <div><label>身分證號</label><input type="text" id="q-idnum" class="form-control" placeholder="輸入證號"></div>
@@ -139,12 +174,14 @@
                             <div>
                                 <label>報到狀態</label>
                                 <select id="q-status" class="form-control">
-                                    <option value="">全部</option>
-                                    <option value="已報到">已報到</option>
-                                    <option value="未報到">未報到</option>
+                                    <option value="">全部狀態</option>
+                                    <option value="已報到">僅顯示已報到</option>
+                                    <option value="未報到">僅顯示未報到</option>
                                 </select>
                             </div>
                         </div>
+
+                        <!-- 操作按鈕群組 (6 顆按鈕) -->
                         <div class="btn-group-custom">
                             <button class="btn-custom" style="background: var(--primary);" onclick="searchData()">🔍 執行查詢</button>
                             <button class="btn-custom" style="background: var(--accent);" onclick="$('#addModal').css('display','flex')">➕ 新增學生</button>
@@ -154,66 +191,106 @@
                             <button class="btn-custom" style="background: var(--danger);" onclick="$('#resetModal').css('display','flex')">🗑️ 系統重置</button>
                         </div>
                     </div>
+
                     <div class="card">
-                        <h4 class="mb-3">查詢結果</h4>
-                        <div id="result-area" class="table-wrapper"><p class="text-center py-5 text-muted">請執行查詢...</p></div>
+                        <h4 class="mb-3" style="color: #555; border-bottom: 2px solid #eee; padding-bottom: 10px;">查詢結果</h4>
+                        <div id="result-area" class="table-wrapper">
+                            <p class="text-center py-5 text-muted">請輸入條件後點擊「執行查詢」...</p>
+                        </div>
                     </div>
                 </div>
-                <div id="page-stats" class="col-lg-4">
+
+                <!-- 右側：統計看板 -->
+                <div id="page-stats" class="col-lg-4 page">
                     <div class="card">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3" style="border-bottom: 2px solid #eee; padding-bottom: 10px;">
                             <h4 class="m-0" style="color: var(--primary);">📊 即時統計</h4>
-                            <button class="btn btn-sm btn-light" onclick="loadStats()">刷新</button>
+                            <button class="btn btn-sm btn-light border" onclick="loadStats()">↻ 刷新</button>
                         </div>
-                        <div id="stats-area">載入中...</div>
+                        <div id="stats-area" class="table-wrapper text-center py-4 text-muted">載入中...</div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- 手機版導覽列 -->
+        <div class="bottom-nav">
+            <a href="javascript:void(0)" class="nav-item active" onclick="switchTab('home', this)">🏠 報到管理</a>
+            <a href="javascript:void(0)" class="nav-item" onclick="switchTab('stats', this)">📈 統計看板</a>
+        </div>
     </div>
 
-    <!-- 彈窗區 -->
-    <div id="addModal" class="modal-custom"><div class="modal-box">
-        <h4>手動新增新生</h4>
-        <div class="form-group"><label>臨時編號 (必填)</label><input type="text" id="nT" class="form-control" placeholder="編號"></div>
-        <div class="form-group"><label>身分證號</label><input type="text" id="nI" class="form-control" placeholder="身分證號"></div>
-        <div class="form-group"><label>姓名 (必填)</label><input type="text" id="nN" class="form-control" placeholder="姓名"></div>
-        <div class="form-group"><label>性別</label><select id="nG" class="form-control"><option value="男">男</option><option value="女">女</option></select></div>
-        <div class="form-group"><label>畢業國小</label><input type="text" id="nS" class="form-control" placeholder="畢業國小"></div>
-        <div class="form-group"><label>電話 1</label><input type="text" id="nP1" class="form-control" placeholder="聯絡電話 1"></div>
-        <div class="form-group"><label>電話 2</label><input type="text" id="nP2" class="form-control" placeholder="聯絡電話 2"></div>
-        <button onclick="saveNewStudent()" class="btn btn-primary btn-block mt-2">確認儲存</button>
-        <button onclick="$('.modal-custom').hide()" class="btn btn-light btn-block">關閉</button>
-    </div></div>
-    <div id="importModal" class="modal-custom"><div class="modal-box"><h4 id="import-title">批次匯入</h4><textarea id="paste-area" class="form-control" style="height:150px;"></textarea><button onclick="processImport()" class="btn btn-primary btn-block mt-2">執行</button><button onclick="$('.modal-custom').hide()" class="btn btn-light btn-block">取消</button></div></div>
-    <div id="resetModal" class="modal-custom"><div class="modal-box text-center"><h3>⚠️ 確定重置？</h3><button onclick="systemReset()" class="btn btn-danger btn-block">確認</button><button onclick="$('.modal-custom').hide()" class="btn btn-light btn-block">取消</button></div></div>
+    <!-- ================= 彈窗區 ================= -->
+    
+    <!-- 1. 新增學生 -->
+    <div id="addModal" class="modal-custom">
+        <div class="modal-box">
+            <h4>➕ 手動新增新生</h4>
+            <div class="row">
+                <div class="col-6 form-group"><label>臨時編號 (必填)</label><input type="text" id="nT" class="form-control" placeholder="例如: 10001"></div>
+                <div class="col-6 form-group"><label>身分證號</label><input type="text" id="nI" class="form-control" placeholder="A123456789"></div>
+                <div class="col-6 form-group"><label>姓名 (必填)</label><input type="text" id="nN" class="form-control" placeholder="學生姓名"></div>
+                <div class="col-6 form-group"><label>性別</label><select id="nG" class="form-control"><option value="男">男</option><option value="女">女</option></select></div>
+                <div class="col-12 form-group"><label>畢業國小</label><input type="text" id="nS" class="form-control" placeholder="例如: 鳳甲國小"></div>
+                <div class="col-6 form-group"><label>聯絡電話 1</label><input type="text" id="nP1" class="form-control" placeholder="手機或市話"></div>
+                <div class="col-6 form-group"><label>聯絡電話 2</label><input type="text" id="nP2" class="form-control" placeholder="備用電話"></div>
+            </div>
+            <div class="d-flex mt-3" style="gap: 10px;">
+                <button class="btn btn-primary flex-grow-1 font-weight-bold" onclick="saveNewStudent()">確認儲存</button>
+                <button class="btn btn-light flex-grow-1 border" onclick="$('#addModal').hide()">取消關閉</button>
+            </div>
+        </div>
+    </div>
 
+    <!-- 2. 批次匯入 -->
+    <div id="importModal" class="modal-custom">
+        <div class="modal-box">
+            <h4 id="import-title">📥 批次匯入</h4>
+            <p class="text-muted small">請從 Excel 複製包含「標題列」的整批資料，並貼上於下方文字框中：</p>
+            <textarea id="paste-area" class="form-control mb-3" style="height: 180px; font-family: monospace; font-size: 12px; white-space: pre; overflow-wrap: normal; overflow-x: auto;"></textarea>
+            <div class="d-flex" style="gap: 10px;">
+                <button class="btn btn-primary flex-grow-1 font-weight-bold" onclick="processImport()">🚀 開始匯入 (覆蓋模式)</button>
+                <button class="btn btn-light flex-grow-1 border" onclick="$('#importModal').hide()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. 系統重置 -->
+    <div id="resetModal" class="modal-custom">
+        <div class="modal-box text-center">
+            <h3 class="text-danger font-weight-bold mb-3">⚠️ 危險操作警告</h3>
+            <p class="text-muted mb-4">這將清空所有的<strong class="text-dark">學生基本資料、體育班名單與報到紀錄</strong>。<br>操作後無法復原，您確定要重置嗎？</p>
+            <div class="d-flex" style="gap: 10px;">
+                <button class="btn btn-danger flex-grow-1 font-weight-bold py-2" onclick="systemReset()">確認清空資料</button>
+                <button class="btn btn-light flex-grow-1 border py-2" onclick="$('#resetModal').hide()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 腳本區 ================= -->
     <script>
+        // ★ 替換為您的正確 GAS 部署網址 ★
         const DEPLOY_URL = "https://script.google.com/macros/s/AKfycbxpY4iHHkEkdNsBvLdb2OJPqzn0eY14CWjLRiEoDJ0IBUhucE2Pp5dJepyZR5AxP_LO/exec";
+        
         let userEmail = "";
         let currentImportType = 'student';
 
-        // ★ 最穩健的 Base64Url 解碼函式
+        // 穩健的 Base64Url 解析器 (解決驗證失敗)
         function parseJwt(token) {
             try {
                 const base64Url = token.split('.')[1];
                 const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                
-                // 處理 Base64 補位長度問題
                 const pad = base64.length % 4;
                 const paddedBase64 = pad ? base64 + new Array(5 - pad).join('=') : base64;
-                
-                // 使用 decodeURIComponent(escape()) 處理 UTF-8 編碼字串
                 const jsonPayload = decodeURIComponent(escape(window.atob(paddedBase64)));
-                
                 return JSON.parse(jsonPayload);
             } catch (e) {
-                console.error("JWT 解碼失敗詳細原因:", e);
+                console.error("JWT Decode Error:", e);
                 return null;
             }
         }
 
-        // Google 登入回調
+        // Google SignIn Callback
         function onGoogleSignIn(response) {
             const payload = parseJwt(response.credential);
             if (payload && payload.email) {
@@ -221,21 +298,22 @@
                 $('#g-btn-wrapper').hide();
                 $('#auth-success-msg').show();
                 $('#re-auth-btn').show();
-                $('#user-email-tag').text(`驗證帳號：${userEmail}`);
-                $('#login-msg').text("帳號驗證成功，請輸入系統密碼").css({'color':'#28a745','background':'#f0fff4','border':'1px solid #c3e6cb'});
+                $('#user-email-tag').text(`授權帳號：${userEmail}`);
+                $('#login-msg').text("✅ 帳號驗證成功，請輸入系統密碼").css({'color':'#155724','background':'#d4edda','border':'1px solid #c3e6cb'});
             } else {
-                $('#login-msg').text("⚠️ Google 驗證解析失敗。請確認是否使用支援的瀏覽器。").css({'color':'red','background':'#fff1f0','border':'1px solid #ffa39e'});
+                $('#login-msg').text("⚠️ Google 驗證解析失敗，請更換瀏覽器重試").css({'color':'#721c24','background':'#f8d7da','border':'1px solid #f5c6cb'});
             }
         }
 
+        // 雙重登入驗證
         async function tryFinalLogin() {
             const pwd = $('#sys-pwd-input').val();
             const msgEl = $('#login-msg');
 
-            if (!userEmail) return msgEl.text("❌ 請先完成 Step 1 Google 驗證").css({'color':'red','background':'#fff1f0','border':'1px solid #ffa39e'});
-            if (!pwd) return msgEl.text("❌ 請輸入系統管理密碼").css({'color':'red','background':'#fff1f0','border':'1px solid #ffa39e'});
+            if (!userEmail) return msgEl.text("❌ 請先完成 Step 1 Google 身份驗證").css({'color':'#721c24','background':'#f8d7da','border':'1px solid #f5c6cb'});
+            if (!pwd) return msgEl.text("❌ 請輸入系統管理密碼").css({'color':'#721c24','background':'#f8d7da','border':'1px solid #f5c6cb'});
             
-            msgEl.text("⏳ 正在驗證雙重授權...").css({'color':'#007bff','background':'#e6f7ff','border':'1px solid #91d5ff'});
+            msgEl.text("⏳ 正在與資料庫進行授權比對...").css({'color':'#004085','background':'#cce5ff','border':'1px solid #b8daff'});
             $('#final-login-btn').prop('disabled', true);
 
             try {
@@ -244,22 +322,23 @@
                     localStorage.setItem('fjm_email', userEmail);
                     localStorage.setItem('fjm_pwd', pwd);
                     $('#login-overlay').fadeOut();
-                    $('#main-app').show();
+                    $('#main-app').fadeIn();
                     initApp();
                 } else {
-                    msgEl.text(`❌ ${res.message || "驗證失敗"}`).css({'color':'red', 'background':'#fff1f0', 'border':'1px solid #ffa39e'});
+                    msgEl.text(`❌ ${res.message || "驗證失敗：帳號不在名單或密碼錯誤"}`).css({'color':'#721c24', 'background':'#f8d7da', 'border':'1px solid #f5c6cb'});
                     $('#final-login-btn').prop('disabled', false);
                 }
             } catch (e) {
-                msgEl.text("❌ 連線異常，後端無回應。").css({'color':'red', 'background':'#fff1f0', 'border':'1px solid #ffa39e'});
+                msgEl.text("❌ 連線異常，後端伺服器無回應").css({'color':'#721c24', 'background':'#f8d7da', 'border':'1px solid #f5c6cb'});
                 $('#final-login-btn').prop('disabled', false);
             }
         }
 
+        // 初始化與登出
         function initApp() {
             loadSchools();
             loadStats();
-            setInterval(loadStats, 30000);
+            setInterval(loadStats, 30000); // 每 30 秒更新一次統計
         }
 
         function logout() {
@@ -267,6 +346,7 @@
             location.reload();
         }
 
+        // 核心 API 請求封裝 (自動帶上 Auth 參數)
         function apiFetch(action, data) {
             const email = userEmail || localStorage.getItem('fjm_email');
             const pwd = $('#sys-pwd-input').val() || localStorage.getItem('fjm_pwd');
@@ -282,6 +362,8 @@
             });
         }
 
+        // --- 業務功能 ---
+
         async function loadSchools() {
             const list = await apiFetch('getPrimarySchools', {});
             if(Array.isArray(list)) list.forEach(s => $('#q-school').append(`<option value="${s}">${s}</option>`));
@@ -289,10 +371,18 @@
 
         async function loadStats() {
             const data = await apiFetch('getStatisticsData', {});
-            if(data.status === 'error') return;
-            let html = '<table class="table table-sm table-bordered" style="font-size:14px;">';
-            data.forEach((r, i) => html += `<tr><td class="${i<2?'bg-light font-weight-bold':''}">${r[0]}</td><td class="text-right">${r[1]}</td></tr>`);
-            $('#stats-area').html(html + '</table>');
+            if(data.status === 'error') return $('#stats-area').text("權限不足，無法讀取");
+            
+            let html = '<table class="table table-sm table-bordered m-0" style="font-size:15px;"><tbody>';
+            data.forEach((r, i) => {
+                const isHeader = i < 2;
+                html += `<tr>
+                            <td class="${isHeader ? 'bg-light font-weight-bold text-primary' : 'text-secondary'}">${r[0]}</td>
+                            <td class="text-right ${isHeader ? 'bg-light font-weight-bold text-primary' : 'font-weight-bold'}">${r[1]}</td>
+                         </tr>`;
+            });
+            html += '</tbody></table>';
+            $('#stats-area').html(html).removeClass('text-center py-4 text-muted');
         }
 
         function clearFields() {
@@ -302,76 +392,126 @@
 
         async function searchData() {
             const filter = { 
-                tempId: $('#q-id').val(), 
-                idNumber: $('#q-idnum').val(),
-                studentName: $('#q-name').val(),
+                tempId: $('#q-id').val().trim(), 
+                idNumber: $('#q-idnum').val().trim(),
+                studentName: $('#q-name').val().trim(),
                 primarySchool: $('#q-school').val(),
                 reportStatus: $('#q-status').val()
             };
-            $('#result-area').html('<p class="text-center py-5">查詢中...</p>');
+            
+            $('#result-area').html('<p class="text-center py-5">資料查詢中 <span class="spinner-border spinner-border-sm text-primary" role="status"></span></p>');
+            
             const res = await apiFetch('queryStudentData', filter);
-            if(res.error || !res.data || res.data.length === 0) return $('#result-area').html('<p class="text-center py-5 text-danger">查無資料</p>');
+            if(res.error || !res.data || res.data.length === 0) {
+                return $('#result-area').html('<p class="text-center py-5 text-danger font-weight-bold">查無符合條件的學生資料</p>');
+            }
+
             let html = '<table class="data-table"><thead><tr>';
             res.headers.forEach(h => html += `<th>${h}</th>`);
-            html += '<th>操作</th></tr></thead><tbody>';
+            html += '<th>系統操作</th></tr></thead><tbody>';
+            
             res.data.forEach(r => {
-                const isTransfer = String(r[9] || "").trim() !== "";
+                const isTransfer = String(r[9] || "").trim() !== ""; // 檢查第10欄(備註)
+                const isCheckIn = String(r[7] || "").trim() !== "" && String(r[7] || "").trim() !== "0"; // 檢查第8欄(報到狀態)
+                
                 html += `<tr class="${isTransfer ? 'transfer-row' : ''}">`;
                 r.forEach(v => html += `<td>${v}</td>`);
-                html += `<td><button class="btn btn-sm btn-success" onclick="checkIn('${r[0]}',true)">報到</button> <button class="btn btn-sm btn-outline-danger" onclick="checkIn('${r[0]}',false)">取消</button></td></tr>`;
+                html += `<td style="white-space: nowrap;">
+                    <button class="btn btn-sm ${isCheckIn ? 'btn-secondary' : 'btn-success'} font-weight-bold px-3" onclick="checkIn('${r[0]}', true)" ${isCheckIn ? 'disabled' : ''}>報到</button>
+                    <button class="btn btn-sm btn-outline-danger font-weight-bold px-3 ml-1" onclick="checkIn('${r[0]}', false)" ${!isCheckIn ? 'disabled' : ''}>取消</button>
+                </td></tr>`;
             });
+            
             $('#result-area').html(html + '</tbody></table>');
         }
 
         async function checkIn(id, status) {
+            showToast("正在更新狀態...", "var(--primary)");
             const res = await apiFetch(status ? 'submitCheckIn' : 'cancelCheckIn', id);
-            showToast(res.message || res.error, status ? "#28a745" : "#D32F2F");
-            searchData(); loadStats();
+            showToast(res.message || res.error, status ? "var(--success)" : "var(--danger)");
+            searchData(); // 更新查詢列表
+            loadStats();  // 更新統計數據
         }
 
         async function saveNewStudent() {
             const data = { 
-                nT: $('#nT').val(), nI: $('#nI').val(), nN: $('#nN').val(), 
-                nG: $('#nG').val(), nS: $('#nS').val(), nP1: $('#nP1').val(), nP2: $('#nP2').val() 
+                nT: $('#nT').val().trim(), nI: $('#nI').val().trim(), nN: $('#nN').val().trim(), 
+                nG: $('#nG').val(), nS: $('#nS').val().trim(), nP1: $('#nP1').val().trim(), nP2: $('#nP2').val().trim() 
             };
-            if(!data.nT || !data.nN) return alert("編號與姓名為必填");
+            if(!data.nT || !data.nN) return alert("「臨時編號」與「姓名」不可空白！");
+            
+            showToast("儲存中...", "var(--primary)");
             const res = await apiFetch('addNewStudent', data);
             showToast(res.success || res.error, "#28a745");
-            $('.modal-custom').hide();
-            searchData(); loadStats();
+            $('#addModal').hide();
+            
+            // 清空彈窗欄位
+            $('#nT, #nI, #nN, #nS, #nP1, #nP2').val('');
+            $('#q-id').val(data.nT); // 自動將搜尋欄位設為剛新增的學生
+            searchData(); 
+            loadStats();
         }
 
         function openImportModal(type) { 
             currentImportType = type;
-            $('#import-title').text(type === 'student' ? '📥 批次匯入學生資料' : '🏀 批次匯入體育班');
+            $('#import-title').html(type === 'student' ? '📥 批次匯入 <span class="text-primary">學生基本資料</span>' : '🏀 批次匯入 <span class="text-warning">體育班名單</span>');
             $('#paste-area').val(''); 
             $('#importModal').css('display','flex'); 
         }
 
         async function processImport() {
             const text = $('#paste-area').val().trim();
-            if(!text) return;
+            if(!text) return showToast("請先貼上資料", "var(--warning)");
+            
             const rows = text.split('\n').map(r => r.split('\t'));
             const pwd = localStorage.getItem('fjm_pwd');
             const email = localStorage.getItem('fjm_email');
             const actionName = currentImportType === 'student' ? "importStudentData" : "importSportsData";
+            
+            showToast("正在上傳並覆蓋資料，這可能需要幾秒鐘...", "var(--primary)");
+            
             try {
-                const res = await fetch(DEPLOY_URL, { method: "POST", body: JSON.stringify({ action: actionName, pwd: pwd, email: email, data: { rows: rows.slice(1), mode: 'overwrite' } }) });
+                // 使用 Fetch 傳送大量資料以避免 URL 過長限制
+                const res = await fetch(DEPLOY_URL, { 
+                    method: "POST", 
+                    body: JSON.stringify({ 
+                        action: actionName, 
+                        pwd: pwd, 
+                        email: email, 
+                        data: { rows: rows.slice(1), mode: 'overwrite' } 
+                    }) 
+                });
                 const result = await res.json();
                 showToast(result.success || result.error, "#28a745");
-                $('.modal-custom').hide(); loadStats();
-            } catch(e) { showToast("連線異常", "red"); }
+                $('#importModal').hide(); 
+                loadStats();
+            } catch(e) { 
+                showToast("上傳異常，請檢查網路連線", "var(--danger)"); 
+            }
         }
 
         async function systemReset() {
-            if(!confirm("確定重置？")) return;
+            showToast("正在執行系統資料重置...", "var(--danger)");
             const res = await apiFetch('clearAllData', {});
-            showToast(res.success || res.error, "#D32F2F");
-            $('.modal-custom').hide(); loadStats();
+            showToast(res.success || res.error, "var(--danger)");
+            $('#resetModal').hide(); 
+            loadStats();
+            clearFields();
         }
 
-        function showToast(text, color) { $('#toast-msg').text(text).css('background', color).fadeIn().delay(3000).fadeOut(); }
+        // --- UI 工具 ---
+        function showToast(text, color) { 
+            $('#toast-msg').text(text).css('background', color).fadeIn(200).delay(2500).fadeOut(300); 
+        }
 
+        function switchTab(tab, el) {
+            $('.page').removeClass('active');
+            $(`#page-${tab}`).addClass('active');
+            $('.nav-item').removeClass('active');
+            $(el).addClass('active');
+        }
+
+        // 頁面載入檢查自動登入
         window.onload = () => {
             if(localStorage.getItem('fjm_email') && localStorage.getItem('fjm_pwd')) {
                 userEmail = localStorage.getItem('fjm_email');
