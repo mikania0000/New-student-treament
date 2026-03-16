@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>鳳甲國中報到管理系統 v2.4</title>
+    <title>鳳甲國中報到管理系統 v2.5</title>
     <!-- 引入外部資源 -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -94,7 +94,6 @@
             
             <div class="auth-section">
                 <div style="font-size: 13px; color: #888; margin-bottom: 10px;">1. 身份驗證</div>
-                <!-- 修正：加入更明確的初始化設定 -->
                 <div id="g_id_onload"
                     data-client_id="553016940521-araovlp30ctbqn6um5rr49q3es5jm4jg.apps.googleusercontent.com"
                     data-callback="onGoogleSignIn"
@@ -162,7 +161,7 @@
         </div>
     </div>
 
-    <!-- 彈窗區 (省略與之前一致) -->
+    <!-- 彈窗區 -->
     <div id="addModal" class="modal-custom"><div class="modal-box"><h4>新增新生</h4><input type="text" id="nT" class="form-control" placeholder="編號"><input type="text" id="nN" class="form-control" placeholder="姓名"><button onclick="saveNewStudent()" class="btn btn-primary btn-block mt-2">儲存</button><button onclick="$('.modal-custom').hide()" class="btn btn-light btn-block">關閉</button></div></div>
     <div id="importModal" class="modal-custom"><div class="modal-box"><h4>批次匯入</h4><textarea id="paste-area" class="form-control" style="height:150px;"></textarea><button onclick="processImport()" class="btn btn-primary btn-block mt-2">執行</button><button onclick="$('.modal-custom').hide()" class="btn btn-light btn-block">取消</button></div></div>
     <div id="resetModal" class="modal-custom"><div class="modal-box text-center"><h3>⚠️ 確定重置？</h3><button onclick="systemReset()" class="btn btn-danger btn-block">確認</button><button onclick="$('.modal-custom').hide()" class="btn btn-light btn-block">取消</button></div></div>
@@ -171,17 +170,22 @@
         const DEPLOY_URL = "https://script.google.com/macros/s/AKfycbxpY4iHHkEkdNsBvLdb2OJPqzn0eY14CWjLRiEoDJ0IBUhucE2Pp5dJepyZR5AxP_LO/exec";
         let userEmail = "";
 
-        // ★ 更穩健的 JWT 解析函式 (解決解析失敗的核心)
+        // ★ 最穩健的 Base64Url 解碼函式
         function parseJwt(token) {
             try {
                 const base64Url = token.split('.')[1];
                 const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                }).join(''));
+                
+                // 處理 Base64 補位長度問題
+                const pad = base64.length % 4;
+                const paddedBase64 = pad ? base64 + new Array(5 - pad).join('=') : base64;
+                
+                // 使用 decodeURIComponent(escape()) 處理 UTF-8 編碼字串
+                const jsonPayload = decodeURIComponent(escape(window.atob(paddedBase64)));
+                
                 return JSON.parse(jsonPayload);
             } catch (e) {
-                console.error("JWT Parse Error", e);
+                console.error("JWT 解碼失敗詳細原因:", e);
                 return null;
             }
         }
@@ -195,9 +199,9 @@
                 $('#auth-success-msg').show();
                 $('#re-auth-btn').show();
                 $('#user-email-tag').text(`驗證帳號：${userEmail}`);
-                $('#login-msg').text("帳號驗證成功，請輸入系統密碼").css({'color':'#28a745','background':'#f0fff4'});
+                $('#login-msg').text("帳號驗證成功，請輸入系統密碼").css({'color':'#28a745','background':'#f0fff4','border':'1px solid #c3e6cb'});
             } else {
-                $('#login-msg').text("⚠️ Google 驗證解析失敗，請嘗試清除瀏覽器快取或更換瀏覽器").css({'color':'red','background':'#fff1f0'});
+                $('#login-msg').text("⚠️ Google 驗證解析失敗。請確認是否使用支援的瀏覽器。").css({'color':'red','background':'#fff1f0','border':'1px solid #ffa39e'});
             }
         }
 
@@ -205,10 +209,10 @@
             const pwd = $('#sys-pwd-input').val();
             const msgEl = $('#login-msg');
 
-            if (!userEmail) return msgEl.text("❌ 請先完成 Step 1 Google 驗證").css({'color':'red','background':'#fff1f0'});
-            if (!pwd) return msgEl.text("❌ 請輸入系統管理密碼").css({'color':'red','background':'#fff1f0'});
+            if (!userEmail) return msgEl.text("❌ 請先完成 Step 1 Google 驗證").css({'color':'red','background':'#fff1f0','border':'1px solid #ffa39e'});
+            if (!pwd) return msgEl.text("❌ 請輸入系統管理密碼").css({'color':'red','background':'#fff1f0','border':'1px solid #ffa39e'});
             
-            msgEl.text("⏳ 正在進行最終驗證...").css({'color':'#007bff','background':'#e6f7ff'});
+            msgEl.text("⏳ 正在驗證雙重授權...").css({'color':'#007bff','background':'#e6f7ff','border':'1px solid #91d5ff'});
             $('#final-login-btn').prop('disabled', true);
 
             try {
@@ -220,11 +224,11 @@
                     $('#main-app').show();
                     initApp();
                 } else {
-                    msgEl.text(`❌ ${res.message || "驗證失敗"}`).css({'color':'red', 'background':'#fff1f0'});
+                    msgEl.text(`❌ ${res.message || "驗證失敗"}`).css({'color':'red', 'background':'#fff1f0', 'border':'1px solid #ffa39e'});
                     $('#final-login-btn').prop('disabled', false);
                 }
             } catch (e) {
-                msgEl.text("❌ 連線異常，請檢查網路或確認 GAS 網址是否正確").css({'color':'red', 'background':'#fff1f0'});
+                msgEl.text("❌ 連線異常，後端無回應。").css({'color':'red', 'background':'#fff1f0', 'border':'1px solid #ffa39e'});
                 $('#final-login-btn').prop('disabled', false);
             }
         }
