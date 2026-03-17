@@ -90,11 +90,12 @@
         /* --- 即時統計表格 (緊湊圓角設計) --- */
         .stats-wrapper { border-radius: 8px; border: 1px solid #dee2e6; overflow: hidden; background: white; }
         .stats-table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 0; }
-        .stats-table td { padding: 5px 10px; border-bottom: 1px solid #dee2e6; vertical-align: middle; }
+        .stats-table td { padding: 6px 8px; border-bottom: 1px solid #dee2e6; vertical-align: middle; }
         .stats-table tr:last-child td { border-bottom: none; }
-        .stats-table td:first-child { width: 50%; color: #666; border-right: 1px solid #dee2e6; }
+        .stats-table td:first-child { width: 55%; color: #666; border-right: 1px solid #dee2e6; }
         .stats-table td.val-col { text-align: right; font-weight: bold; color: #333; }
         .stats-table .highlight-row td { color: var(--primary); font-weight: bold; background-color: #f8f9fa; }
+        .stats-table .pink-row td { background-color: #fff0f4; color: #d63384; font-weight: bold; }
 
         /* --- 提示訊息與彈窗 --- */
         #toast-msg {
@@ -167,7 +168,7 @@
         <div class="app-container">
             <div class="row">
                 <!-- 左側：管理與查詢 -->
-                <div id="page-home" class="col-lg-8 page active">
+                <div id="page-home" class="col-lg-9 page active">
                     <div class="card">
                         <div class="header-row">
                             <h3 class="m-0">報到管理功能</h3>
@@ -210,7 +211,7 @@
                 </div>
 
                 <!-- 右側：統計看板 -->
-                <div id="page-stats" class="col-lg-4 page">
+                <div id="page-stats" class="col-lg-3 page">
                     <div class="card">
                         <div class="d-flex justify-content-between align-items-center mb-3" style="border-bottom: 2px solid #eee; padding-bottom: 10px;">
                             <h4 class="m-0" style="color: var(--primary);">📊 即時統計</h4>
@@ -384,17 +385,23 @@
             const data = await apiFetch('getStatisticsData', {});
             if(data.status === 'error') return $('#stats-area').html('<p class="text-center py-4 text-danger">權限不足，無法讀取</p>');
             
-            // ★ 修改這裡：套用緊湊的 stats-table CSS ★
+            // ★ 修改這裡：套用緊湊的 stats-table CSS，並增加粉紅色列 ★
             let html = '<div class="stats-wrapper"><table class="stats-table"><tbody>';
             data.forEach((r, i) => {
                 const isHeader = i < 2; // 前兩列為藍色高亮
-                html += `<tr class="${isHeader ? 'highlight-row' : ''}">
+                const isPink = String(r[0]).includes('未聯絡人數') || String(r[0]).includes('剩餘名額');
+                
+                let rowClass = '';
+                if (isHeader) rowClass = 'highlight-row';
+                else if (isPink) rowClass = 'pink-row';
+
+                html += `<tr class="${rowClass}">
                             <td>${r[0]}</td>
                             <td class="val-col">${r[1]}</td>
                          </tr>`;
             });
             html += '</tbody></table></div>';
-            $('#stats-area').html(html);
+            $('#stats-area').html(html).removeClass('text-center py-4 text-muted');
         }
 
         function clearFields() {
@@ -419,16 +426,20 @@
             }
 
             let html = '<table class="data-table"><thead><tr>';
-            res.headers.forEach(h => html += `<th>${h}</th>`);
-            html += '<th>系統操作</th></tr></thead><tbody>';
+            res.headers.forEach(h => html += `<th style="white-space: nowrap;">${h}</th>`);
+            html += '<th style="white-space: nowrap;">系統操作</th></tr></thead><tbody>';
             
             res.data.forEach(r => {
                 const isTransfer = String(r[9] || "").trim() !== ""; // 檢查第10欄(備註)
                 const isCheckIn = String(r[7] || "").trim() !== "" && String(r[7] || "").trim() !== "0"; // 檢查第8欄(報到狀態)
                 
                 html += `<tr class="${isTransfer ? 'transfer-row' : ''}">`;
-                r.forEach(v => html += `<td>${v}</td>`);
-                html += `<td style="white-space: nowrap;">
+                r.forEach((v, i) => {
+                    // 針對編號、身分證號、姓名、性別強制不換行
+                    const noWrap = (i === 0 || i === 1 || i === 2 || i === 3) ? 'style="white-space: nowrap;"' : '';
+                    html += `<td ${noWrap}>${v}</td>`;
+                });
+                html += `<td style="white-space: nowrap; min-width: 120px;">
                     <button class="btn btn-sm ${isCheckIn ? 'btn-secondary' : 'btn-success'} font-weight-bold px-2" onclick="checkIn('${r[0]}', true)" ${isCheckIn ? 'disabled' : ''}>報到</button>
                     <button class="btn btn-sm btn-outline-danger font-weight-bold px-2 ml-1" onclick="checkIn('${r[0]}', false)" ${!isCheckIn ? 'disabled' : ''}>取消</button>
                 </td></tr>`;
