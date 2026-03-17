@@ -395,9 +395,15 @@
                 if (isHeader) rowClass = 'highlight-row';
                 else if (isPink) rowClass = 'pink-row';
 
+                // 讓「目標人數」的 (已達標) 換行顯示，看起來更整齊
+                let val = r[1];
+                if (String(r[0]).includes('目標人數')) {
+                    val = String(val).replace('(', '<br><span style="font-size:0.85em; color:#888;">(').concat('</span>');
+                }
+
                 html += `<tr class="${rowClass}">
                             <td>${r[0]}</td>
-                            <td class="val-col">${r[1]}</td>
+                            <td class="val-col">${val}</td>
                          </tr>`;
             });
             html += '</tbody></table></div>';
