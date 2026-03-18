@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>鳳甲國中報到管理系統 v2.8</title>
+    <title>鳳甲國中報到管理系統 v2.9</title>
     <!-- 引入外部資源 -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -180,7 +180,7 @@
                             <button class="btn btn-outline-danger btn-sm" onclick="logout()">登出系統</button>
                         </div>
                         
-                        <!-- 搜尋欄位 (5 個條件) -->
+                        <!-- 搜尋欄位 -->
                         <div class="form-grid">
                             <div><label>臨時編號</label><input type="text" id="q-id" class="form-control" placeholder="輸入編號"></div>
                             <div><label>身分證號</label><input type="text" id="q-idnum" class="form-control" placeholder="輸入證號"></div>
@@ -196,7 +196,7 @@
                             </div>
                         </div>
 
-                        <!-- 操作按鈕群組 (6 顆按鈕) -->
+                        <!-- 操作按鈕群組 -->
                         <div class="btn-group-custom">
                             <button class="btn-custom" style="background: var(--primary);" onclick="searchData()">🔍 執行查詢</button>
                             <button class="btn-custom" style="background: var(--accent);" onclick="$('#addModal').css('display','flex')">➕ 新增學生</button>
@@ -238,8 +238,6 @@
     </div>
 
     <!-- ================= 彈窗區 ================= -->
-    
-    <!-- 1. 新增學生 -->
     <div id="addModal" class="modal-custom">
         <div class="modal-box">
             <h4>➕ 手動新增新生</h4>
@@ -259,7 +257,6 @@
         </div>
     </div>
 
-    <!-- 2. 批次匯入 -->
     <div id="importModal" class="modal-custom">
         <div class="modal-box">
             <h4 id="import-title">📥 批次匯入</h4>
@@ -272,7 +269,6 @@
         </div>
     </div>
 
-    <!-- 3. 系統重置 -->
     <div id="resetModal" class="modal-custom">
         <div class="modal-box text-center">
             <h3 class="text-danger font-weight-bold mb-3">⚠️ 危險操作警告</h3>
@@ -286,13 +282,11 @@
 
     <!-- ================= 腳本區 ================= -->
     <script>
-        // ★ 替換為您的正確 GAS 部署網址 ★
         const DEPLOY_URL = "https://script.google.com/macros/s/AKfycbxpY4iHHkEkdNsBvLdb2OJPqzn0eY14CWjLRiEoDJ0IBUhucE2Pp5dJepyZR5AxP_LO/exec";
         
         let userEmail = "";
         let currentImportType = 'student';
 
-        // 穩健的 Base64Url 解析器
         function parseJwt(token) {
             try {
                 const base64Url = token.split('.')[1];
@@ -302,7 +296,6 @@
                 const jsonPayload = decodeURIComponent(escape(window.atob(paddedBase64)));
                 return JSON.parse(jsonPayload);
             } catch (e) {
-                console.error("JWT Decode Error:", e);
                 return null;
             }
         }
@@ -321,6 +314,7 @@
             }
         }
 
+        // 手動點擊登入
         async function tryFinalLogin() {
             const pwd = $('#sys-pwd-input').val();
             const msgEl = $('#login-msg');
@@ -334,6 +328,7 @@
             try {
                 const res = await apiFetch('verify', {});
                 if(res.authorized) {
+                    // ★ 驗證成功後，才將密碼與帳號記錄到 localStorage
                     localStorage.setItem('fjm_email', userEmail);
                     localStorage.setItem('fjm_pwd', pwd);
                     $('#login-overlay').fadeOut();
@@ -433,7 +428,6 @@
                 
                 html += `<tr class="${isTransfer ? 'transfer-row' : ''}">`;
                 r.forEach((v, i) => {
-                    // 允許編輯的欄位：1:身分證, 2:姓名, 3:性別, 4:畢業國小, 5:電話1, 6:電話2, 9:備註
                     const isEditable = [1, 2, 3, 4, 5, 6, 9].includes(i);
                     const noWrap = (i === 0 || i === 1 || i === 2 || i === 3) ? 'style="white-space: nowrap;"' : '';
                     
@@ -457,14 +451,12 @@
             $('#result-area').html(html + '</tbody></table>');
         }
 
-        // --- ★ 補回「修正(編輯)」行內按鈕功能 ★ ---
         async function toggleEdit(btn) {
             const tr = btn.closest("tr");
             const editables = tr.querySelectorAll(".editable");
             const isSaving = btn.innerText === "儲存";
             
             if (!isSaving) {
-                // 切換為編輯模式 (黃色提示)
                 btn.innerText = "儲存";
                 btn.classList.replace("btn-info", "btn-warning");
                 tr.classList.add("editing-row");
@@ -474,11 +466,9 @@
                     td.querySelector("input").style.display = "block";
                 });
             } else {
-                // 執行存檔邏輯
                 btn.disabled = true;
                 btn.innerText = "存檔中";
                 
-                // 收集該列資料 (避開最後一個按鈕欄)
                 const rowData = Array.from(tr.cells).slice(0, -1).map(td => {
                     const input = td.querySelector("input");
                     return (input && input.style.display !== 'none') ? input.value.trim() : (td.querySelector("span") ? td.querySelector("span").innerText : td.innerText);
@@ -501,11 +491,10 @@
                             inp.style.display = "none";
                         });
                         
-                        // 動態更新是否為轉出(備註)的紅底色
                         if (rowData[9] !== "") tr.classList.add("transfer-row");
                         else tr.classList.remove("transfer-row");
                         
-                        loadStats(); // 更新統計表
+                        loadStats(); 
                     }
                 } catch(e) {
                     showToast("連線異常，存檔失敗", "var(--danger)");
@@ -598,12 +587,48 @@
             $(el).addClass('active');
         }
 
-        window.onload = () => {
-            if(localStorage.getItem('fjm_email') && localStorage.getItem('fjm_pwd')) {
-                userEmail = localStorage.getItem('fjm_email');
-                $('#login-overlay').hide();
-                $('#main-app').show();
-                initApp();
+        // ★ 核心防護：網頁載入時的「自動登入驗證」邏輯 ★
+        window.onload = async () => {
+            const storedEmail = localStorage.getItem('fjm_email');
+            const storedPwd = localStorage.getItem('fjm_pwd');
+            
+            // 如果偵測到記憶的帳號與密碼
+            if (storedEmail && storedPwd) {
+                userEmail = storedEmail;
+                $('#sys-pwd-input').val(storedPwd); // 暫時填入密碼欄位以供 apiFetch 讀取
+                
+                // 介面切換至「驗證中」狀態
+                $('#g-btn-wrapper').hide();
+                $('#user-email-tag').text(`授權帳號：${userEmail}`);
+                $('#login-msg').text("⏳ 偵測到已記憶的帳號，正在自動驗證登入...").css({'color':'#004085','background':'#cce5ff','border':'1px solid #b8daff'});
+                $('#final-login-btn').prop('disabled', true);
+
+                try {
+                    // 發送驗證請求給後端
+                    const res = await apiFetch('verify', {});
+                    
+                    if(res.authorized) {
+                        // 驗證成功：允許進入主畫面
+                        $('#login-overlay').fadeOut();
+                        $('#main-app').fadeIn();
+                        initApp();
+                    } else {
+                        // ❌ 驗證失敗：密碼錯誤或已換掉，自動清除記憶
+                        localStorage.removeItem('fjm_email');
+                        localStorage.removeItem('fjm_pwd');
+                        userEmail = "";
+                        $('#sys-pwd-input').val(""); // 清空密碼框
+                        
+                        // 恢復登入介面
+                        $('#g-btn-wrapper').show();
+                        $('#user-email-tag').text("");
+                        $('#login-msg').text("⚠️ 記憶的帳號或密碼已失效，請重新進行 Google 驗證與登入").css({'color':'#721c24', 'background':'#f8d7da', 'border':'1px solid #f5c6cb'});
+                        $('#final-login-btn').prop('disabled', false);
+                    }
+                } catch (e) {
+                    $('#login-msg').text("❌ 連線異常，自動登入失敗，請檢查網路連線").css({'color':'#721c24', 'background':'#f8d7da', 'border':'1px solid #f5c6cb'});
+                    $('#final-login-btn').prop('disabled', false);
+                }
             }
         };
     </script>
