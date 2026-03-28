@@ -312,9 +312,23 @@
             setInterval(loadStats, 60000); 
         }
 
-        function logout() {
+        // 安全登出：主動通知後端銷毀 Token
+        async function logout() {
+            if (sessionToken) {
+                try {
+                    await apiFetch('logout', {});
+                } catch (e) {
+                    console.log("後端連線異常，但仍會執行本地登出");
+                }
+            }
+
             sessionStorage.removeItem('fjm_token');
             sessionToken = "";
+
+            if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+                google.accounts.id.disableAutoSelect();
+            }
+
             location.reload();
         }
 
@@ -343,6 +357,7 @@
         async function loadSchools() {
             const res = await apiFetch('getPrimarySchools', {});
             if(res.status === 'success' && Array.isArray(res.data)) {
+                $('#q-school').html('<option value="">全部國小</option>'); // 清空並重設預設值
                 res.data.forEach(s => $('#q-school').append(`<option value="${s}">${s}</option>`));
             }
         }
