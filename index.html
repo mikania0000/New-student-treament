@@ -27,6 +27,7 @@
             font-family: "Microsoft JhengHei", sans-serif;
             color: var(--text);
             margin: 0; padding-bottom: 80px;
+            font-size: 16px; /* 整體字體加大 */
         }
 
         /* --- 登入畫面 --- */
@@ -38,10 +39,10 @@
         .login-box {
             background: white; padding: 40px; border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.08); text-align: center;
-            width: 90%; max-width: 380px;
+            width: 90%; max-width: 400px;
         }
-        .login-box h4 { color: #444; font-weight: bold; margin-bottom: 5px; }
-        .login-box p { color: #888; font-size: 14px; margin-bottom: 25px; }
+        .login-box h4 { color: #444; font-weight: bold; margin-bottom: 10px; font-size: 24px; }
+        .login-box p { color: #888; font-size: 16px; margin-bottom: 25px; }
 
         .auth-section {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -51,17 +52,18 @@
         /* --- 主程式佈局 --- */
         #main-app { display: none; }
         .app-container { max-width: 98%; margin: 20px auto; padding: 0 15px; }
-        .card { background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 20px; margin-bottom: 20px; border: none; }
-        .header-row { display: flex; justify-content: space-between; align-items: center; border-left: 5px solid var(--primary); padding-left: 15px; margin-bottom: 15px; }
+        .card { background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 25px; margin-bottom: 20px; border: none; }
+        .header-row { display: flex; justify-content: space-between; align-items: center; border-left: 6px solid var(--primary); padding-left: 15px; margin-bottom: 20px; }
         
         /* 搜尋條件網格 */
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .form-grid label { font-weight: bold; color: #555; margin-bottom: 5px; font-size: 13px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .form-grid label { font-weight: bold; color: #555; margin-bottom: 8px; font-size: 15px; }
+        .form-control-sm { height: calc(1.5em + 0.75rem + 2px); font-size: 15px; }
         
         /* 按鈕群組 */
         .btn-group-custom { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
-        .btn-custom { padding: 8px 16px; border-radius: 6px; border: none; color: white; font-weight: normal; cursor: pointer; transition: 0.2s; white-space: nowrap; font-size: 14px;}
-        .btn-custom:hover { opacity: 0.9; }
+        .btn-custom { padding: 10px 20px; border-radius: 6px; border: none; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; white-space: nowrap; font-size: 15px;}
+        .btn-custom:hover { opacity: 0.9; transform: translateY(-1px); }
 
         /* --- 分頁切換 --- */
         .page { display: none; }
@@ -69,50 +71,45 @@
 
         /* --- 查詢結果表格優化 --- */
         .table-wrapper { width: 100%; overflow-x: auto; border-radius: 6px; border: 1px solid #dee2e6; background: #fff; }
-        .data-table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 0; table-layout: auto; }
-        .data-table th { background: #f8f9fa; color: #333; padding: 10px 5px; text-align: center; white-space: nowrap; border: 1px solid #dee2e6; font-weight: bold; }
-        .data-table td { padding: 5px 5px; border: 1px solid #dee2e6; text-align: center; vertical-align: middle; word-break: break-word; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 15px; margin: 0; table-layout: auto; }
+        .data-table th { background: #f8f9fa; color: #333; padding: 12px 8px; text-align: center; white-space: nowrap; border: 1px solid #dee2e6; font-weight: bold; font-size: 15px; }
+        .data-table td { padding: 8px 6px; border: 1px solid #dee2e6; text-align: center; vertical-align: middle; word-break: break-word; }
         .data-table tbody tr:hover { background-color: #f4f8ff; }
         
-        /* 針對關鍵欄位禁止換行 */
-        .nowrap-col { white-space: nowrap !important; font-weight: bold; }
+        /* 針對關鍵欄位禁止換行且字體加粗 */
+        .nowrap-col { white-space: nowrap !important; font-weight: bold; color: #222; min-width: 80px; }
         
-        /* 垂直按鈕容器：緊湊寬度 */
-        .action-stack { display: flex; flex-direction: column; gap: 3px; align-items: center; min-width: 60px; }
-        .btn-stack { width: 100%; font-size: 12px !important; padding: 2px 4px !important; line-height: 1.2 !important; }
+        /* 畢業國小欄位緊縮 */
+        .compact-col { max-width: 120px; font-size: 14px; color: #666; }
+
+        /* 垂直按鈕容器：操作欄位加寬一點點 */
+        .action-stack { display: flex; flex-direction: column; gap: 4px; align-items: center; min-width: 75px; padding: 4px 0; }
+        .btn-stack { width: 100%; font-size: 13px !important; padding: 4px 6px !important; font-weight: bold; }
 
         .transfer-row { background-color: #fff0f4 !important; color: #d63384 !important; }
-        .editable input { width: 100%; padding: 4px; font-size: 13px; text-align: center; border: 1px solid #aaa; border-radius: 4px; box-sizing: border-box; }
+        .editable input { width: 100%; padding: 4px; font-size: 14px; text-align: center; border: 1px solid var(--primary); border-radius: 4px; box-sizing: border-box; }
         .editing-row { background-color: #fff3cd !important; }
 
         /* --- 統計看板 --- */
         .stats-wrapper { border-radius: 6px; border: 1px solid #dee2e6; overflow: hidden; background: white; }
-        .stats-table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 0; }
-        .stats-table td { padding: 8px; border-bottom: 1px solid #dee2e6; vertical-align: middle; }
+        .stats-table { width: 100%; border-collapse: collapse; font-size: 15px; margin: 0; }
+        .stats-table td { padding: 10px; border-bottom: 1px solid #dee2e6; vertical-align: middle; }
         .stats-table tr:last-child td { border-bottom: none; }
-        .stats-table td:first-child { width: 55%; color: #666; border-right: 1px solid #dee2e6; }
-        .stats-table td.val-col { text-align: right; font-weight: bold; color: #333; }
+        .stats-table td:first-child { width: 55%; color: #666; border-right: 1px solid #dee2e6; font-weight: bold; }
+        .stats-table td.val-col { text-align: right; font-weight: bold; color: #333; font-size: 16px; }
         .stats-table .highlight-row td { color: var(--primary); font-weight: bold; background-color: #f8f9fa; }
         .stats-table .pink-row td { background-color: #fff0f4; color: #d63384; font-weight: bold; }
 
         /* --- 匯入預覽區 --- */
-        .header-hint-box { background: #e9f3ff; border: 1px solid #b8daff; border-radius: 8px; padding: 12px; margin-bottom: 15px; }
-        .header-tag { display: inline-block; background: #fff; border: 1px solid #007bff; color: #007bff; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-right: 5px; margin-bottom: 5px; font-weight: bold; }
-        .drop-zone { border: 2px dashed #ccc; border-radius: 10px; padding: 30px; text-align: center; color: #999; cursor: pointer; transition: 0.3s; background: #fafafa; }
+        .header-hint-box { background: #e9f3ff; border: 1px solid #b8daff; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
+        .header-tag { display: inline-block; background: #fff; border: 1px solid #007bff; color: #007bff; padding: 4px 10px; border-radius: 4px; font-size: 13px; margin-right: 6px; margin-bottom: 6px; font-weight: bold; }
+        .drop-zone { border: 2px dashed #ccc; border-radius: 10px; padding: 35px; text-align: center; color: #888; cursor: pointer; transition: 0.3s; background: #fafafa; font-size: 16px; }
         .drop-zone:hover { border-color: var(--primary); background: #f0f7ff; color: var(--primary); }
-        .preview-container { margin-top: 15px; max-height: 250px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; }
-        .preview-table { font-size: 12px; width: 100%; }
 
         /* --- 提示訊息與彈窗 --- */
-        #toast-msg { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 10px 25px; border-radius: 30px; color: white; z-index: 100000; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.15); font-size: 14px; }
-        .modal-custom { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; }
-        .modal-box { background: white; padding: 25px; border-radius: 10px; width: 95%; max-width: 850px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-        .modal-box h5 { color: #333; font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
-
-        /* --- 手機與桌機分流 --- */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background: white; border-top: 1px solid #ddd; display: none; justify-content: space-around; align-items: center; z-index: 1000; }
-        .nav-item { color: #666; text-decoration: none !important; font-size: 14px; text-align: center; flex: 1; padding: 10px 0; }
-        .nav-item.active { color: var(--primary); font-weight: bold; background: #f0f7ff; }
+        #toast-msg { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 12px 30px; border-radius: 30px; color: white; z-index: 100000; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); font-size: 16px; font-weight: bold; }
+        .modal-box { background: white; padding: 30px; border-radius: 12px; width: 95%; max-width: 850px; }
+        .modal-box h5 { font-size: 20px; border-bottom: 2px solid #eee; padding-bottom: 12px; }
 
         @media (max-width: 991px) {
             .bottom-nav { display: flex; }
@@ -142,11 +139,11 @@
                 <div id="g-btn-wrapper">
                     <div class="g_id_signin" data-type="standard" data-theme="outline" data-size="large" data-width="300"></div>
                 </div>
-                <div id="loading-msg" style="display: none; color: var(--primary); font-size: 14px; margin-top: 15px;">
+                <div id="loading-msg" style="display: none; color: var(--primary); font-size: 16px; margin-top: 15px; font-weight: bold;">
                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                     驗證授權中...
                 </div>
-                <div id="login-msg" style="display: none; margin-top: 15px; color: var(--danger); font-size: 13px; padding: 8px; background: #fdf2f2; border-radius: 6px;"></div>
+                <div id="login-msg" style="display: none; margin-top: 15px; color: var(--danger); font-size: 14px; padding: 10px; background: #fdf2f2; border-radius: 6px; border: 1px solid #f5c6cb;"></div>
             </div>
         </div>
     </div>
@@ -158,10 +155,10 @@
     <div id="main-app">
         <div class="app-container">
             <div class="row">
-                <!-- 左側：管理與分頁 -->
+                <!-- 左側內容 -->
                 <div id="content-col" class="col-lg-9">
                     
-                    <!-- 首頁：報到管理 -->
+                    <!-- 分頁1：報到管理 -->
                     <div id="page-home" class="page active mobile-page">
                         <div class="card">
                             <div class="header-row">
@@ -188,49 +185,48 @@
                             </div>
 
                             <div class="btn-group-custom">
-                                <button class="btn-custom" style="background: var(--primary);" onclick="searchData()">查詢</button>
-                                <button class="btn-custom" style="background: #20c997;" onclick="$('#addModal').css('display','flex')">新增新生</button>
-                                <button class="btn-custom" style="background: #6c757d;" onclick="openImportModal('student')">匯入名單</button>
-                                <button class="btn-custom" style="background: #e83e8c;" onclick="openImportModal('sports')">匯入體育班</button>
-                                <button class="btn-custom" style="background: #6610f2;" onclick="switchTab('accounts', document.querySelector('.nav-item[data-tab=accounts]'))">帳號管理</button>
-                                <button class="btn-custom" style="background: #adb5bd;" onclick="clearFields()">清除</button>
-                                <button class="btn-custom ml-auto" style="background: var(--danger);" onclick="$('#resetModal').css('display','flex')">重置系統</button>
+                                <button class="btn-custom" style="background: var(--primary);" onclick="searchData()">🔍 執行查詢</button>
+                                <button class="btn-custom" style="background: #20c997;" onclick="$('#addModal').css('display','flex')">➕ 新增新生</button>
+                                <button class="btn-custom" style="background: #6c757d;" onclick="openImportModal('student')">📥 匯入名單</button>
+                                <button class="btn-custom" style="background: #e83e8c;" onclick="openImportModal('sports')">🏀 匯入體育班</button>
+                                <button class="btn-custom" style="background: #6610f2;" onclick="switchTab('accounts', document.querySelector('.nav-item[data-tab=accounts]'))">⚙️ 帳號管理</button>
+                                <button class="btn-custom" style="background: #adb5bd;" onclick="clearFields()">🧹 清除</button>
+                                <button class="btn-custom ml-auto" style="background: var(--danger);" onclick="$('#resetModal').css('display','flex')">⚠️ 重置系統</button>
                             </div>
                         </div>
 
                         <div class="card">
                             <div id="result-area" class="table-wrapper">
-                                <p class="text-center py-4 text-muted small">請輸入條件後點擊「查詢」</p>
+                                <p class="text-center py-4 text-muted">請輸入條件後點擊「執行查詢」</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 帳號管理分頁 -->
+                    <!-- 分頁2：帳號管理 -->
                     <div id="page-accounts" class="page mobile-page">
                         <div class="card">
                             <div class="header-row">
                                 <h5 class="m-0 text-secondary font-weight-bold">帳號授權管理 (白名單)</h5>
-                                <button class="btn btn-outline-primary btn-sm" onclick="switchTab('home', document.querySelector('.nav-item[data-tab=home]'))">返回管理頁</button>
+                                <button class="btn btn-outline-primary btn-sm" onclick="switchTab('home', document.querySelector('.nav-item[data-tab=home]'))">返回報到管理</button>
                             </div>
-                            <p class="text-muted small">只有在此名單內的 Google 帳號可以登入本系統。</p>
+                            <p class="text-muted">只有在此名單內的 Google 帳號可以登入本系統。</p>
                             <div class="d-flex mb-3" style="gap: 10px;">
-                                <input type="email" id="new-whitelist-email" class="form-control form-control-sm" placeholder="輸入欲授權的 Google Email">
-                                <button class="btn btn-primary btn-sm px-4" onclick="saveWhitelistAccount()">新增授權</button>
+                                <input type="email" id="new-whitelist-email" class="form-control" placeholder="欲授權的 Google Email">
+                                <button class="btn btn-primary px-4 font-weight-bold" onclick="saveWhitelistAccount()">新增授權</button>
                             </div>
                             <div id="whitelist-area" class="table-wrapper">
-                                <p class="text-center py-4 text-muted small">正在讀取授權名單...</p>
+                                <p class="text-center py-4 text-muted">正在讀取授權名單...</p>
                             </div>
                         </div>
                     </div>
-
                 </div>
 
                 <!-- 右側：統計看板 -->
                 <div id="page-stats" class="col-lg-3 mobile-page">
                     <div class="card">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="m-0 font-weight-bold text-secondary">系統統計</h6>
-                            <button class="btn btn-sm btn-light border" onclick="loadStats()" style="font-size:12px;">↻ 刷新</button>
+                            <h6 class="m-0 font-weight-bold text-secondary" style="font-size: 18px;">📊 系統統計</h6>
+                            <button class="btn btn-sm btn-light border" onclick="loadStats()">↻ 刷新</button>
                         </div>
                         <div id="stats-area">
                             <p class="text-center py-4 text-muted small">載入中...</p>
@@ -240,11 +236,11 @@
             </div>
         </div>
 
-        <!-- 手機版底部選單 -->
+        <!-- 手機版導覽列 -->
         <div class="bottom-nav">
-            <a href="javascript:void(0)" class="nav-item active" data-tab="home" onclick="switchTab('home', this)">管理作業</a>
+            <a href="javascript:void(0)" class="nav-item active" data-tab="home" onclick="switchTab('home', this)">報到管理</a>
             <a href="javascript:void(0)" class="nav-item" data-tab="accounts" onclick="switchTab('accounts', this)">帳號管理</a>
-            <a href="javascript:void(0)" class="nav-item" data-tab="stats" onclick="switchTab('stats', this)">系統統計</a>
+            <a href="javascript:void(0)" class="nav-item" data-tab="stats" onclick="switchTab('stats', this)">統計看板</a>
         </div>
     </div>
 
@@ -253,61 +249,61 @@
         <div class="modal-box">
             <h5>➕ 手動新增新生</h5>
             <div class="row">
-                <div class="col-6 form-group"><label class="small text-muted">臨時編號 *</label><input type="text" id="nT" class="form-control form-control-sm"></div>
-                <div class="col-6 form-group"><label class="small text-muted">身分證號</label><input type="text" id="nI" class="form-control form-control-sm"></div>
-                <div class="col-6 form-group"><label class="small text-muted">姓名 *</label><input type="text" id="nN" class="form-control form-control-sm"></div>
-                <div class="col-6 form-group"><label class="small text-muted">性別</label><select id="nG" class="form-control form-control-sm"><option value="男">男</option><option value="女">女</option></select></div>
-                <div class="col-12 form-group"><label class="small text-muted">畢業國小</label><input type="text" id="nS" class="form-control form-control-sm"></div>
-                <div class="col-6 form-group"><label class="small text-muted">電話 1</label><input type="text" id="nP1" class="form-control form-control-sm"></div>
-                <div class="col-6 form-group"><label class="small text-muted">電話 2</label><input type="text" id="nP2" class="form-control form-control-sm"></div>
+                <div class="col-6 form-group"><label>臨時編號 *</label><input type="text" id="nT" class="form-control"></div>
+                <div class="col-6 form-group"><label>身分證號</label><input type="text" id="nI" class="form-control"></div>
+                <div class="col-6 form-group"><label>姓名 *</label><input type="text" id="nN" class="form-control"></div>
+                <div class="col-6 form-group"><label>性別</label><select id="nG" class="form-control"><option value="男">男</option><option value="女">女</option></select></div>
+                <div class="col-12 form-group"><label>畢業國小</label><input type="text" id="nS" class="form-control"></div>
+                <div class="col-6 form-group"><label>電話 1</label><input type="text" id="nP1" class="form-control"></div>
+                <div class="col-6 form-group"><label>電話 2</label><input type="text" id="nP2" class="form-control"></div>
             </div>
-            <div class="d-flex mt-2" style="gap: 10px;">
-                <button class="btn btn-primary btn-sm flex-grow-1" onclick="saveNewStudent()">儲存</button>
-                <button class="btn btn-light btn-sm flex-grow-1 border" onclick="$('#addModal').hide()">取消</button>
+            <div class="d-flex mt-3" style="gap: 12px;">
+                <button class="btn btn-primary btn-lg flex-grow-1 font-weight-bold" onclick="saveNewStudent()">儲存學生資料</button>
+                <button class="btn btn-light btn-lg flex-grow-1 border" onclick="$('#addModal').hide()">取消</button>
             </div>
         </div>
     </div>
 
     <div id="importModal" class="modal-custom">
         <div class="modal-box">
-            <h5 id="import-title">📥 數據匯入模組</h5>
+            <h5 id="import-title">📥 專業數據匯入</h5>
             <div class="header-hint-box">
-                <div class="small font-weight-bold text-primary mb-2">📋 建議 Excel 欄位標題與順序：</div>
+                <div class="small font-weight-bold text-primary mb-2">📋 建議 Excel 欄位對照：</div>
                 <div id="header-tags-container"></div>
             </div>
-            <ul class="nav nav-tabs mb-3" id="importTab" role="tablist">
-                <li class="nav-item"><a class="nav-link active py-1 px-3 small" id="file-tab" data-toggle="tab" href="#tab-file" role="tab">Excel 檔案</a></li>
-                <li class="nav-item"><a class="nav-link py-1 px-3 small" id="paste-tab" data-toggle="tab" href="#tab-paste" role="tab">文字貼上</a></li>
+            <ul class="nav nav-tabs mb-3" role="tablist">
+                <li class="nav-item"><a class="nav-link active py-2 small" data-toggle="tab" href="#tab-file">Excel 檔案</a></li>
+                <li class="nav-item"><a class="nav-link py-2 small" data-toggle="tab" href="#tab-paste">文字貼上</a></li>
             </ul>
-            <div class="tab-content" id="importTabContent">
-                <div class="tab-pane fade show active" id="tab-file" role="tabpanel">
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="tab-file">
                     <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
                         <div class="mb-2">📄 點擊或將 Excel 檔案拖曳至此</div>
                         <input type="file" id="file-input" style="display:none" accept=".xlsx, .xls, .csv" onchange="handleFileSelect(this)">
                     </div>
                 </div>
-                <div class="tab-pane fade" id="tab-paste" role="tabpanel">
-                    <textarea id="paste-area" class="form-control mb-2" style="height: 120px; font-size: 12px;" placeholder="請複製包含標題列的內容..." oninput="parsePasteData()"></textarea>
+                <div class="tab-pane fade" id="tab-paste">
+                    <textarea id="paste-area" class="form-control" style="height: 120px;" placeholder="請複製包含標頭的整列資料貼於此..." oninput="parsePasteData()"></textarea>
                 </div>
             </div>
             <div id="preview-section" style="display:none">
-                <div class="mt-3 d-flex justify-content-between align-items-center"><strong class="small">預覽 (前 10 筆)：</strong><span id="import-count" class="badge badge-info px-2">共 0 筆</span></div>
+                <div class="mt-3 d-flex justify-content-between align-items-center"><strong class="small">預覽 (僅顯示前10筆)：</strong><span id="import-count" class="badge badge-info px-2">共 0 筆</span></div>
                 <div class="preview-container"><table class="table table-sm table-bordered preview-table mb-0"><thead id="preview-thead"></thead><tbody id="preview-tbody"></tbody></table></div>
             </div>
-            <div class="d-flex mt-3" style="gap: 10px;">
-                <button id="import-confirm-btn" class="btn btn-primary btn-sm flex-grow-1 font-weight-bold" onclick="processImport()" disabled>🚀 確認寫入並覆蓋資料</button>
-                <button class="btn btn-light btn-sm flex-grow-1 border" onclick="$('#importModal').hide(); resetImport()">取消</button>
+            <div class="d-flex mt-3" style="gap: 12px;">
+                <button id="import-confirm-btn" class="btn btn-primary font-weight-bold flex-grow-1" onclick="processImport()" disabled>🚀 確認並覆蓋資料庫</button>
+                <button class="btn btn-light border flex-grow-1" onclick="$('#importModal').hide(); resetImport()">取消</button>
             </div>
         </div>
     </div>
 
     <div id="resetModal" class="modal-custom">
         <div class="modal-box text-center">
-            <h5 class="text-danger mb-3">⚠️ 系統清空確認</h5>
-            <p class="text-muted" style="font-size:13px;">將清空所有名單與紀錄，無法復原。<br>確認要繼續嗎？</p>
-            <div class="d-flex mt-4" style="gap: 10px;">
-                <button class="btn btn-danger btn-sm flex-grow-1" onclick="systemReset()">確認清空</button>
-                <button class="btn btn-light btn-sm flex-grow-1 border" onclick="$('#resetModal').hide()">取消</button>
+            <h5 class="text-danger mb-3 font-weight-bold">⚠️ 危險：系統清空確認</h5>
+            <p class="text-muted">這將清空所有的學生名單、報到時間與統計數據。<br>此操作無法復原，您確定要執行嗎？</p>
+            <div class="d-flex mt-4" style="gap: 12px;">
+                <button class="btn btn-danger btn-lg flex-grow-1 font-weight-bold" onclick="systemReset()">確認清空全部資料</button>
+                <button class="btn btn-light border btn-lg flex-grow-1" onclick="$('#resetModal').hide()">取消</button>
             </div>
         </div>
     </div>
@@ -328,7 +324,7 @@
                     $('#user-display').text(res.email); $('#login-overlay').fadeOut(); $('#main-app').fadeIn();
                     initApp();
                 } else { showLoginError(res.message || "驗證失敗"); }
-            } catch (e) { showLoginError("連線異常"); }
+            } catch (e) { showLoginError("伺服器連線異常"); }
         }
 
         function showLoginError(msg) { $('#loading-msg').hide(); $('#g-btn-wrapper').show(); $('#login-msg').text(msg).show(); if (google?.accounts?.id) google.accounts.id.disableAutoSelect(); }
@@ -363,8 +359,8 @@
 
         function clearFields() {
             $('#q-id, #q-idnum, #q-name, #q-school, #q-status').val('');
-            $('#result-area').html('<p class="text-center py-4 text-muted small">欄位已清空，請重新輸入條件後點擊「查詢」</p>');
-            showToast("查詢條件已清除", "var(--primary)");
+            $('#result-area').html('<p class="text-center py-4 text-muted">查詢條件已清除</p>');
+            showToast("已重設搜尋條件", "var(--primary)");
         }
 
         async function loadSchools() {
@@ -388,9 +384,9 @@
 
         async function searchData() {
             const filter = { tempId: $('#q-id').val().trim(), idNumber: $('#q-idnum').val().trim(), studentName: $('#q-name').val().trim(), primarySchool: $('#q-school').val(), reportStatus: $('#q-status').val() };
-            $('#result-area').html('<p class="text-center py-4"><span class="spinner-border spinner-border-sm text-primary"></span></p>');
+            $('#result-area').html('<p class="text-center py-4"><span class="spinner-border text-primary"></span><br>資料查詢中...</p>');
             const res = await apiFetch('queryStudentData', filter);
-            if(res.status !== 'success' || !res.data.length) return $('#result-area').html('<p class="text-center py-4 text-danger small">查無資料</p>');
+            if(res.status !== 'success' || !res.data.length) return $('#result-area').html('<p class="text-center py-4 text-danger font-weight-bold">查無符合條件的資料</p>');
             
             let html = '<table class="data-table"><thead><tr>';
             res.headers.forEach(h => html += `<th>${h}</th>`);
@@ -400,16 +396,15 @@
                 const isTransfer = String(r[9] || "").trim() !== ""; const isCheckIn = String(r[7] || "").trim() !== "" && String(r[7] || "").trim() !== "0";
                 html += `<tr class="${isTransfer ? 'transfer-row' : ''}">`;
                 r.forEach((v, i) => {
-                    // 臨時編班(0)、身分證(1)、姓名(2) 加上 nowrap-col 類別
                     const isNoWrap = [0, 1, 2].includes(i) ? 'nowrap-col' : '';
+                    const isCompact = (i === 4) ? 'compact-col' : '';
                     if ([1,2,3,4,5,6,9].includes(i)) {
-                        html += `<td class="editable ${isNoWrap}"><span>${v}</span><input type="text" value="${v}" style="display:none;"></td>`;
+                        html += `<td class="editable ${isNoWrap} ${isCompact}"><span>${v}</span><input type="text" value="${v}" style="display:none;"></td>`;
                     } else {
-                        html += `<td class="${isNoWrap}">${v}</td>`;
+                        html += `<td class="${isNoWrap} ${isCompact}">${v}</td>`;
                     }
                 });
                 
-                // 最後一欄：操作按鈕改為垂直排列
                 html += `<td>
                     <div class="action-stack">
                         <button class="btn btn-outline-secondary btn-stack" onclick="toggleEdit(this, 'student')">修正</button>
@@ -421,49 +416,49 @@
             $('#result-area').html(html + '</tbody></table>');
         }
 
-        // --- 匯入 ---
+        // --- 匯入邏輯 ---
         function openImportModal(type) { 
             currentImportType = type; const container = $('#header-tags-container'); container.empty();
-            let headers = type === 'student' ? ['臨時編班', '身分證字號', '姓名', '性別', '畢業國小', '電話 1', '電話 2'] : ['姓名', '性別', '身分證'];
-            $('#import-title').text(type === 'student' ? '📥 匯入學生基本資料' : '🏀 匯入體育班名單');
-            headers.forEach(h => container.append(`<span class="header-tag">${h}</span>`));
+            let h = type === 'student' ? ['臨時編班', '身分證字號', '姓名', '性別', '畢業國小', '電話 1', '電話 2'] : ['姓名', '性別', '身分證'];
+            $('#import-title').text(type === 'student' ? '📥 匯入新生基本資料' : '🏀 匯入體育班名單');
+            h.forEach(tag => container.append(`<span class="header-tag">${tag}</span>`));
             resetImport(); $('#importModal').css('display','flex'); 
         }
-        function resetImport() { stagedData = []; $('#paste-area').val(''); $('#file-input').val(''); $('#preview-section').hide(); $('#import-confirm-btn').prop('disabled', true); $('#preview-thead, #preview-tbody').empty(); $('#drop-zone').html('<div class="mb-2">📄 點擊或將檔案拖曳至此</div>'); }
+        function resetImport() { stagedData = []; $('#paste-area, #file-input').val(''); $('#preview-section').hide(); $('#import-confirm-btn').prop('disabled', true); $('#drop-zone').html('<div class="mb-2">📄 點擊或將 Excel 檔案拖曳至此</div>'); }
         function handleFileSelect(input) {
-            const file = input.files[0]; if(!file) return;
-            $('#drop-zone').html(`選取：<strong>${file.name}</strong>`);
+            const f = input.files[0]; if(!f) return;
+            $('#drop-zone').html(`已選取：<strong>${f.name}</strong>`);
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = (e) => {
                 const workbook = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
                 const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1});
                 if(rows.length > 0) { stagedData = rows.slice(1); renderPreview(rows[0], stagedData); }
             };
-            reader.readAsArrayBuffer(file);
+            reader.readAsArrayBuffer(f);
         }
-        function parsePasteData() { const text = $('#paste-area').val().trim(); if(!text) return $('#preview-section').hide(); const rows = text.split('\n').map(r => r.split('\t')); if(rows.length > 0) { stagedData = rows.slice(1); renderPreview(rows[0], stagedData); } }
-        function renderPreview(headers, data) { $('#preview-thead').html('<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>'); $('#preview-tbody').html(data.slice(0, 10).map(r => '<tr>' + r.map(c => `<td>${c||''}</td>`).join('') + '</tr>').join('')); $('#import-count').text(`共 ${data.length} 筆`); $('#preview-section').show(); $('#import-confirm-btn').prop('disabled', data.length === 0); }
+        function parsePasteData() { const t = $('#paste-area').val().trim(); if(!t) return $('#preview-section').hide(); const rows = t.split('\n').map(r => r.split('\t')); if(rows.length > 0) { stagedData = rows.slice(1); renderPreview(rows[0], stagedData); } }
+        function renderPreview(h, d) { $('#preview-thead').html('<tr>' + h.map(tag => `<th>${tag}</th>`).join('') + '</tr>'); $('#preview-tbody').html(d.slice(0, 10).map(r => '<tr>' + r.map(c => `<td>${c||''}</td>`).join('') + '</tr>').join('')); $('#import-count').text(`共 ${d.length} 筆`); $('#preview-section').show(); $('#import-confirm-btn').prop('disabled', d.length === 0); }
         async function processImport() {
-            if(!stagedData.length) return; showToast("上傳資料中...", "var(--primary)"); $('#import-confirm-btn').prop('disabled', true).text("處理中...");
+            if(!stagedData.length) return; showToast("資料上傳中...", "var(--primary)"); $('#import-confirm-btn').prop('disabled', true).text("寫入中...");
             try {
                 const res = await fetch(DEPLOY_URL, { method: "POST", body: JSON.stringify({ action: currentImportType === 'student' ? "importStudentData" : "importSportsData", token: sessionToken, data: { rows: stagedData, mode: 'overwrite' } }) });
                 const result = await res.json(); showToast(result.message, result.status === 'success' ? "var(--success)" : "var(--danger)");
                 if(result.status === 'success') { $('#importModal').hide(); loadStats(); }
             } catch(e) { showToast("連線異常", "var(--danger)"); }
-            $('#import-confirm-btn').prop('disabled', false).text("🚀 確認寫入並覆蓋資料");
+            $('#import-confirm-btn').prop('disabled', false).text("🚀 確認並覆蓋資料庫");
         }
 
-        // --- 管理 ---
+        // --- 帳號與其他管理 ---
         async function loadWhitelist() {
-            $('#whitelist-area').html('<p class="text-center py-4 text-muted small">讀取中...</p>');
+            $('#whitelist-area').html('<p class="text-center py-4">讀取中...</p>');
             const res = await apiFetch('getWhitelist', {});
-            if(res.status !== 'success') return $('#whitelist-area').html('<p class="text-center py-4 text-danger small">讀取失敗</p>');
-            let html = '<table class="data-table"><thead><tr><th>授權 Email</th><th>操作</th></tr></thead><tbody>';
-            res.data.forEach((email, idx) => { if(idx === 0) return; html += `<tr><td class="editable"><span>${email}</span><input type="text" value="${email}" style="display:none;"></td><td><button class="btn btn-sm btn-outline-secondary px-2 py-0" onclick="toggleEdit(this, 'whitelist', '${email}')">修正</button> <button class="btn btn-sm btn-outline-danger px-2 py-0" onclick="deleteWhitelistAccount('${email}')">刪除</button></td></tr>`; });
+            if(res.status !== 'success') return $('#whitelist-area').html('<p class="text-center py-4 text-danger">讀取失敗</p>');
+            let html = '<table class="data-table"><thead><tr><th>授權 Google Email</th><th>操作</th></tr></thead><tbody>';
+            res.data.forEach((email, idx) => { if(idx === 0) return; html += `<tr><td class="editable"><span>${email}</span><input type="text" value="${email}" style="display:none;"></td><td><button class="btn btn-sm btn-outline-secondary px-3" onclick="toggleEdit(this, 'whitelist', '${email}')">修正</button> <button class="btn btn-sm btn-outline-danger px-3" onclick="deleteWhitelistAccount('${email}')">移除</button></td></tr>`; });
             $('#whitelist-area').html(html + '</tbody></table>');
         }
-        async function saveWhitelistAccount() { const email = $('#new-whitelist-email').val().trim(); if(!email) return; const res = await apiFetch('addWhitelist', email); showToast(res.message, res.status === 'success' ? "var(--success)" : "var(--danger)"); if(res.status === 'success') { $('#new-whitelist-email').val(''); loadWhitelist(); } }
-        async function deleteWhitelistAccount(email) { if(!confirm(`確定移除 ${email} 嗎？`)) return; const res = await apiFetch('deleteWhitelist', email); showToast(res.message, "var(--danger)"); if(res.status === 'success') loadWhitelist(); }
+        async function saveWhitelistAccount() { const e = $('#new-whitelist-email').val().trim(); if(!e) return; const res = await apiFetch('addWhitelist', e); showToast(res.message, res.status === 'success' ? "var(--success)" : "var(--danger)"); if(res.status === 'success') { $('#new-whitelist-email').val(''); loadWhitelist(); } }
+        async function deleteWhitelistAccount(e) { if(!confirm(`確定移除 ${e} 嗎？`)) return; const res = await apiFetch('deleteWhitelist', e); showToast(res.message, "var(--danger)"); if(res.status === 'success') loadWhitelist(); }
 
         async function toggleEdit(btn, type, originalValue) {
             const tr = btn.closest("tr"); const editables = tr.querySelectorAll(".editable");
@@ -482,14 +477,14 @@
         async function checkIn(id, status) { const res = await apiFetch(status ? 'submitCheckIn' : 'cancelCheckIn', id); showToast(res.message, status ? "var(--success)" : "var(--danger)"); searchData(); loadStats(); }
         async function saveNewStudent() {
             const data = { nT: $('#nT').val().trim(), nI: $('#nI').val().trim(), nN: $('#nN').val().trim(), nG: $('#nG').val(), nS: $('#nS').val().trim(), nP1: $('#nP1').val().trim(), nP2: $('#nP2').val().trim() };
-            if(!data.nT || !data.nN) return alert("編號與姓名不可空白");
+            if(!data.nT || !data.nN) return alert("臨時編號與姓名為必填欄位");
             const res = await apiFetch('addNewStudent', data);
             showToast(res.message, res.status === 'success' ? "var(--success)" : "var(--danger)");
             if(res.status === 'success') { $('#addModal').hide(); searchData(); loadStats(); }
         }
         async function systemReset() { const res = await apiFetch('clearAllData', {}); showToast(res.message, "var(--danger)"); $('#resetModal').hide(); loadStats(); clearFields(); }
 
-        function showToast(text, color) { $('#toast-msg').text(text).css('background', color).fadeIn(200).delay(2500).fadeOut(300); }
+        function showToast(text, color) { $('#toast-msg').text(text).css('background', color).stop().fadeIn(200).delay(2500).fadeOut(300); }
         function switchTab(tab, el) { $('.mobile-page').removeClass('active'); $(`#page-${tab}`).addClass('active'); $('.nav-item').removeClass('active'); $(el).addClass('active'); if(tab === 'accounts') loadWhitelist(); }
 
         window.onload = async () => { if (sessionToken) { $('#login-overlay').hide(); $('#main-app').show(); initApp(); } $('.nav-tabs a').on('click', function (e) { e.preventDefault(); $(this).tab('show'); }); };
