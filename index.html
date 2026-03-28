@@ -82,6 +82,8 @@
         .stats-table td:first-child { width: 55%; color: #666; border-right: 1px solid #dee2e6; }
         .stats-table td.val-col { text-align: right; font-weight: bold; color: #333; }
         .stats-table .highlight-row td { color: var(--primary); font-weight: bold; background-color: #f8f9fa; }
+        /* 補回粉紅高亮樣式 */
+        .stats-table .pink-row td { background-color: #fff0f4; color: #d63384; font-weight: bold; }
 
         /* --- 提示訊息與彈窗 --- */
         #toast-msg {
@@ -147,7 +149,7 @@
     <div id="main-app">
         <div class="app-container">
             <div class="row">
-                <!-- 左側：管理與查詢 -->
+                <!-- 左側：管理與查詢 (預設首頁) -->
                 <div id="page-home" class="col-lg-9 page active">
                     <div class="card">
                         <div class="header-row">
@@ -177,9 +179,10 @@
                         <!-- 操作按鈕群組 -->
                         <div class="btn-group-custom">
                             <button class="btn-custom" style="background: var(--primary);" onclick="searchData()">查詢</button>
-                            <button class="btn-custom" style="background: #20c997;" onclick="$('#addModal').css('display','flex')">新增</button>
+                            <button class="btn-custom" style="background: #20c997;" onclick="$('#addModal').css('display','flex')">新增新生</button>
                             <button class="btn-custom" style="background: #6c757d;" onclick="openImportModal('student')">匯入名單</button>
                             <button class="btn-custom" style="background: #e83e8c;" onclick="openImportModal('sports')">匯入體育班</button>
+                            <button class="btn-custom" style="background: #6610f2;" onclick="switchTab('accounts', document.querySelector('.nav-item[data-tab=accounts]'))">帳號管理</button>
                             <button class="btn-custom" style="background: #adb5bd;" onclick="clearFields()">清除</button>
                             <button class="btn-custom ml-auto" style="background: var(--danger);" onclick="$('#resetModal').css('display','flex')">重置系統</button>
                         </div>
@@ -188,6 +191,27 @@
                     <div class="card">
                         <div id="result-area" class="table-wrapper">
                             <p class="text-center py-4 text-muted small">請輸入條件後點擊「查詢」</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 帳號管理分頁 (白名單管理) -->
+                <div id="page-accounts" class="col-lg-9 page">
+                    <div class="card">
+                        <div class="header-row">
+                            <h5 class="m-0 text-secondary font-weight-bold">帳號授權管理 (白名單)</h5>
+                            <button class="btn btn-outline-primary btn-sm" onclick="switchTab('home', document.querySelector('.nav-item[data-tab=home]'))">返回管理頁</button>
+                        </div>
+                        
+                        <p class="text-muted small">只有在此名單內的 Google 帳號可以登入本系統。</p>
+                        
+                        <div class="d-flex mb-3" style="gap: 10px;">
+                            <input type="email" id="new-whitelist-email" class="form-control form-control-sm" placeholder="輸入欲授權的 Google Email">
+                            <button class="btn btn-primary btn-sm px-4" onclick="saveWhitelistAccount()">新增授權</button>
+                        </div>
+
+                        <div id="whitelist-area" class="table-wrapper">
+                            <p class="text-center py-4 text-muted small">正在讀取授權名單...</p>
                         </div>
                     </div>
                 </div>
@@ -209,15 +233,16 @@
 
         <!-- 手機版導覽列 -->
         <div class="bottom-nav">
-            <a href="javascript:void(0)" class="nav-item active" onclick="switchTab('home', this)">管理作業</a>
-            <a href="javascript:void(0)" class="nav-item" onclick="switchTab('stats', this)">系統統計</a>
+            <a href="javascript:void(0)" class="nav-item active" data-tab="home" onclick="switchTab('home', this)">管理作業</a>
+            <a href="javascript:void(0)" class="nav-item" data-tab="accounts" onclick="switchTab('accounts', this)">帳號管理</a>
+            <a href="javascript:void(0)" class="nav-item" data-tab="stats" onclick="switchTab('stats', this)">系統統計</a>
         </div>
     </div>
 
     <!-- ================= 彈窗區 ================= -->
     <div id="addModal" class="modal-custom">
         <div class="modal-box">
-            <h5>手動新增</h5>
+            <h5>手動新增新生</h5>
             <div class="row">
                 <div class="col-6 form-group"><label class="small text-muted">臨時編號 *</label><input type="text" id="nT" class="form-control form-control-sm"></div>
                 <div class="col-6 form-group"><label class="small text-muted">身分證號</label><input type="text" id="nI" class="form-control form-control-sm"></div>
@@ -308,8 +333,8 @@
         function initApp() {
             loadSchools();
             loadStats();
-            // 每分鐘自動刷新統計
-            setInterval(loadStats, 60000); 
+            // 補回：每 30 秒自動刷新統計 (30000毫秒)
+            setInterval(loadStats, 30000); 
         }
 
         // 安全登出：主動通知後端銷毀 Token
@@ -354,6 +379,7 @@
             });
         }
 
+        // --- 學生資料與國小清單 ---
         async function loadSchools() {
             const res = await apiFetch('getPrimarySchools', {});
             if(res.status === 'success' && Array.isArray(res.data)) {
@@ -370,8 +396,16 @@
             let html = '<div class="stats-wrapper"><table class="stats-table"><tbody>';
             data.forEach((r, i) => {
                 const isHeader = i < 2;
-                let rowClass = isHeader ? 'highlight-row' : '';
+                // 補回：粉紅高亮判斷
+                const isPink = String(r[0]).includes('未聯絡人數') || String(r[0]).includes('剩餘名額');
+                let rowClass = isHeader ? 'highlight-row' : (isPink ? 'pink-row' : '');
                 let val = r[1];
+                
+                // 補回：目標人數的括號換行縮小處理
+                if (String(r[0]).includes('目標人數')) {
+                    val = String(val).replace('(', '<br><span style="font-size:0.85em; color:#888;">(').concat('</span>');
+                }
+                
                 html += `<tr class="${rowClass}">
                             <td>${r[0]}</td>
                             <td class="val-col">${val}</td>
@@ -424,74 +458,13 @@
                 });
                 
                 html += `<td style="white-space: nowrap;">
-                    <button class="btn btn-sm btn-outline-secondary px-2 py-0" style="font-size:12px;" onclick="toggleEdit(this)">修正</button>
+                    <button class="btn btn-sm btn-outline-secondary px-2 py-0" style="font-size:12px;" onclick="toggleEdit(this, 'student')">修正</button>
                     <button class="btn btn-sm ${isCheckIn ? 'btn-secondary' : 'btn-success'} px-2 py-0" style="font-size:12px;" onclick="checkIn('${r[0]}', true)" ${isCheckIn ? 'disabled' : ''}>報到</button>
                     <button class="btn btn-sm btn-outline-danger px-2 py-0" style="font-size:12px;" onclick="checkIn('${r[0]}', false)" ${!isCheckIn ? 'disabled' : ''}>取消</button>
                 </td></tr>`;
             });
             
             $('#result-area').html(html + '</tbody></table>');
-        }
-
-        async function toggleEdit(btn) {
-            const tr = btn.closest("tr");
-            const editables = tr.querySelectorAll(".editable");
-            const isSaving = btn.innerText === "儲存";
-            
-            if (!isSaving) {
-                btn.innerText = "儲存";
-                btn.classList.replace("btn-outline-secondary", "btn-warning");
-                btn.classList.remove("btn-outline-secondary");
-                tr.classList.add("editing-row");
-                
-                editables.forEach(td => {
-                    td.querySelector("span").style.display = "none";
-                    td.querySelector("input").style.display = "block";
-                });
-            } else {
-                btn.disabled = true;
-                btn.innerText = "處理中";
-                
-                const rowData = Array.from(tr.cells).slice(0, -1).map(td => {
-                    const input = td.querySelector("input");
-                    return (input && input.style.display !== 'none') ? input.value.trim() : (td.querySelector("span") ? td.querySelector("span").innerText : td.innerText);
-                });
-                
-                try {
-                    const res = await apiFetch('updateStudentData', rowData);
-                    showToast(res.message, res.status === 'success' ? "var(--success)" : "var(--danger)");
-                    
-                    btn.disabled = false;
-                    btn.innerText = "修正";
-                    btn.classList.replace("btn-warning", "btn-outline-secondary");
-                    btn.classList.add("btn-outline-secondary");
-                    tr.classList.remove("editing-row");
-                    
-                    if (res.status === 'success') {
-                        editables.forEach(td => {
-                            const inp = td.querySelector("input");
-                            td.querySelector("span").innerText = inp.value;
-                            td.querySelector("span").style.display = "inline";
-                            inp.style.display = "none";
-                        });
-                        if (rowData[9] !== "") tr.classList.add("transfer-row");
-                        else tr.classList.remove("transfer-row");
-                        loadStats(); 
-                    }
-                } catch(e) {
-                    showToast("存檔失敗", "var(--danger)");
-                    btn.disabled = false;
-                    btn.innerText = "儲存";
-                }
-            }
-        }
-
-        async function checkIn(id, status) {
-            showToast("處理中...", "var(--primary)");
-            const res = await apiFetch(status ? 'submitCheckIn' : 'cancelCheckIn', id);
-            showToast(res.message, res.status === 'success' ? "var(--success)" : "var(--danger)");
-            searchData(); 
-            loadStats();  
         }
 
         async function saveNewStudent() {
@@ -512,6 +485,122 @@
             }
         }
 
+        // --- 帳號管理 (白名單) 功能 ---
+        async function loadWhitelist() {
+            $('#whitelist-area').html('<p class="text-center py-4 text-muted small">讀取授權清單中...</p>');
+            const res = await apiFetch('getWhitelist', {});
+            
+            if(res.status !== 'success' || !res.data) {
+                return $('#whitelist-area').html('<p class="text-center py-4 text-danger small">讀取失敗</p>');
+            }
+
+            let html = '<table class="data-table"><thead><tr><th>授權 Google Email</th><th>操作</th></tr></thead><tbody>';
+            res.data.forEach((email, index) => {
+                if(index === 0) return; // 跳過標題列
+                html += `<tr>
+                    <td class="editable">
+                        <span>${email}</span>
+                        <input type="text" value="${email}" style="display:none;">
+                    </td>
+                    <td style="white-space: nowrap; width: 120px;">
+                        <button class="btn btn-sm btn-outline-secondary px-2 py-0" style="font-size:12px;" onclick="toggleEdit(this, 'whitelist', '${email}')">修正</button>
+                        <button class="btn btn-sm btn-outline-danger px-2 py-0" style="font-size:12px;" onclick="deleteWhitelistAccount('${email}')">刪除</button>
+                    </td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            $('#whitelist-area').html(html);
+        }
+
+        async function saveWhitelistAccount() {
+            const email = $('#new-whitelist-email').val().trim();
+            if(!email) return alert("請輸入 Email");
+            showToast("正在處理...", "var(--primary)");
+            const res = await apiFetch('addWhitelist', email);
+            showToast(res.message, res.status === 'success' ? "var(--success)" : "var(--danger)");
+            if(res.status === 'success') {
+                $('#new-whitelist-email').val('');
+                loadWhitelist();
+            }
+        }
+
+        async function deleteWhitelistAccount(email) {
+            if(!confirm(`確定要取消對 ${email} 的授權嗎？\n該帳號將立刻無法登入。`)) return;
+            showToast("正在刪除...", "var(--danger)");
+            const res = await apiFetch('deleteWhitelist', email);
+            showToast(res.message, res.status === 'success' ? "var(--success)" : "var(--danger)");
+            if(res.status === 'success') loadWhitelist();
+        }
+
+        // --- 通用行內編輯切換 (支援學生資料與白名單) ---
+        async function toggleEdit(btn, type, originalValue) {
+            const tr = btn.closest("tr");
+            const editables = tr.querySelectorAll(".editable");
+            const isSaving = btn.innerText === "儲存";
+            
+            if (!isSaving) {
+                btn.innerText = "儲存";
+                btn.classList.replace("btn-outline-secondary", "btn-warning");
+                btn.classList.remove("btn-outline-secondary");
+                tr.classList.add("editing-row");
+                
+                editables.forEach(td => {
+                    td.querySelector("span").style.display = "none";
+                    td.querySelector("input").style.display = "block";
+                });
+            } else {
+                btn.disabled = true;
+                btn.innerText = "處理中";
+                
+                let res;
+                if (type === 'student') {
+                    const rowData = Array.from(tr.cells).slice(0, -1).map(td => {
+                        const input = td.querySelector("input");
+                        return (input && input.style.display !== 'none') ? input.value.trim() : (td.querySelector("span") ? td.querySelector("span").innerText : td.innerText);
+                    });
+                    res = await apiFetch('updateStudentData', rowData);
+                } else if (type === 'whitelist') {
+                    const newEmail = tr.querySelector("input").value.trim();
+                    res = await apiFetch('updateWhitelist', { oldEmail: originalValue, newEmail: newEmail });
+                }
+                
+                showToast(res.message, res.status === 'success' ? "var(--success)" : "var(--danger)");
+                
+                btn.disabled = false;
+                btn.innerText = "修正";
+                btn.classList.replace("btn-warning", "btn-outline-secondary");
+                btn.classList.add("btn-outline-secondary");
+                tr.classList.remove("editing-row");
+                
+                if (res.status === 'success') {
+                    editables.forEach(td => {
+                        const inp = td.querySelector("input");
+                        td.querySelector("span").innerText = inp.value;
+                        td.querySelector("span").style.display = "inline";
+                        inp.style.display = "none";
+                    });
+                    // 如果是白名單，因為 originalValue 需要更新，直接刷清單最保險
+                    if(type === 'whitelist') loadWhitelist();
+                    if(type === 'student') {
+                        const rowData = Array.from(tr.cells).slice(0, -1).map(td => (td.querySelector("span") ? td.querySelector("span").innerText : td.innerText));
+                        if (rowData[9] !== "") tr.classList.add("transfer-row");
+                        else tr.classList.remove("transfer-row");
+                        loadStats();
+                    }
+                }
+            }
+        }
+
+        // --- 報到與取消 ---
+        async function checkIn(id, status) {
+            showToast("處理中...", "var(--primary)");
+            const res = await apiFetch(status ? 'submitCheckIn' : 'cancelCheckIn', id);
+            showToast(res.message, res.status === 'success' ? "var(--success)" : "var(--danger)");
+            searchData(); 
+            loadStats();  
+        }
+
+        // --- 匯入與重置 ---
         function openImportModal(type) { 
             currentImportType = type;
             $('#import-title').text(type === 'student' ? '匯入學生資料' : '匯入體育班');
@@ -522,32 +611,18 @@
         async function processImport() {
             const text = $('#paste-area').val().trim();
             if(!text) return showToast("請貼上資料", "var(--warning)");
-            
             const rows = text.split('\n').map(r => r.split('\t'));
             const actionName = currentImportType === 'student' ? "importStudentData" : "importSportsData";
-            
             showToast("上傳中...", "var(--primary)");
-            
             try {
                 const res = await fetch(DEPLOY_URL, { 
                     method: "POST", 
-                    body: JSON.stringify({ 
-                        action: actionName, 
-                        token: sessionToken, 
-                        data: { rows: rows.slice(1), mode: 'overwrite' } 
-                    }) 
+                    body: JSON.stringify({ action: actionName, token: sessionToken, data: { rows: rows.slice(1), mode: 'overwrite' } }) 
                 });
                 const result = await res.json();
                 showToast(result.message, result.status === 'success' ? "var(--success)" : "var(--danger)");
-                if(result.status === 'success') {
-                    $('#importModal').hide(); 
-                    loadStats();
-                } else if (result.status === 'unauthorized') {
-                    logout();
-                }
-            } catch(e) { 
-                showToast("連線異常", "var(--danger)"); 
-            }
+                if(result.status === 'success') { $('#importModal').hide(); loadStats(); }
+            } catch(e) { showToast("連線異常", "var(--danger)"); }
         }
 
         async function systemReset() {
@@ -567,6 +642,8 @@
             $(`#page-${tab}`).addClass('active');
             $('.nav-item').removeClass('active');
             $(el).addClass('active');
+            // 如果切換到帳號管理，自動載入清單
+            if(tab === 'accounts') loadWhitelist();
         }
 
         // 頁面載入時檢查是否有未過期的 Token
@@ -574,7 +651,6 @@
             if (sessionToken) {
                 $('#login-overlay').fadeOut(0);
                 $('#main-app').fadeIn(0);
-                // 嘗試載入資料，如果 Token 已經在後端過期，apiFetch 會自動觸發登出
                 initApp();
             }
         };
