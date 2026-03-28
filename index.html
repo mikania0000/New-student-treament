@@ -63,7 +63,7 @@
         .btn-custom { padding: 8px 16px; border-radius: 6px; border: none; color: white; font-weight: normal; cursor: pointer; transition: 0.2s; white-space: nowrap; font-size: 14px;}
         .btn-custom:hover { opacity: 0.9; }
 
-        /* --- 分頁切換核心 --- */
+        /* --- 分頁與內容顯示 --- */
         .page { display: none; }
         .page.active { display: block; }
 
@@ -88,6 +88,20 @@
         .stats-table .highlight-row td { color: var(--primary); font-weight: bold; background-color: #f8f9fa; }
         .stats-table .pink-row td { background-color: #fff0f4; color: #d63384; font-weight: bold; }
 
+        /* --- 匯入預覽區樣式 --- */
+        .header-hint-box { background: #e9f3ff; border: 1px solid #b8daff; border-radius: 8px; padding: 12px; margin-bottom: 15px; }
+        .header-tag { display: inline-block; background: #fff; border: 1px solid #007bff; color: #007bff; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-right: 5px; margin-bottom: 5px; font-weight: bold; }
+        
+        .drop-zone {
+            border: 2px dashed #ccc; border-radius: 10px; padding: 30px;
+            text-align: center; color: #999; cursor: pointer; transition: 0.3s;
+            background: #fafafa;
+        }
+        .drop-zone:hover { border-color: var(--primary); background: #f0f7ff; color: var(--primary); }
+        .preview-container { margin-top: 15px; max-height: 250px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; }
+        .preview-table { font-size: 12px; width: 100%; }
+        .preview-table th { background: #f0f0f0; position: sticky; top: 0; white-space: nowrap; }
+
         /* --- 提示訊息與彈窗 --- */
         #toast-msg {
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
@@ -96,7 +110,7 @@
         }
         
         .modal-custom { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; }
-        .modal-box { background: white; padding: 25px; border-radius: 10px; width: 90%; max-width: 550px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .modal-box { background: white; padding: 25px; border-radius: 10px; width: 95%; max-width: 850px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
         .modal-box h5 { color: #333; font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
 
         /* --- 手機版導覽與桌機響應調整 --- */
@@ -110,13 +124,13 @@
 
         @media (max-width: 991px) {
             .bottom-nav { display: flex; }
-            .mobile-hide { display: none; }
             .mobile-page { display: none; }
             .mobile-page.active { display: block; }
+            #page-stats { display: none; }
+            #page-stats.active { display: block !important; }
         }
 
         @media (min-width: 992px) {
-            /* 桌機版統計區塊始終顯示在右側 */
             #page-stats { display: block !important; }
         }
     </style>
@@ -154,7 +168,7 @@
         <div class="app-container">
             <div class="row">
                 <!-- 左側：主要內容區 -->
-                <div class="col-lg-9">
+                <div id="content-col" class="col-lg-9">
                     
                     <!-- 分頁1：報到管理 -->
                     <div id="page-home" class="page active mobile-page">
@@ -220,7 +234,7 @@
 
                 </div> <!-- End Left Content -->
 
-                <!-- 右側：統計看板 (桌機版獨立 column，手機版為 mobile-page) -->
+                <!-- 右側：統計看板 -->
                 <div id="page-stats" class="col-lg-3 mobile-page">
                     <div class="card">
                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -247,7 +261,7 @@
     <!-- ================= 彈窗區 ================= -->
     <div id="addModal" class="modal-custom">
         <div class="modal-box">
-            <h5>手動新增新生</h5>
+            <h5>➕ 手動新增新生</h5>
             <div class="row">
                 <div class="col-6 form-group"><label class="small text-muted">臨時編號 *</label><input type="text" id="nT" class="form-control form-control-sm"></div>
                 <div class="col-6 form-group"><label class="small text-muted">身分證號</label><input type="text" id="nI" class="form-control form-control-sm"></div>
@@ -264,22 +278,46 @@
         </div>
     </div>
 
+    <!-- 匯入彈窗 -->
     <div id="importModal" class="modal-custom">
         <div class="modal-box">
-            <h5 id="import-title">資料匯入</h5>
-            <p class="text-muted" style="font-size:12px;">請從 Excel 複製含標題列的資料貼於下方：</p>
-            <textarea id="paste-area" class="form-control mb-3" style="height: 150px; font-size: 12px; white-space: pre; overflow-wrap: normal; overflow-x: auto;"></textarea>
-            <div class="d-flex" style="gap: 10px;">
-                <button class="btn btn-primary btn-sm flex-grow-1" onclick="processImport()">確認覆蓋匯入</button>
-                <button class="btn btn-light btn-sm flex-grow-1 border" onclick="$('#importModal').hide()">取消</button>
+            <h5 id="import-title">📥 數據匯入模組</h5>
+            <div class="header-hint-box">
+                <div class="small font-weight-bold text-primary mb-2">📋 建議 Excel A、B、C... 欄位標題與順序：</div>
+                <div id="header-tags-container"></div>
+            </div>
+            <ul class="nav nav-tabs mb-3" id="importTab" role="tablist">
+                <li class="nav-item"><a class="nav-link active py-1 px-3 small" id="file-tab" data-toggle="tab" href="#tab-file" role="tab">Excel/CSV 檔案</a></li>
+                <li class="nav-item"><a class="nav-link py-1 px-3 small" id="paste-tab" data-toggle="tab" href="#tab-paste" role="tab">文字貼上</a></li>
+            </ul>
+            <div class="tab-content" id="importTabContent">
+                <div class="tab-pane fade show active" id="tab-file" role="tabpanel">
+                    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+                        <div class="mb-2">📄 點擊或將 Excel 檔案拖曳至此</div>
+                        <div class="small">系統將自動解析內容</div>
+                        <input type="file" id="file-input" style="display:none" accept=".xlsx, .xls, .csv" onchange="handleFileSelect(this)">
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="tab-paste" role="tabpanel">
+                    <textarea id="paste-area" class="form-control mb-2" style="height: 120px; font-size: 12px;" placeholder="請從 Excel 複製包含標題列的資料貼於此..." oninput="parsePasteData()"></textarea>
+                </div>
+            </div>
+            <div id="preview-section" style="display:none">
+                <div class="mt-3 d-flex justify-content-between align-items-center"><strong class="small">數據預覽 (前 10 筆)：</strong><span id="import-count" class="badge badge-info px-2">共 0 筆資料</span></div>
+                <div class="preview-container"><table class="table table-sm table-bordered preview-table mb-0"><thead id="preview-thead"></thead><tbody id="preview-tbody"></tbody></table></div>
+            </div>
+            <div class="d-flex mt-3" style="gap: 10px;">
+                <button id="import-confirm-btn" class="btn btn-primary btn-sm flex-grow-1 font-weight-bold" onclick="processImport()" disabled>🚀 確認寫入並覆蓋資料</button>
+                <button class="btn btn-light btn-sm flex-grow-1 border" onclick="$('#importModal').hide(); resetImport()">取消</button>
             </div>
         </div>
     </div>
 
+    <!-- 重置彈窗 -->
     <div id="resetModal" class="modal-custom">
         <div class="modal-box text-center">
-            <h5 class="text-danger mb-3">資料清空確認</h5>
-            <p class="text-muted" style="font-size:13px;">將清空所有學生資料與報到紀錄，無法復原。<br>確認要繼續嗎？</p>
+            <h5 class="text-danger mb-3">⚠️ 系統清空確認</h5>
+            <p class="text-muted" style="font-size:13px;">將清空所有學生資料、體育班名單與報到紀錄，無法復原。<br>確認要繼續嗎？</p>
             <div class="d-flex mt-4" style="gap: 10px;">
                 <button class="btn btn-danger btn-sm flex-grow-1" onclick="systemReset()">確認清空</button>
                 <button class="btn btn-light btn-sm flex-grow-1 border" onclick="$('#resetModal').hide()">取消</button>
@@ -292,44 +330,35 @@
         const DEPLOY_URL = "https://script.google.com/macros/s/AKfycbxpY4iHHkEkdNsBvLdb2OJPqzn0eY14CWjLRiEoDJ0IBUhucE2Pp5dJepyZR5AxP_LO/exec";
         let sessionToken = sessionStorage.getItem('fjm_token') || "";
         let currentImportType = 'student';
+        let stagedData = [];
 
-        // 1. Google 登入
         async function onGoogleSignIn(response) {
-            $('#g-btn-wrapper').hide();
-            $('#login-msg').hide();
-            $('#loading-msg').show();
+            $('#g-btn-wrapper').hide(); $('#login-msg').hide(); $('#loading-msg').show();
             try {
                 const res = await apiFetch('login', { credential: response.credential });
                 if (res.status === 'success') {
-                    sessionToken = res.token;
-                    sessionStorage.setItem('fjm_token', sessionToken);
-                    $('#user-display').text(res.email);
-                    $('#login-overlay').fadeOut();
-                    $('#main-app').fadeIn();
+                    sessionToken = res.token; sessionStorage.setItem('fjm_token', sessionToken);
+                    $('#user-display').text(res.email); $('#login-overlay').fadeOut(); $('#main-app').fadeIn();
                     initApp();
-                } else {
-                    showLoginError(res.message || "驗證失敗");
-                }
+                } else { showLoginError(res.message || "驗證失敗"); }
             } catch (e) { showLoginError("伺服器連線異常"); }
         }
 
-        function showLoginError(msg) {
-            $('#loading-msg').hide();
-            $('#g-btn-wrapper').show();
-            $('#login-msg').text(msg).show();
-            if (google?.accounts?.id) google.accounts.id.disableAutoSelect();
-        }
+        function showLoginError(msg) { $('#loading-msg').hide(); $('#g-btn-wrapper').show(); $('#login-msg').text(msg).show(); if (google?.accounts?.id) google.accounts.id.disableAutoSelect(); }
 
         function initApp() {
-            loadSchools();
-            loadStats();
-            setInterval(loadStats, 30000); 
+            loadSchools(); loadStats(); setInterval(loadStats, 30000); 
+            const dz = document.getElementById('drop-zone');
+            if(dz) {
+                dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.style.borderColor = '#007BFF'; });
+                dz.addEventListener('dragleave', () => { dz.style.borderColor = '#ccc'; });
+                dz.addEventListener('drop', (e) => { e.preventDefault(); dz.style.borderColor = '#ccc'; const files = e.dataTransfer.files; if(files.length) handleFileSelect({files: files}); });
+            }
         }
 
         async function logout() {
             if (sessionToken) try { await apiFetch('logout', {}); } catch (e) {}
-            sessionStorage.removeItem('fjm_token');
-            sessionToken = "";
+            sessionStorage.removeItem('fjm_token'); sessionToken = "";
             if (google?.accounts?.id) google.accounts.id.disableAutoSelect();
             location.reload();
         }
@@ -337,27 +366,27 @@
         function apiFetch(action, data) {
             const callback = 'cb_' + Math.floor(Math.random() * 1000000);
             return new Promise((resolve) => {
-                window[callback] = (res) => { 
-                    resolve(res); 
-                    delete window[callback]; 
-                    $(`#${callback}`).remove(); 
-                    if(res?.status === 'unauthorized') { alert('登入逾時，請重新登入'); logout(); }
-                };
-                const script = document.createElement('script');
-                script.id = callback;
+                window[callback] = (res) => { resolve(res); delete window[callback]; $(`#${callback}`).remove(); if(res?.status === 'unauthorized') { alert('登入逾時，請重新登入'); logout(); } };
+                const script = document.createElement('script'); script.id = callback;
                 const encodedData = encodeURIComponent(JSON.stringify(data));
                 script.src = `${DEPLOY_URL}?action=${action}&token=${sessionToken}&callback=${callback}&data=${encodedData}&v=${Date.now()}`;
                 document.body.appendChild(script);
             });
         }
 
-        // --- 核心功能 ---
+        // --- 核心功能 (修正後的清除鈕) ---
+        function clearFields() {
+            // 1. 清空所有輸入框
+            $('#q-id, #q-idnum, #q-name, #q-school, #q-status').val('');
+            // 2. 清空查詢結果區域
+            $('#result-area').html('<p class="text-center py-4 text-muted small">欄位已清空，請重新輸入條件後點擊「查詢」</p>');
+            // 3. 提示訊息
+            showToast("查詢條件已清除", "var(--primary)");
+        }
+
         async function loadSchools() {
             const res = await apiFetch('getPrimarySchools', {});
-            if(res.status === 'success') {
-                $('#q-school').html('<option value="">全部國小</option>');
-                res.data.forEach(s => $('#q-school').append(`<option value="${s}">${s}</option>`));
-            }
+            if(res.status === 'success') { $('#q-school').html('<option value="">全部國小</option>'); res.data.forEach(s => $('#q-school').append(`<option value="${s}">${s}</option>`)); }
         }
 
         async function loadStats() {
@@ -365,130 +394,108 @@
             if(res.status !== 'success') return;
             let html = '<div class="stats-wrapper"><table class="stats-table"><tbody>';
             res.data.forEach((r, i) => {
-                const isHeader = i < 2;
-                const isPink = String(r[0]).includes('未聯絡人數') || String(r[0]).includes('剩餘名額');
+                const isHeader = i < 2; const isPink = String(r[0]).includes('未聯絡人數') || String(r[0]).includes('剩餘名額');
                 let rowClass = isHeader ? 'highlight-row' : (isPink ? 'pink-row' : '');
                 let val = r[1];
-                if (String(r[0]).includes('目標人數')) {
-                    val = String(val).replace('(', '<br><span style="font-size:0.85em; color:#888;">(').concat('</span>');
-                }
+                if (String(r[0]).includes('目標人數')) val = String(val).replace('(', '<br><span style="font-size:0.85em; color:#888;">(').concat('</span>');
                 html += `<tr class="${rowClass}"><td>${r[0]}</td><td class="val-col">${val}</td></tr>`;
             });
             $('#stats-area').html(html + '</tbody></table></div>');
         }
 
         async function searchData() {
-            const filter = { 
-                tempId: $('#q-id').val().trim(), 
-                idNumber: $('#q-idnum').val().trim(),
-                studentName: $('#q-name').val().trim(),
-                primarySchool: $('#q-school').val(),
-                reportStatus: $('#q-status').val()
-            };
+            const filter = { tempId: $('#q-id').val().trim(), idNumber: $('#q-idnum').val().trim(), studentName: $('#q-name').val().trim(), primarySchool: $('#q-school').val(), reportStatus: $('#q-status').val() };
             $('#result-area').html('<p class="text-center py-4"><span class="spinner-border spinner-border-sm text-primary"></span></p>');
             const res = await apiFetch('queryStudentData', filter);
             if(res.status !== 'success' || !res.data.length) return $('#result-area').html('<p class="text-center py-4 text-danger small">查無資料</p>');
-            
             let html = '<table class="data-table"><thead><tr>';
             res.headers.forEach(h => html += `<th>${h}</th>`);
             html += '<th>操作</th></tr></thead><tbody>';
             res.data.forEach(r => {
-                const isTransfer = String(r[9] || "").trim() !== ""; 
-                const isCheckIn = String(r[7] || "").trim() !== "" && String(r[7] || "").trim() !== "0"; 
+                const isTransfer = String(r[9] || "").trim() !== ""; const isCheckIn = String(r[7] || "").trim() !== "" && String(r[7] || "").trim() !== "0";
                 html += `<tr class="${isTransfer ? 'transfer-row' : ''}">`;
-                r.forEach((v, i) => {
-                    if ([1,2,3,4,5,6,9].includes(i)) {
-                        html += `<td class="editable"><span>${v}</span><input type="text" value="${v}" style="display:none;"></td>`;
-                    } else html += `<td>${v}</td>`;
-                });
-                html += `<td>
-                    <button class="btn btn-sm btn-outline-secondary px-2 py-0" style="font-size:12px;" onclick="toggleEdit(this, 'student')">修正</button>
-                    <button class="btn btn-sm ${isCheckIn ? 'btn-secondary' : 'btn-success'} px-2 py-0" style="font-size:12px;" onclick="checkIn('${r[0]}', true)" ${isCheckIn ? 'disabled' : ''}>報到</button>
-                    <button class="btn btn-sm btn-outline-danger px-2 py-0" style="font-size:12px;" onclick="checkIn('${r[0]}', false)" ${!isCheckIn ? 'disabled' : ''}>取消</button>
-                </td></tr>`;
+                r.forEach((v, i) => { if ([1,2,3,4,5,6,9].includes(i)) html += `<td class="editable"><span>${v}</span><input type="text" value="${v}" style="display:none;"></td>`; else html += `<td>${v}</td>`; });
+                html += `<td><button class="btn btn-sm btn-outline-secondary px-2 py-0" style="font-size:12px;" onclick="toggleEdit(this, 'student')">修正</button> <button class="btn btn-sm ${isCheckIn ? 'btn-secondary' : 'btn-success'} px-2 py-0" style="font-size:12px;" onclick="checkIn('${r[0]}', true)" ${isCheckIn ? 'disabled' : ''}>報到</button> <button class="btn btn-sm btn-outline-danger px-2 py-0" style="font-size:12px;" onclick="checkIn('${r[0]}', false)" ${!isCheckIn ? 'disabled' : ''}>取消</button></td></tr>`;
             });
             $('#result-area').html(html + '</tbody></table>');
         }
 
-        // --- 帳號管理 ---
+        // --- 匯入與管理 ---
+        function openImportModal(type) { 
+            currentImportType = type; const container = $('#header-tags-container'); container.empty();
+            let headers = type === 'student' ? ['臨時編班', '身分證字號', '姓名', '性別', '畢業國小', '電話 1', '電話 2'] : ['姓名', '性別', '身分證'];
+            $('#import-title').text(type === 'student' ? '📥 匯入學生基本資料' : '🏀 匯入體育班名單');
+            headers.forEach(h => container.append(`<span class="header-tag">${h}</span>`));
+            resetImport(); $('#importModal').css('display','flex'); 
+        }
+
+        function resetImport() { stagedData = []; $('#paste-area').val(''); $('#file-input').val(''); $('#preview-section').hide(); $('#import-confirm-btn').prop('disabled', true); $('#preview-thead, #preview-tbody').empty(); $('#drop-zone').html('<div class="mb-2">📄 點擊或將 Excel 檔案拖曳至此</div><div class="small">系統將自動解析內容</div>'); }
+
+        function handleFileSelect(input) {
+            const file = input.files[0]; if(!file) return;
+            $('#drop-zone').html(`已選取：<strong>${file.name}</strong><br><span class="text-primary small">正在讀取內容...</span>`);
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result); const workbook = XLSX.read(data, {type: 'array'});
+                const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1});
+                if(rows.length > 0) { stagedData = rows.slice(1); renderPreview(rows[0], stagedData); }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function parsePasteData() { const text = $('#paste-area').val().trim(); if(!text) return $('#preview-section').hide(); const rows = text.split('\n').map(r => r.split('\t')); if(rows.length > 0) { stagedData = rows.slice(1); renderPreview(rows[0], stagedData); } }
+
+        function renderPreview(headers, data) { $('#preview-thead').html('<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>'); const previewRows = data.slice(0, 10); $('#preview-tbody').html(previewRows.map(r => '<tr>' + r.map(c => `<td>${c||''}</td>`).join('') + '</tr>').join('')); $('#import-count').text(`共 ${data.length} 筆資料`); $('#preview-section').show(); $('#import-confirm-btn').prop('disabled', data.length === 0); }
+
+        async function processImport() {
+            if(!stagedData.length) return; const actionName = currentImportType === 'student' ? "importStudentData" : "importSportsData";
+            showToast("正在上傳資料...", "var(--primary)"); $('#import-confirm-btn').prop('disabled', true).text("處理中...");
+            try {
+                const res = await fetch(DEPLOY_URL, { method: "POST", body: JSON.stringify({ action: actionName, token: sessionToken, data: { rows: stagedData, mode: 'overwrite' } }) });
+                const result = await res.json(); showToast(result.message, result.status === 'success' ? "var(--success)" : "var(--danger)");
+                if(result.status === 'success') { $('#importModal').hide(); loadStats(); }
+            } catch(e) { showToast("連線異常", "var(--danger)"); }
+            $('#import-confirm-btn').prop('disabled', false).text("🚀 確認寫入並覆蓋資料");
+        }
+
         async function loadWhitelist() {
             $('#whitelist-area').html('<p class="text-center py-4 text-muted small">讀取中...</p>');
             const res = await apiFetch('getWhitelist', {});
             if(res.status !== 'success') return $('#whitelist-area').html('<p class="text-center py-4 text-danger small">讀取失敗</p>');
             let html = '<table class="data-table"><thead><tr><th>授權 Email</th><th>操作</th></tr></thead><tbody>';
-            res.data.forEach((email, idx) => {
-                if(idx === 0) return;
-                html += `<tr><td class="editable"><span>${email}</span><input type="text" value="${email}" style="display:none;"></td>
-                <td>
-                    <button class="btn btn-sm btn-outline-secondary px-2 py-0" style="font-size:12px;" onclick="toggleEdit(this, 'whitelist', '${email}')">修正</button>
-                    <button class="btn btn-sm btn-outline-danger px-2 py-0" style="font-size:12px;" onclick="deleteWhitelistAccount('${email}')">刪除</button>
-                </td></tr>`;
-            });
+            res.data.forEach((email, idx) => { if(idx === 0) return; html += `<tr><td class="editable"><span>${email}</span><input type="text" value="${email}" style="display:none;"></td><td><button class="btn btn-sm btn-outline-secondary px-2 py-0" style="font-size:12px;" onclick="toggleEdit(this, 'whitelist', '${email}')">修正</button> <button class="btn btn-sm btn-outline-danger px-2 py-0" style="font-size:12px;" onclick="deleteWhitelistAccount('${email}')">刪除</button></td></tr>`; });
             $('#whitelist-area').html(html + '</tbody></table>');
         }
 
-        async function saveWhitelistAccount() {
-            const email = $('#new-whitelist-email').val().trim();
-            if(!email) return;
-            const res = await apiFetch('addWhitelist', email);
-            showToast(res.message, res.status === 'success' ? "var(--success)" : "var(--danger)");
-            if(res.status === 'success') { $('#new-whitelist-email').val(''); loadWhitelist(); }
-        }
+        async function saveWhitelistAccount() { const email = $('#new-whitelist-email').val().trim(); if(!email) return; const res = await apiFetch('addWhitelist', email); showToast(res.message, res.status === 'success' ? "var(--success)" : "var(--danger)"); if(res.status === 'success') { $('#new-whitelist-email').val(''); loadWhitelist(); } }
 
-        async function deleteWhitelistAccount(email) {
-            if(!confirm(`確定移除 ${email} 嗎？`)) return;
-            const res = await apiFetch('deleteWhitelist', email);
-            showToast(res.message, "var(--danger)");
-            if(res.status === 'success') loadWhitelist();
-        }
+        async function deleteWhitelistAccount(email) { if(!confirm(`確定移除 ${email} 嗎？`)) return; const res = await apiFetch('deleteWhitelist', email); showToast(res.message, "var(--danger)"); if(res.status === 'success') loadWhitelist(); }
 
-        // --- 其他輔助 ---
         async function toggleEdit(btn, type, originalValue) {
-            const tr = btn.closest("tr");
-            const editables = tr.querySelectorAll(".editable");
+            const tr = btn.closest("tr"); const editables = tr.querySelectorAll(".editable");
             if (btn.innerText !== "儲存") {
-                btn.innerText = "儲存";
-                btn.classList.replace("btn-outline-secondary", "btn-warning");
-                tr.classList.add("editing-row");
+                btn.innerText = "儲存"; btn.classList.replace("btn-outline-secondary", "btn-warning"); tr.classList.add("editing-row");
                 editables.forEach(td => { td.querySelector("span").style.display="none"; td.querySelector("input").style.display="block"; });
             } else {
-                btn.disabled = true;
-                let res;
-                if (type === 'student') {
-                    const rowData = Array.from(tr.cells).slice(0, -1).map(td => td.querySelector("input")?.value.trim() || td.innerText);
-                    res = await apiFetch('updateStudentData', rowData);
-                } else {
-                    res = await apiFetch('updateWhitelist', { oldEmail: originalValue, newEmail: tr.querySelector("input").value.trim() });
-                }
+                btn.disabled = true; let res;
+                if (type === 'student') { const rowData = Array.from(tr.cells).slice(0, -1).map(td => td.querySelector("input")?.value.trim() || td.innerText); res = await apiFetch('updateStudentData', rowData); }
+                else { res = await apiFetch('updateWhitelist', { oldEmail: originalValue, newEmail: tr.querySelector("input").value.trim() }); }
                 showToast(res.message, res.status === 'success' ? "var(--success)" : "var(--danger)");
-                btn.disabled = false; btn.innerText = "修正";
-                btn.classList.replace("btn-warning", "btn-outline-secondary");
-                tr.classList.remove("editing-row");
-                if (res.status === 'success') {
-                    if(type === 'whitelist') loadWhitelist();
-                    else searchData();
-                }
+                btn.disabled = false; btn.innerText = "修正"; btn.classList.replace("btn-warning", "btn-outline-secondary"); tr.classList.remove("editing-row");
+                if (res.status === 'success') { if(type === 'whitelist') loadWhitelist(); else searchData(); }
             }
         }
 
-        async function checkIn(id, status) {
-            const res = await apiFetch(status ? 'submitCheckIn' : 'cancelCheckIn', id);
-            showToast(res.message, status ? "var(--success)" : "var(--danger)");
-            searchData(); loadStats();
-        }
+        async function checkIn(id, status) { const res = await apiFetch(status ? 'submitCheckIn' : 'cancelCheckIn', id); showToast(res.message, status ? "var(--success)" : "var(--danger)"); searchData(); loadStats(); }
 
-        function clearFields() { $('#q-id, #q-idnum, #q-name, #q-school, #q-status').val(''); }
+        async function systemReset() { const res = await apiFetch('clearAllData', {}); showToast(res.message, "var(--danger)"); $('#resetModal').hide(); loadStats(); clearFields(); }
+
         function showToast(text, color) { $('#toast-msg').text(text).css('background', color).fadeIn(200).delay(2500).fadeOut(300); }
 
-        function switchTab(tab, el) {
-            $('.mobile-page').removeClass('active');
-            $(`#page-${tab}`).addClass('active');
-            $('.nav-item').removeClass('active');
-            $(el).addClass('active');
-            if(tab === 'accounts') loadWhitelist();
-        }
+        function switchTab(tab, el) { $('.mobile-page').removeClass('active'); $(`#page-${tab}`).addClass('active'); $('.nav-item').removeClass('active'); $(el).addClass('active'); if(tab === 'accounts') loadWhitelist(); }
 
-        window.onload = async () => { if (sessionToken) { $('#login-overlay').hide(); $('#main-app').show(); initApp(); } };
+        window.onload = async () => { if (sessionToken) { $('#login-overlay').hide(); $('#main-app').show(); initApp(); } $('.nav-tabs a').on('click', function (e) { e.preventDefault(); $(this).tab('show'); }); };
     </script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
