@@ -29,7 +29,7 @@
             margin: 0; padding-bottom: 80px;
         }
 
-        /* --- 登入畫面樣式 (簡潔低調) --- */
+        /* --- 登入畫面 --- */
         .login-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(135deg, #e0eafc, #cfdef3);
@@ -48,7 +48,7 @@
             min-height: 120px;
         }
 
-        /* --- 主程式區域 --- */
+        /* --- 主程式佈局 --- */
         #main-app { display: none; }
         .app-container { max-width: 98%; margin: 20px auto; padding: 0 15px; }
         .card { background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 20px; margin-bottom: 20px; border: none; }
@@ -63,6 +63,10 @@
         .btn-custom { padding: 8px 16px; border-radius: 6px; border: none; color: white; font-weight: normal; cursor: pointer; transition: 0.2s; white-space: nowrap; font-size: 14px;}
         .btn-custom:hover { opacity: 0.9; }
 
+        /* --- 分頁切換核心 --- */
+        .page { display: none; }
+        .page.active { display: block; }
+
         /* --- 查詢結果表格 --- */
         .table-wrapper { width: 100%; overflow-x: auto; border-radius: 6px; border: 1px solid #dee2e6; background: #fff; }
         .data-table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 0; table-layout: auto; }
@@ -74,7 +78,7 @@
         .editable input { width: 100%; padding: 4px; font-size: 13px; text-align: center; border: 1px solid #aaa; border-radius: 4px; box-sizing: border-box; }
         .editing-row { background-color: #fff3cd !important; }
 
-        /* --- 即時統計表格 --- */
+        /* --- 統計看板 --- */
         .stats-wrapper { border-radius: 6px; border: 1px solid #dee2e6; overflow: hidden; background: white; }
         .stats-table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 0; }
         .stats-table td { padding: 8px; border-bottom: 1px solid #dee2e6; vertical-align: middle; }
@@ -82,7 +86,6 @@
         .stats-table td:first-child { width: 55%; color: #666; border-right: 1px solid #dee2e6; }
         .stats-table td.val-col { text-align: right; font-weight: bold; color: #333; }
         .stats-table .highlight-row td { color: var(--primary); font-weight: bold; background-color: #f8f9fa; }
-        /* 補回粉紅高亮樣式 */
         .stats-table .pink-row td { background-color: #fff0f4; color: #d63384; font-weight: bold; }
 
         /* --- 提示訊息與彈窗 --- */
@@ -96,7 +99,7 @@
         .modal-box { background: white; padding: 25px; border-radius: 10px; width: 90%; max-width: 550px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
         .modal-box h5 { color: #333; font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
 
-        /* --- 手機版導覽 --- */
+        /* --- 手機版導覽與桌機響應調整 --- */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
             background: white; border-top: 1px solid #ddd; display: none;
@@ -107,21 +110,25 @@
 
         @media (max-width: 991px) {
             .bottom-nav { display: flex; }
-            .page { display: none; }
-            .page.active { display: block; }
+            .mobile-hide { display: none; }
+            .mobile-page { display: none; }
+            .mobile-page.active { display: block; }
+        }
+
+        @media (min-width: 992px) {
+            /* 桌機版統計區塊始終顯示在右側 */
+            #page-stats { display: block !important; }
         }
     </style>
 </head>
 <body>
 
-    <!-- 簡潔登入畫面 -->
+    <!-- 登入畫面 -->
     <div id="login-overlay" class="login-overlay">
         <div class="login-box">
             <h4>系統登入</h4>
             <p>鳳甲國中報到管理系統</p>
-            
             <div class="auth-section">
-                <!-- Google 登入按鈕容器 -->
                 <div id="g_id_onload"
                     data-client_id="553016940521-araovlp30ctbqn6um5rr49q3es5jm4jg.apps.googleusercontent.com"
                     data-callback="onGoogleSignIn"
@@ -130,13 +137,10 @@
                 <div id="g-btn-wrapper">
                     <div class="g_id_signin" data-type="standard" data-theme="outline" data-size="large" data-width="300"></div>
                 </div>
-                
-                <!-- 驗證中狀態 -->
                 <div id="loading-msg" style="display: none; color: var(--primary); font-size: 14px; margin-top: 15px;">
                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                    正在驗證授權，請稍候...
+                    驗證授權中...
                 </div>
-                <!-- 錯誤訊息 -->
                 <div id="login-msg" style="display: none; margin-top: 15px; color: var(--danger); font-size: 13px; padding: 8px; background: #fdf2f2; border-radius: 6px;"></div>
             </div>
         </div>
@@ -149,75 +153,75 @@
     <div id="main-app">
         <div class="app-container">
             <div class="row">
-                <!-- 左側：管理與查詢 (預設首頁) -->
-                <div id="page-home" class="col-lg-9 page active">
-                    <div class="card">
-                        <div class="header-row">
-                            <h5 class="m-0 text-secondary font-weight-bold">報到管理作業</h5>
-                            <div>
-                                <span id="user-display" class="text-muted small mr-3"></span>
-                                <button class="btn btn-outline-secondary btn-sm" onclick="logout()">安全登出</button>
+                <!-- 左側：主要內容區 -->
+                <div class="col-lg-9">
+                    
+                    <!-- 分頁1：報到管理 -->
+                    <div id="page-home" class="page active mobile-page">
+                        <div class="card">
+                            <div class="header-row">
+                                <h5 class="m-0 text-secondary font-weight-bold">報到管理作業</h5>
+                                <div>
+                                    <span id="user-display" class="text-muted small mr-3"></span>
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="logout()">安全登出</button>
+                                </div>
+                            </div>
+                            
+                            <div class="form-grid">
+                                <div><label>臨時編號</label><input type="text" id="q-id" class="form-control form-control-sm" placeholder="輸入編號"></div>
+                                <div><label>身分證號</label><input type="text" id="q-idnum" class="form-control form-control-sm" placeholder="輸入證號"></div>
+                                <div><label>學生姓名</label><input type="text" id="q-name" class="form-control form-control-sm" placeholder="輸入姓名"></div>
+                                <div><label>畢業國小</label><select id="q-school" class="form-control form-control-sm"><option value="">全部國小</option></select></div>
+                                <div>
+                                    <label>報到狀態</label>
+                                    <select id="q-status" class="form-control form-control-sm">
+                                        <option value="">全部狀態</option>
+                                        <option value="已報到">已報到</option>
+                                        <option value="未報到">未報到</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="btn-group-custom">
+                                <button class="btn-custom" style="background: var(--primary);" onclick="searchData()">查詢</button>
+                                <button class="btn-custom" style="background: #20c997;" onclick="$('#addModal').css('display','flex')">新增新生</button>
+                                <button class="btn-custom" style="background: #6c757d;" onclick="openImportModal('student')">匯入名單</button>
+                                <button class="btn-custom" style="background: #e83e8c;" onclick="openImportModal('sports')">匯入體育班</button>
+                                <button class="btn-custom" style="background: #6610f2;" onclick="switchTab('accounts', document.querySelector('.nav-item[data-tab=accounts]'))">帳號管理</button>
+                                <button class="btn-custom" style="background: #adb5bd;" onclick="clearFields()">清除</button>
+                                <button class="btn-custom ml-auto" style="background: var(--danger);" onclick="$('#resetModal').css('display','flex')">重置系統</button>
                             </div>
                         </div>
-                        
-                        <!-- 搜尋欄位 -->
-                        <div class="form-grid">
-                            <div><label>臨時編號</label><input type="text" id="q-id" class="form-control form-control-sm" placeholder="輸入編號"></div>
-                            <div><label>身分證號</label><input type="text" id="q-idnum" class="form-control form-control-sm" placeholder="輸入證號"></div>
-                            <div><label>學生姓名</label><input type="text" id="q-name" class="form-control form-control-sm" placeholder="輸入姓名"></div>
-                            <div><label>畢業國小</label><select id="q-school" class="form-control form-control-sm"><option value="">全部國小</option></select></div>
-                            <div>
-                                <label>報到狀態</label>
-                                <select id="q-status" class="form-control form-control-sm">
-                                    <option value="">全部狀態</option>
-                                    <option value="已報到">已報到</option>
-                                    <option value="未報到">未報到</option>
-                                </select>
+
+                        <div class="card">
+                            <div id="result-area" class="table-wrapper">
+                                <p class="text-center py-4 text-muted small">請輸入條件後點擊「查詢」</p>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- 操作按鈕群組 -->
-                        <div class="btn-group-custom">
-                            <button class="btn-custom" style="background: var(--primary);" onclick="searchData()">查詢</button>
-                            <button class="btn-custom" style="background: #20c997;" onclick="$('#addModal').css('display','flex')">新增新生</button>
-                            <button class="btn-custom" style="background: #6c757d;" onclick="openImportModal('student')">匯入名單</button>
-                            <button class="btn-custom" style="background: #e83e8c;" onclick="openImportModal('sports')">匯入體育班</button>
-                            <button class="btn-custom" style="background: #6610f2;" onclick="switchTab('accounts', document.querySelector('.nav-item[data-tab=accounts]'))">帳號管理</button>
-                            <button class="btn-custom" style="background: #adb5bd;" onclick="clearFields()">清除</button>
-                            <button class="btn-custom ml-auto" style="background: var(--danger);" onclick="$('#resetModal').css('display','flex')">重置系統</button>
+                    <!-- 分頁2：帳號授權管理 -->
+                    <div id="page-accounts" class="page mobile-page">
+                        <div class="card">
+                            <div class="header-row">
+                                <h5 class="m-0 text-secondary font-weight-bold">帳號授權管理 (白名單)</h5>
+                                <button class="btn btn-outline-primary btn-sm" onclick="switchTab('home', document.querySelector('.nav-item[data-tab=home]'))">返回管理頁</button>
+                            </div>
+                            <p class="text-muted small">只有在此名單內的 Google 帳號可以登入本系統。</p>
+                            <div class="d-flex mb-3" style="gap: 10px;">
+                                <input type="email" id="new-whitelist-email" class="form-control form-control-sm" placeholder="輸入欲授權的 Google Email">
+                                <button class="btn btn-primary btn-sm px-4" onclick="saveWhitelistAccount()">新增授權</button>
+                            </div>
+                            <div id="whitelist-area" class="table-wrapper">
+                                <p class="text-center py-4 text-muted small">正在讀取授權名單...</p>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="card">
-                        <div id="result-area" class="table-wrapper">
-                            <p class="text-center py-4 text-muted small">請輸入條件後點擊「查詢」</p>
-                        </div>
-                    </div>
-                </div>
+                </div> <!-- End Left Content -->
 
-                <!-- 帳號管理分頁 (白名單管理) -->
-                <div id="page-accounts" class="col-lg-9 page">
-                    <div class="card">
-                        <div class="header-row">
-                            <h5 class="m-0 text-secondary font-weight-bold">帳號授權管理 (白名單)</h5>
-                            <button class="btn btn-outline-primary btn-sm" onclick="switchTab('home', document.querySelector('.nav-item[data-tab=home]'))">返回管理頁</button>
-                        </div>
-                        
-                        <p class="text-muted small">只有在此名單內的 Google 帳號可以登入本系統。</p>
-                        
-                        <div class="d-flex mb-3" style="gap: 10px;">
-                            <input type="email" id="new-whitelist-email" class="form-control form-control-sm" placeholder="輸入欲授權的 Google Email">
-                            <button class="btn btn-primary btn-sm px-4" onclick="saveWhitelistAccount()">新增授權</button>
-                        </div>
-
-                        <div id="whitelist-area" class="table-wrapper">
-                            <p class="text-center py-4 text-muted small">正在讀取授權名單...</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 右側：統計看板 -->
-                <div id="page-stats" class="col-lg-3 page">
+                <!-- 右側：統計看板 (桌機版獨立 column，手機版為 mobile-page) -->
+                <div id="page-stats" class="col-lg-3 mobile-page">
                     <div class="card">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h6 class="m-0 font-weight-bold text-secondary">系統統計</h6>
@@ -228,6 +232,7 @@
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
 
@@ -284,80 +289,51 @@
 
     <!-- ================= 腳本區 ================= -->
     <script>
-        // ★ 請替換成您最新的 GAS 部署網址 ★
         const DEPLOY_URL = "https://script.google.com/macros/s/AKfycbxpY4iHHkEkdNsBvLdb2OJPqzn0eY14CWjLRiEoDJ0IBUhucE2Pp5dJepyZR5AxP_LO/exec";
-        
-        // 儲存從後端取得的安全憑證
         let sessionToken = sessionStorage.getItem('fjm_token') || "";
         let currentImportType = 'student';
 
-        // 1. Google 登入回傳處理
+        // 1. Google 登入
         async function onGoogleSignIn(response) {
-            const jwtCredential = response.credential;
-            
             $('#g-btn-wrapper').hide();
             $('#login-msg').hide();
             $('#loading-msg').show();
-
             try {
-                // 將 JWT 傳給後端驗證，不送任何密碼
-                const res = await apiFetch('login', { credential: jwtCredential });
-                
+                const res = await apiFetch('login', { credential: response.credential });
                 if (res.status === 'success') {
-                    // 登入成功，儲存後端發放的 Session Token
                     sessionToken = res.token;
                     sessionStorage.setItem('fjm_token', sessionToken);
                     $('#user-display').text(res.email);
-                    
                     $('#login-overlay').fadeOut();
                     $('#main-app').fadeIn();
                     initApp();
                 } else {
-                    showLoginError(res.message || "驗證失敗，請聯絡管理員確認權限。");
+                    showLoginError(res.message || "驗證失敗");
                 }
-            } catch (e) {
-                showLoginError("伺服器連線異常，請稍後再試。");
-            }
+            } catch (e) { showLoginError("伺服器連線異常"); }
         }
 
         function showLoginError(msg) {
             $('#loading-msg').hide();
             $('#g-btn-wrapper').show();
             $('#login-msg').text(msg).show();
-            // 登出 Google 帳號以允許重新選擇
-            if (google && google.accounts && google.accounts.id) {
-                google.accounts.id.disableAutoSelect();
-            }
+            if (google?.accounts?.id) google.accounts.id.disableAutoSelect();
         }
 
         function initApp() {
             loadSchools();
             loadStats();
-            // 補回：每 30 秒自動刷新統計 (30000毫秒)
             setInterval(loadStats, 30000); 
         }
 
-        // 安全登出：主動通知後端銷毀 Token
         async function logout() {
-            if (sessionToken) {
-                try {
-                    await apiFetch('logout', {});
-                } catch (e) {
-                    console.log("後端連線異常，但仍會執行本地登出");
-                }
-            }
-
+            if (sessionToken) try { await apiFetch('logout', {}); } catch (e) {}
             sessionStorage.removeItem('fjm_token');
             sessionToken = "";
-
-            if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
-                google.accounts.id.disableAutoSelect();
-            }
-
+            if (google?.accounts?.id) google.accounts.id.disableAutoSelect();
             location.reload();
         }
 
-        // 核心 API 呼叫函數 (使用 JSONP 解決跨域 GET，並帶上 Token)
         function apiFetch(action, data) {
             const callback = 'cb_' + Math.floor(Math.random() * 1000000);
             return new Promise((resolve) => {
@@ -365,11 +341,7 @@
                     resolve(res); 
                     delete window[callback]; 
                     $(`#${callback}`).remove(); 
-                    // 如果後端回傳 token 過期，自動登出
-                    if(res && res.status === 'unauthorized') {
-                        alert('登入時效已過，請重新登入。');
-                        logout();
-                    }
+                    if(res?.status === 'unauthorized') { alert('登入逾時，請重新登入'); logout(); }
                 };
                 const script = document.createElement('script');
                 script.id = callback;
@@ -379,11 +351,11 @@
             });
         }
 
-        // --- 學生資料與國小清單 ---
+        // --- 核心功能 ---
         async function loadSchools() {
             const res = await apiFetch('getPrimarySchools', {});
-            if(res.status === 'success' && Array.isArray(res.data)) {
-                $('#q-school').html('<option value="">全部國小</option>'); // 清空並重設預設值
+            if(res.status === 'success') {
+                $('#q-school').html('<option value="">全部國小</option>');
                 res.data.forEach(s => $('#q-school').append(`<option value="${s}">${s}</option>`));
             }
         }
@@ -391,33 +363,18 @@
         async function loadStats() {
             const res = await apiFetch('getStatisticsData', {});
             if(res.status !== 'success') return;
-            
-            const data = res.data;
             let html = '<div class="stats-wrapper"><table class="stats-table"><tbody>';
-            data.forEach((r, i) => {
+            res.data.forEach((r, i) => {
                 const isHeader = i < 2;
-                // 補回：粉紅高亮判斷
                 const isPink = String(r[0]).includes('未聯絡人數') || String(r[0]).includes('剩餘名額');
                 let rowClass = isHeader ? 'highlight-row' : (isPink ? 'pink-row' : '');
                 let val = r[1];
-                
-                // 補回：目標人數的括號換行縮小處理
                 if (String(r[0]).includes('目標人數')) {
                     val = String(val).replace('(', '<br><span style="font-size:0.85em; color:#888;">(').concat('</span>');
                 }
-                
-                html += `<tr class="${rowClass}">
-                            <td>${r[0]}</td>
-                            <td class="val-col">${val}</td>
-                         </tr>`;
+                html += `<tr class="${rowClass}"><td>${r[0]}</td><td class="val-col">${val}</td></tr>`;
             });
-            html += '</tbody></table></div>';
-            $('#stats-area').html(html);
-        }
-
-        function clearFields() {
-            $('#q-id, #q-idnum, #q-name, #q-school, #q-status').val('');
-            $('#result-area').html('<p class="text-center py-4 text-muted small">欄位已清空</p>');
+            $('#stats-area').html(html + '</tbody></table></div>');
         }
 
         async function searchData() {
@@ -428,232 +385,110 @@
                 primarySchool: $('#q-school').val(),
                 reportStatus: $('#q-status').val()
             };
-            
             $('#result-area').html('<p class="text-center py-4"><span class="spinner-border spinner-border-sm text-primary"></span></p>');
-            
             const res = await apiFetch('queryStudentData', filter);
-            if(res.status !== 'success' || !res.data || res.data.length === 0) {
-                return $('#result-area').html('<p class="text-center py-4 text-danger small">查無資料</p>');
-            }
-
+            if(res.status !== 'success' || !res.data.length) return $('#result-area').html('<p class="text-center py-4 text-danger small">查無資料</p>');
+            
             let html = '<table class="data-table"><thead><tr>';
             res.headers.forEach(h => html += `<th>${h}</th>`);
             html += '<th>操作</th></tr></thead><tbody>';
-            
             res.data.forEach(r => {
                 const isTransfer = String(r[9] || "").trim() !== ""; 
                 const isCheckIn = String(r[7] || "").trim() !== "" && String(r[7] || "").trim() !== "0"; 
-                
                 html += `<tr class="${isTransfer ? 'transfer-row' : ''}">`;
                 r.forEach((v, i) => {
-                    const isEditable = [1, 2, 3, 4, 5, 6, 9].includes(i);
-                    if (isEditable) {
-                        html += `<td class="editable">
-                                    <span>${v}</span>
-                                    <input type="text" value="${v}" style="display:none;">
-                                 </td>`;
-                    } else {
-                        html += `<td>${v}</td>`;
-                    }
+                    if ([1,2,3,4,5,6,9].includes(i)) {
+                        html += `<td class="editable"><span>${v}</span><input type="text" value="${v}" style="display:none;"></td>`;
+                    } else html += `<td>${v}</td>`;
                 });
-                
-                html += `<td style="white-space: nowrap;">
+                html += `<td>
                     <button class="btn btn-sm btn-outline-secondary px-2 py-0" style="font-size:12px;" onclick="toggleEdit(this, 'student')">修正</button>
                     <button class="btn btn-sm ${isCheckIn ? 'btn-secondary' : 'btn-success'} px-2 py-0" style="font-size:12px;" onclick="checkIn('${r[0]}', true)" ${isCheckIn ? 'disabled' : ''}>報到</button>
                     <button class="btn btn-sm btn-outline-danger px-2 py-0" style="font-size:12px;" onclick="checkIn('${r[0]}', false)" ${!isCheckIn ? 'disabled' : ''}>取消</button>
                 </td></tr>`;
             });
-            
             $('#result-area').html(html + '</tbody></table>');
         }
 
-        async function saveNewStudent() {
-            const data = { 
-                nT: $('#nT').val().trim(), nI: $('#nI').val().trim(), nN: $('#nN').val().trim(), 
-                nG: $('#nG').val(), nS: $('#nS').val().trim(), nP1: $('#nP1').val().trim(), nP2: $('#nP2').val().trim() 
-            };
-            if(!data.nT || !data.nN) return alert("編號與姓名不可空白");
-            
-            const res = await apiFetch('addNewStudent', data);
-            showToast(res.message, res.status === 'success' ? "var(--success)" : "var(--danger)");
-            if(res.status === 'success') {
-                $('#addModal').hide();
-                $('#nT, #nI, #nN, #nS, #nP1, #nP2').val('');
-                $('#q-id').val(data.nT); 
-                searchData(); 
-                loadStats();
-            }
-        }
-
-        // --- 帳號管理 (白名單) 功能 ---
+        // --- 帳號管理 ---
         async function loadWhitelist() {
-            $('#whitelist-area').html('<p class="text-center py-4 text-muted small">讀取授權清單中...</p>');
+            $('#whitelist-area').html('<p class="text-center py-4 text-muted small">讀取中...</p>');
             const res = await apiFetch('getWhitelist', {});
-            
-            if(res.status !== 'success' || !res.data) {
-                return $('#whitelist-area').html('<p class="text-center py-4 text-danger small">讀取失敗</p>');
-            }
-
-            let html = '<table class="data-table"><thead><tr><th>授權 Google Email</th><th>操作</th></tr></thead><tbody>';
-            res.data.forEach((email, index) => {
-                if(index === 0) return; // 跳過標題列
-                html += `<tr>
-                    <td class="editable">
-                        <span>${email}</span>
-                        <input type="text" value="${email}" style="display:none;">
-                    </td>
-                    <td style="white-space: nowrap; width: 120px;">
-                        <button class="btn btn-sm btn-outline-secondary px-2 py-0" style="font-size:12px;" onclick="toggleEdit(this, 'whitelist', '${email}')">修正</button>
-                        <button class="btn btn-sm btn-outline-danger px-2 py-0" style="font-size:12px;" onclick="deleteWhitelistAccount('${email}')">刪除</button>
-                    </td>
-                </tr>`;
+            if(res.status !== 'success') return $('#whitelist-area').html('<p class="text-center py-4 text-danger small">讀取失敗</p>');
+            let html = '<table class="data-table"><thead><tr><th>授權 Email</th><th>操作</th></tr></thead><tbody>';
+            res.data.forEach((email, idx) => {
+                if(idx === 0) return;
+                html += `<tr><td class="editable"><span>${email}</span><input type="text" value="${email}" style="display:none;"></td>
+                <td>
+                    <button class="btn btn-sm btn-outline-secondary px-2 py-0" style="font-size:12px;" onclick="toggleEdit(this, 'whitelist', '${email}')">修正</button>
+                    <button class="btn btn-sm btn-outline-danger px-2 py-0" style="font-size:12px;" onclick="deleteWhitelistAccount('${email}')">刪除</button>
+                </td></tr>`;
             });
-            html += '</tbody></table>';
-            $('#whitelist-area').html(html);
+            $('#whitelist-area').html(html + '</tbody></table>');
         }
 
         async function saveWhitelistAccount() {
             const email = $('#new-whitelist-email').val().trim();
-            if(!email) return alert("請輸入 Email");
-            showToast("正在處理...", "var(--primary)");
+            if(!email) return;
             const res = await apiFetch('addWhitelist', email);
             showToast(res.message, res.status === 'success' ? "var(--success)" : "var(--danger)");
-            if(res.status === 'success') {
-                $('#new-whitelist-email').val('');
-                loadWhitelist();
-            }
+            if(res.status === 'success') { $('#new-whitelist-email').val(''); loadWhitelist(); }
         }
 
         async function deleteWhitelistAccount(email) {
-            if(!confirm(`確定要取消對 ${email} 的授權嗎？\n該帳號將立刻無法登入。`)) return;
-            showToast("正在刪除...", "var(--danger)");
+            if(!confirm(`確定移除 ${email} 嗎？`)) return;
             const res = await apiFetch('deleteWhitelist', email);
-            showToast(res.message, res.status === 'success' ? "var(--success)" : "var(--danger)");
+            showToast(res.message, "var(--danger)");
             if(res.status === 'success') loadWhitelist();
         }
 
-        // --- 通用行內編輯切換 (支援學生資料與白名單) ---
+        // --- 其他輔助 ---
         async function toggleEdit(btn, type, originalValue) {
             const tr = btn.closest("tr");
             const editables = tr.querySelectorAll(".editable");
-            const isSaving = btn.innerText === "儲存";
-            
-            if (!isSaving) {
+            if (btn.innerText !== "儲存") {
                 btn.innerText = "儲存";
                 btn.classList.replace("btn-outline-secondary", "btn-warning");
-                btn.classList.remove("btn-outline-secondary");
                 tr.classList.add("editing-row");
-                
-                editables.forEach(td => {
-                    td.querySelector("span").style.display = "none";
-                    td.querySelector("input").style.display = "block";
-                });
+                editables.forEach(td => { td.querySelector("span").style.display="none"; td.querySelector("input").style.display="block"; });
             } else {
                 btn.disabled = true;
-                btn.innerText = "處理中";
-                
                 let res;
                 if (type === 'student') {
-                    const rowData = Array.from(tr.cells).slice(0, -1).map(td => {
-                        const input = td.querySelector("input");
-                        return (input && input.style.display !== 'none') ? input.value.trim() : (td.querySelector("span") ? td.querySelector("span").innerText : td.innerText);
-                    });
+                    const rowData = Array.from(tr.cells).slice(0, -1).map(td => td.querySelector("input")?.value.trim() || td.innerText);
                     res = await apiFetch('updateStudentData', rowData);
-                } else if (type === 'whitelist') {
-                    const newEmail = tr.querySelector("input").value.trim();
-                    res = await apiFetch('updateWhitelist', { oldEmail: originalValue, newEmail: newEmail });
+                } else {
+                    res = await apiFetch('updateWhitelist', { oldEmail: originalValue, newEmail: tr.querySelector("input").value.trim() });
                 }
-                
                 showToast(res.message, res.status === 'success' ? "var(--success)" : "var(--danger)");
-                
-                btn.disabled = false;
-                btn.innerText = "修正";
+                btn.disabled = false; btn.innerText = "修正";
                 btn.classList.replace("btn-warning", "btn-outline-secondary");
-                btn.classList.add("btn-outline-secondary");
                 tr.classList.remove("editing-row");
-                
                 if (res.status === 'success') {
-                    editables.forEach(td => {
-                        const inp = td.querySelector("input");
-                        td.querySelector("span").innerText = inp.value;
-                        td.querySelector("span").style.display = "inline";
-                        inp.style.display = "none";
-                    });
-                    // 如果是白名單，因為 originalValue 需要更新，直接刷清單最保險
                     if(type === 'whitelist') loadWhitelist();
-                    if(type === 'student') {
-                        const rowData = Array.from(tr.cells).slice(0, -1).map(td => (td.querySelector("span") ? td.querySelector("span").innerText : td.innerText));
-                        if (rowData[9] !== "") tr.classList.add("transfer-row");
-                        else tr.classList.remove("transfer-row");
-                        loadStats();
-                    }
+                    else searchData();
                 }
             }
         }
 
-        // --- 報到與取消 ---
         async function checkIn(id, status) {
-            showToast("處理中...", "var(--primary)");
             const res = await apiFetch(status ? 'submitCheckIn' : 'cancelCheckIn', id);
-            showToast(res.message, res.status === 'success' ? "var(--success)" : "var(--danger)");
-            searchData(); 
-            loadStats();  
+            showToast(res.message, status ? "var(--success)" : "var(--danger)");
+            searchData(); loadStats();
         }
 
-        // --- 匯入與重置 ---
-        function openImportModal(type) { 
-            currentImportType = type;
-            $('#import-title').text(type === 'student' ? '匯入學生資料' : '匯入體育班');
-            $('#paste-area').val(''); 
-            $('#importModal').css('display','flex'); 
-        }
-
-        async function processImport() {
-            const text = $('#paste-area').val().trim();
-            if(!text) return showToast("請貼上資料", "var(--warning)");
-            const rows = text.split('\n').map(r => r.split('\t'));
-            const actionName = currentImportType === 'student' ? "importStudentData" : "importSportsData";
-            showToast("上傳中...", "var(--primary)");
-            try {
-                const res = await fetch(DEPLOY_URL, { 
-                    method: "POST", 
-                    body: JSON.stringify({ action: actionName, token: sessionToken, data: { rows: rows.slice(1), mode: 'overwrite' } }) 
-                });
-                const result = await res.json();
-                showToast(result.message, result.status === 'success' ? "var(--success)" : "var(--danger)");
-                if(result.status === 'success') { $('#importModal').hide(); loadStats(); }
-            } catch(e) { showToast("連線異常", "var(--danger)"); }
-        }
-
-        async function systemReset() {
-            const res = await apiFetch('clearAllData', {});
-            showToast(res.message, res.status === 'success' ? "var(--danger)" : "var(--warning)");
-            $('#resetModal').hide(); 
-            loadStats();
-            clearFields();
-        }
-
-        function showToast(text, color) { 
-            $('#toast-msg').text(text).css('background', color).fadeIn(200).delay(2500).fadeOut(300); 
-        }
+        function clearFields() { $('#q-id, #q-idnum, #q-name, #q-school, #q-status').val(''); }
+        function showToast(text, color) { $('#toast-msg').text(text).css('background', color).fadeIn(200).delay(2500).fadeOut(300); }
 
         function switchTab(tab, el) {
-            $('.page').removeClass('active');
+            $('.mobile-page').removeClass('active');
             $(`#page-${tab}`).addClass('active');
             $('.nav-item').removeClass('active');
             $(el).addClass('active');
-            // 如果切換到帳號管理，自動載入清單
             if(tab === 'accounts') loadWhitelist();
         }
 
-        // 頁面載入時檢查是否有未過期的 Token
-        window.onload = async () => {
-            if (sessionToken) {
-                $('#login-overlay').fadeOut(0);
-                $('#main-app').fadeIn(0);
-                initApp();
-            }
-        };
+        window.onload = async () => { if (sessionToken) { $('#login-overlay').hide(); $('#main-app').show(); initApp(); } };
     </script>
 </body>
 </html>
