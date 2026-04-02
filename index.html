@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>鳳甲國中報到管理系統 V1.4</title>
+    <title>鳳甲國中報到管理系統 V1.5</title>
     <!-- 引入外部資源 -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -104,6 +104,17 @@
         .btn-stack { width: 100%; font-size: 14px !important; padding: 6px 8px !important; font-weight: 800; border-radius: 8px !important; white-space: nowrap; }
 
         .transfer-row { background-color: #fff8f8 !important; color: var(--danger) !important; }
+        
+        /* --- 修正：編輯輸入框樣式強化 --- */
+        .editable input { 
+            width: 100%; min-width: 120px; padding: 10px 8px; font-size: 16px; font-weight: 700;
+            color: var(--primary); text-align: center; border: 2px solid var(--primary); 
+            border-radius: 8px; box-sizing: border-box; background-color: #fff;
+            transition: 0.2s;
+        }
+        .editable input:focus { outline: none; box-shadow: 0 0 0 3px var(--primary-light); }
+        /* ------------------------------- */
+
         .editing-row { background-color: #fffdf0 !important; }
 
         /* --- 欄寬調整功能 --- */
@@ -185,7 +196,7 @@
     <div id="login-overlay" class="login-overlay">
         <div class="login-box">
             <h4>系統登入</h4>
-            <p>鳳甲國中報到管理系統 <span style="color:var(--primary); font-weight:bold;">V 1.4</span></p>
+            <p>鳳甲國中報到管理系統 <span style="color:var(--primary); font-weight:bold;">V 1.5</span></p>
             <div class="auth-section">
                 <div id="g_id_onload"
                     data-client_id="553016940521-araovlp30ctbqn6um5rr49q3es5jm4jg.apps.googleusercontent.com"
@@ -218,7 +229,7 @@
                         <div class="card">
                             <div class="header-row">
                                 <div class="header-title">
-                                    <h5>報到管理作業 <span class="version-badge">V 1.4</span></h5>
+                                    <h5>報到管理作業 <span class="version-badge">V 1.5</span></h5>
                                 </div>
                                 <div class="d-flex align-items-center" style="gap: 12px;">
                                     <span id="user-display" class="text-muted font-weight-bold d-none d-md-inline"></span>
@@ -270,7 +281,7 @@
                     <div id="page-accounts" class="page mobile-page">
                         <div class="card">
                             <div class="header-row">
-                                <div class="header-title"><h5>帳號授權管理 <span class="version-badge">V 1.4</span></h5></div>
+                                <div class="header-title"><h5>帳號授權管理 <span class="version-badge">V 1.5</span></h5></div>
                                 <button class="btn btn-outline-primary" style="border-radius:12px; font-weight:700;" onclick="switchTab('home', document.querySelector('[data-tab=home]'))">返回報到管理</button>
                             </div>
                             <p class="text-muted mb-4" style="font-size: 16px;">只有在白名單內的 Google 帳號可以登入本系統。</p>
