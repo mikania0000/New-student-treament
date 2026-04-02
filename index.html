@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>鳳甲國中報到管理系統 V1.2</title>
+    <title>鳳甲國中報到管理系統 V1.3</title>
     <!-- 引入外部資源 -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -88,20 +88,20 @@
         .btn-custom:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.1); }
         .btn-custom:active { transform: translateY(0); }
 
-        /* --- 表格樣式 --- */
-        .table-wrapper { width: 100%; overflow-x: auto; border-radius: 16px; border: 1px solid #f0f0f0; background: #fff; }
+        /* --- 表格樣式 (加深框線) --- */
+        .table-wrapper { width: 100%; overflow-x: auto; border-radius: 12px; border: 2px solid #e0e0e0; background: #fff; }
         .data-table { width: 100%; border-collapse: collapse; font-size: 16px; margin: 0; }
-        .data-table th { background: #fcfcfc; color: #666; padding: 16px 10px; text-align: center; border-bottom: 2px solid #f0f0f0; font-weight: 800; font-size: 16px; }
-        .data-table td { padding: 14px 8px; border-bottom: 1px solid #f9f9f9; text-align: center; vertical-align: middle; }
-        .data-table tbody tr:last-child td { border-bottom: none; }
+        .data-table th { background: #f4f6f9; color: #444; padding: 16px 10px; text-align: center; border: 1px solid #d0d4dc; font-weight: 800; font-size: 16px; }
+        .data-table td { padding: 14px 8px; border: 1px solid #d0d4dc; text-align: center; vertical-align: middle; }
+        .data-table tbody tr:last-child td { border-bottom: 1px solid #d0d4dc; }
         .data-table tbody tr:hover { background-color: #fcfdff; }
         
         .nowrap-col { white-space: nowrap !important; font-weight: 800; color: #333; }
         .compact-col { max-width: 140px; font-size: 15px; color: #777; line-height: 1.4; }
 
-        /* 操作按鈕垂直化 */
-        .action-stack { display: flex; flex-direction: column; gap: 6px; align-items: center; min-width: 85px; }
-        .btn-stack { width: 100%; font-size: 14px !important; padding: 6px 8px !important; font-weight: 800; border-radius: 8px !important; }
+        /* 操作按鈕水平化 (防誤觸) */
+        .action-row { display: flex; flex-direction: row; gap: 8px; justify-content: center; flex-wrap: nowrap; }
+        .btn-action { font-size: 14px !important; padding: 6px 12px !important; font-weight: 800; border-radius: 8px !important; white-space: nowrap; }
 
         .transfer-row { background-color: #fff8f8 !important; color: var(--danger) !important; }
         .editing-row { background-color: #fffdf0 !important; }
@@ -213,7 +213,7 @@
                                 </div>
                                 <div class="d-flex align-items-center" style="gap: 12px;">
                                     <span id="user-display" class="text-muted font-weight-bold d-none d-md-inline"></span>
-                                    <button class="btn btn-danger btn-sm" style="border-radius:10px; font-weight: 700; padding: 8px 14px; font-size: 15px;" onclick="$('#resetModal').css('display','flex')">⚠️ 重置</button>
+                                    <button class="btn btn-outline-danger btn-sm" style="border-radius:10px; font-weight: 700; padding: 8px 14px; font-size: 15px;" onclick="$('#resetModal').css('display','flex')">系統重置</button>
                                     <button class="btn btn-outline-secondary btn-sm" style="border-radius:10px; font-weight: 700; padding: 8px 14px; font-size: 15px;" onclick="logout()">安全登出</button>
                                 </div>
                             </div>
@@ -467,7 +467,7 @@
                     if ([1,2,3,4,5,6,9].includes(i)) html += `<td class="editable ${nowrap} ${compact}"><span>${v}</span><input type="text" value="${v}" style="display:none;"></td>`;
                     else html += `<td class="${nowrap} ${compact}">${v}</td>`;
                 });
-                html += `<td><div class="action-stack"><button class="btn btn-outline-secondary btn-stack" onclick="toggleEdit(this, 'student')">修正資料</button><button class="btn ${isCi ? 'btn-secondary' : 'btn-success'} btn-stack" onclick="checkIn('${r[0]}', true)" ${isCi ? 'disabled' : ''}>確認報到</button><button class="btn btn-outline-danger btn-stack" onclick="checkIn('${r[0]}', false)" ${!isCi ? 'disabled' : ''}>取消報到</button></div></td></tr>`;
+                html += `<td><div class="action-row"><button class="btn btn-outline-secondary btn-action" onclick="toggleEdit(this, 'student')">修正資料</button><button class="btn ${isCi ? 'btn-secondary' : 'btn-success'} btn-action" onclick="checkIn('${r[0]}', true)" ${isCi ? 'disabled' : ''}>確認報到</button><button class="btn btn-outline-danger btn-action" onclick="checkIn('${r[0]}', false)" ${!isCi ? 'disabled' : ''}>取消報到</button></div></td></tr>`;
             });
             $('#result-area').html(html + '</tbody></table>');
         }
@@ -510,7 +510,7 @@
             const res = await apiFetch('getWhitelist', {});
             if(res.status !== 'success') return $('#whitelist-area').html('<p class="text-center py-4 text-danger font-weight-bold">讀取失敗</p>');
             let html = '<table class="data-table"><thead><tr><th>授權的 Google Email</th><th>管理操作</th></tr></thead><tbody>';
-            res.data.forEach((e, idx) => { if(idx === 0) return; html += `<tr><td class="editable nowrap-col"><span>${e}</span><input type="text" value="${e}" style="display:none;"></td><td><button class="btn btn-sm btn-outline-secondary px-3 font-weight-bold" style="border-radius:10px; font-size:15px;" onclick="toggleEdit(this, 'whitelist', '${e}')">修正</button> <button class="btn btn-sm btn-outline-danger px-3 font-weight-bold" style="border-radius:10px; font-size:15px;" onclick="deleteWhitelistAccount('${e}')">強制移除</button></td></tr>`; });
+            res.data.forEach((e, idx) => { if(idx === 0) return; html += `<tr><td class="editable nowrap-col"><span>${e}</span><input type="text" value="${e}" style="display:none;"></td><td><div class="action-row"><button class="btn btn-outline-secondary btn-action" onclick="toggleEdit(this, 'whitelist', '${e}')">修正</button> <button class="btn btn-outline-danger btn-action" onclick="deleteWhitelistAccount('${e}')">強制移除</button></div></td></tr>`; });
             $('#whitelist-area').html(html + '</tbody></table>');
         }
         async function saveWhitelistAccount() { const e = $('#new-whitelist-email').val().trim(); if(!e) return; const r = await apiFetch('addWhitelist', e); showToast(r.message, r.status === 'success' ? "var(--success)" : "var(--danger)"); if(r.status === 'success') { $('#new-whitelist-email').val(''); loadWhitelist(); } }
