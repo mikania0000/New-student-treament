@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>鳳甲國中報到管理系統</title>
+    <title>鳳甲國中報到管理系統 V1.1</title>
     <!-- 引入外部資源 -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -60,8 +60,9 @@
         .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
         .header-title { display: flex; align-items: center; gap: 12px; }
         .header-title::before { content: ""; width: 8px; height: 28px; background: var(--primary); border-radius: 10px; display: inline-block; }
-        .header-title h5 { margin: 0; font-weight: 800; color: #333; font-size: 26px; } /* 網頁標題放大 */
-        
+        .header-title h5 { margin: 0; font-weight: 800; color: #333; font-size: 26px; display: flex; align-items: center; } /* 網頁標題放大 */
+        .version-badge { font-size: 14px; color: var(--primary); font-weight: 800; background: var(--primary-light); padding: 4px 10px; border-radius: 8px; margin-left: 10px; border: 1px solid #dce1ff; }
+
         /* 搜尋欄位 (字體加大) */
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-bottom: 25px; }
         .form-grid label { font-weight: 700; color: #666; margin-bottom: 8px; font-size: 16px; display: block; }
@@ -71,20 +72,16 @@
         }
         .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-light); background-color: #fff; }
 
-        /* --- 按鈕風格 (強制單一列，不換行) --- */
+        /* --- 按鈕風格 (強制單一列修復) --- */
         .btn-group-custom { 
-            display: flex; gap: 12px; margin-bottom: 10px;
-            flex-wrap: nowrap; /* 強制不換行 */
-            overflow-x: auto; /* 螢幕小的時候可以水平滑動 */
+            display: flex; gap: 10px; margin-bottom: 10px;
+            flex-wrap: wrap; /* 允許換行，但移除了 ml-auto 後，寬螢幕下會自然排成一列 */
             padding-bottom: 8px; 
         }
-        /* 隱藏滾動條但保持可滑動 */
-        .btn-group-custom::-webkit-scrollbar { height: 6px; }
-        .btn-group-custom::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 10px; }
         .btn-custom { 
-            padding: 12px 22px; border-radius: 14px; border: none; color: white; 
+            padding: 10px 18px; border-radius: 12px; border: none; color: white; 
             font-weight: 700; cursor: pointer; transition: 0.2s; white-space: nowrap; font-size: 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05); flex-shrink: 0; /* 確保按鈕不被壓縮 */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); flex-shrink: 0; 
         }
         .btn-custom:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.1); }
         .btn-custom:active { transform: translateY(0); }
@@ -177,7 +174,7 @@
     <div id="login-overlay" class="login-overlay">
         <div class="login-box">
             <h4>系統登入</h4>
-            <p>鳳甲國中報到管理系統</p>
+            <p>鳳甲國中報到管理系統 <span style="color:var(--primary); font-weight:bold;">V 1.1</span></p>
             <div class="auth-section">
                 <div id="g_id_onload"
                     data-client_id="553016940521-araovlp30ctbqn6um5rr49q3es5jm4jg.apps.googleusercontent.com"
@@ -209,7 +206,9 @@
                     <div id="page-home" class="page active mobile-page">
                         <div class="card">
                             <div class="header-row">
-                                <div class="header-title"><h5>報到管理作業</h5></div>
+                                <div class="header-title">
+                                    <h5>報到管理作業 <span class="version-badge">V 1.1</span></h5>
+                                </div>
                                 <div class="d-flex align-items-center gap-3">
                                     <span id="user-display" class="text-muted font-weight-bold"></span>
                                     <button class="btn btn-outline-secondary" style="border-radius:12px; font-weight: 700;" onclick="logout()">安全登出</button>
@@ -231,7 +230,7 @@
                                 </div>
                             </div>
 
-                            <!-- 按鈕強制一列 -->
+                            <!-- 按鈕已移除 ml-auto，確保能整齊排成一列 -->
                             <div class="btn-group-custom">
                                 <button class="btn-custom" style="background: var(--primary);" onclick="searchData()">🔍 查詢學生</button>
                                 <button class="btn-custom" style="background: var(--success);" onclick="$('#addModal').css('display','flex')">＋ 新增新生</button>
@@ -245,7 +244,7 @@
 
                         <div class="card" style="min-height: 200px;">
                             <div id="result-area" class="table-wrapper">
-                                <p class="text-center py-5 text-muted font-weight-bold" style="font-size: 18px;">請輸入查詢條件</p>
+                                <p class="text-center py-5 text-muted font-weight-bold" style="font-size: 18px;">請輸入查詢條件後點擊「查詢學生」</p>
                             </div>
                         </div>
                     </div>
@@ -254,7 +253,7 @@
                     <div id="page-accounts" class="page mobile-page">
                         <div class="card">
                             <div class="header-row">
-                                <div class="header-title"><h5>帳號授權管理</h5></div>
+                                <div class="header-title"><h5>帳號授權管理 <span class="version-badge">V 1.1</span></h5></div>
                                 <button class="btn btn-outline-primary" style="border-radius:12px; font-weight:700;" onclick="switchTab('home', document.querySelector('[data-tab=home]'))">返回報到管理</button>
                             </div>
                             <p class="text-muted mb-4" style="font-size: 16px;">只有在白名單內的 Google 帳號可以登入本系統。</p>
@@ -317,8 +316,8 @@
     <!-- 匯入彈窗 -->
     <div id="importModal" class="modal-custom">
         <div class="modal-box">
-            <h5 id="import-title">📥 數據匯入模組</h5>
-            <div class="header-hint-box">
+            <h5 id="import-title">📥 專業數據匯入</h5>
+            <div class="header-hint-box" style="background: #e9f3ff; border: 1px solid #b8daff; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
                 <div class="font-weight-bold text-primary mb-2" style="font-size:15px;">📋 建議 Excel 欄位順序：</div>
                 <div id="header-tags-container"></div>
             </div>
@@ -328,7 +327,7 @@
             </ul>
             <div class="tab-content">
                 <div class="tab-pane fade show active" id="tab-file">
-                    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()" style="padding: 50px; font-size: 18px; border-width: 3px;">
+                    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()" style="border: 2px dashed #ccc; border-radius: 10px; padding: 50px; text-align: center; color: #888; cursor: pointer; transition: 0.3s; background: #fafafa; font-size: 18px;">
                         📄 點擊或直接將 Excel 檔案拖曳至此
                         <input type="file" id="file-input" style="display:none" accept=".xlsx, .xls, .csv" onchange="handleFileSelect(this)">
                     </div>
@@ -342,7 +341,12 @@
                     <strong style="font-size: 16px; color: #555;">預覽資料 (前 10 筆)</strong>
                     <span id="import-count" class="badge badge-pill badge-primary px-3 py-2" style="font-size:15px;">0 筆</span>
                 </div>
-                <div class="preview-container"><table class="table table-bordered preview-table mb-0"><thead id="preview-thead"></thead><tbody id="preview-tbody"></tbody></table></div>
+                <div class="preview-container" style="margin-top: 15px; max-height: 250px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px;">
+                    <table class="table table-bordered preview-table mb-0" style="font-size: 13px; width: 100%;">
+                        <thead id="preview-thead" style="background: #f0f0f0; position: sticky; top: 0; white-space: nowrap; color: #555;"></thead>
+                        <tbody id="preview-tbody"></tbody>
+                    </table>
+                </div>
             </div>
             <div class="d-flex mt-4" style="gap: 15px;">
                 <button id="import-confirm-btn" class="btn btn-primary btn-lg font-weight-bold flex-grow-1" style="border-radius:18px; font-size:18px;" onclick="processImport()" disabled>🚀 確認寫入覆蓋</button>
@@ -470,16 +474,15 @@
             currentImportType = type; const c = $('#header-tags-container'); c.empty();
             let h = type === 'student' ? ['臨時編班','身分證字號','姓名','性別','畢業國小','電話 1','電話 2'] : ['姓名','性別','身分證'];
             $('#import-title').text(type === 'student' ? '📥 專業數據匯入' : '🏀 匯入體育班名單');
-            h.forEach(t => c.append(`<span class="header-tag">${t}</span>`));
+            h.forEach(t => c.append(`<span class="header-tag" style="display: inline-block; background: #fff; border: 1px solid #007bff; color: #007bff; padding: 4px 10px; border-radius: 4px; font-size: 13px; margin-right: 6px; margin-bottom: 6px; font-weight: bold;">${t}</span>`));
             resetImport(); $('#importModal').css('display','flex'); 
         }
         function resetImport() { 
             stagedData = []; $('#paste-area, #file-input').val(''); $('#preview-section').hide(); $('#import-confirm-btn').prop('disabled', true); 
-            // 修正：確保清除時把 file-input 補回去，否則第二次點擊會沒反應
-            $('#drop-zone').html('<div class="mb-2">📄 點擊或將 Excel 檔案拖曳至此</div><input type="file" id="file-input" style="display:none" accept=".xlsx, .xls, .csv" onchange="handleFileSelect(this)">'); 
+            $('#drop-zone').html('<div class="mb-2">📄 點擊或直接將 Excel 檔案拖曳至此</div><input type="file" id="file-input" style="display:none" accept=".xlsx, .xls, .csv" onchange="handleFileSelect(this)">'); 
         }
         function handleFileSelect(i) {
-            const f = i.files[0]; if(!f) return; $('#drop-zone').html(`已選取：<strong>${f.name}</strong>`);
+            const f = i.files[0]; if(!f) return; $('#drop-zone').html(`<div style="color:var(--primary); font-weight:bold; font-size:20px;">已選取：${f.name}</div>`);
             const r = new FileReader(); r.onload = (e) => {
                 const wb = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
                 const rs = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: 1});
@@ -487,7 +490,7 @@
             }; r.readAsArrayBuffer(f);
         }
         function parsePasteData() { const t = $('#paste-area').val().trim(); if(!t) return $('#preview-section').hide(); const rs = t.split('\n').map(r => r.split('\t')); if(rs.length > 0) { stagedData = rs.slice(1); renderPreview(rs[0], stagedData); } }
-        function renderPreview(h, d) { $('#preview-thead').html('<tr>' + h.map(t => `<th>${t}</th>`).join('') + '</tr>'); $('#preview-tbody').html(d.slice(0, 10).map(r => '<tr>' + r.map(c => `<td>${c||''}</td>`).join('') + '</tr>').join('')); $('#import-count').text(`共 ${d.length} 筆`); $('#preview-section').show(); $('#import-confirm-btn').prop('disabled', d.length === 0); }
+        function renderPreview(h, d) { $('#preview-thead').html('<tr>' + h.map(t => `<th style="padding: 6px; font-size: 13px;">${t}</th>`).join('') + '</tr>'); $('#preview-tbody').html(d.slice(0, 10).map(r => '<tr>' + r.map(c => `<td style="padding: 6px;">${c||''}</td>`).join('') + '</tr>').join('')); $('#import-count').text(`共 ${d.length} 筆資料`); $('#preview-section').show(); $('#import-confirm-btn').prop('disabled', d.length === 0); }
         async function processImport() {
             if(!stagedData.length) return; showToast("資料上傳中，這可能需要幾秒鐘...", "var(--primary)"); $('#import-confirm-btn').prop('disabled', true).text("伺服器處理中...");
             try {
