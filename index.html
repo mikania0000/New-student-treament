@@ -65,7 +65,7 @@
         .btn-custom { padding: 10px 20px; border-radius: 6px; border: none; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; white-space: nowrap; font-size: 15px;}
         .btn-custom:hover { opacity: 0.9; transform: translateY(-1px); }
 
-        /* --- 分頁切換 --- */
+        /* --- 分頁與內容顯示 --- */
         .page { display: none; }
         .page.active { display: block; }
 
@@ -82,8 +82,8 @@
         /* 畢業國小欄位緊縮 */
         .compact-col { max-width: 120px; font-size: 14px; color: #666; }
 
-        /* 垂直按鈕容器：操作欄位加寬一點點 */
-        .action-stack { display: flex; flex-direction: column; gap: 4px; align-items: center; min-width: 75px; padding: 4px 0; }
+        /* 垂直按鈕容器：操作欄位寬度與間距 */
+        .action-stack { display: flex; flex-direction: column; gap: 4px; align-items: center; min-width: 80px; padding: 4px 0; }
         .btn-stack { width: 100%; font-size: 13px !important; padding: 4px 6px !important; font-weight: bold; }
 
         .transfer-row { background-color: #fff0f4 !important; color: #d63384 !important; }
@@ -106,10 +106,23 @@
         .drop-zone { border: 2px dashed #ccc; border-radius: 10px; padding: 35px; text-align: center; color: #888; cursor: pointer; transition: 0.3s; background: #fafafa; font-size: 16px; }
         .drop-zone:hover { border-color: var(--primary); background: #f0f7ff; color: var(--primary); }
 
-        /* --- 提示訊息與彈窗 --- */
+        /* --- 提示訊息與彈窗核心樣式 (關鍵修復點) --- */
         #toast-msg { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 12px 30px; border-radius: 30px; color: white; z-index: 100000; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); font-size: 16px; font-weight: bold; }
-        .modal-box { background: white; padding: 30px; border-radius: 12px; width: 95%; max-width: 850px; }
-        .modal-box h5 { font-size: 20px; border-bottom: 2px solid #eee; padding-bottom: 12px; }
+        
+        /* 確保彈窗背景覆蓋全螢幕並初始隱藏 */
+        .modal-custom { 
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.6); 
+            z-index: 2000; 
+            justify-content: center; 
+            align-items: center; 
+            backdrop-filter: blur(2px);
+        }
+        .modal-box { background: white; padding: 30px; border-radius: 12px; width: 95%; max-width: 850px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+        .modal-box h5 { font-size: 20px; border-bottom: 2px solid #eee; padding-bottom: 12px; margin-bottom: 20px; color: var(--primary); font-weight: bold; }
 
         @media (max-width: 991px) {
             .bottom-nav { display: flex; }
@@ -155,7 +168,7 @@
     <div id="main-app">
         <div class="app-container">
             <div class="row">
-                <!-- 左側內容 -->
+                <!-- 左側：主要內容區 -->
                 <div id="content-col" class="col-lg-9">
                     
                     <!-- 分頁1：報到管理 -->
@@ -202,7 +215,7 @@
                         </div>
                     </div>
 
-                    <!-- 分頁2：帳號管理 -->
+                    <!-- 分頁2：帳號授權管理 -->
                     <div id="page-accounts" class="page mobile-page">
                         <div class="card">
                             <div class="header-row">
@@ -219,7 +232,8 @@
                             </div>
                         </div>
                     </div>
-                </div>
+
+                </div> <!-- End Left Content -->
 
                 <!-- 右側：統計看板 -->
                 <div id="page-stats" class="col-lg-3 mobile-page">
@@ -233,10 +247,11 @@
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
 
-        <!-- 手機版導覽列 -->
+        <!-- 手機版底部導覽 -->
         <div class="bottom-nav">
             <a href="javascript:void(0)" class="nav-item active" data-tab="home" onclick="switchTab('home', this)">報到管理</a>
             <a href="javascript:void(0)" class="nav-item" data-tab="accounts" onclick="switchTab('accounts', this)">帳號管理</a>
@@ -244,7 +259,7 @@
         </div>
     </div>
 
-    <!-- ================= 彈窗區 ================= -->
+    <!-- ================= 彈窗區 (修正後的樣式) ================= -->
     <div id="addModal" class="modal-custom">
         <div class="modal-box">
             <h5>➕ 手動新增新生</h5>
@@ -387,11 +402,9 @@
             $('#result-area').html('<p class="text-center py-4"><span class="spinner-border text-primary"></span><br>資料查詢中...</p>');
             const res = await apiFetch('queryStudentData', filter);
             if(res.status !== 'success' || !res.data.length) return $('#result-area').html('<p class="text-center py-4 text-danger font-weight-bold">查無符合條件的資料</p>');
-            
             let html = '<table class="data-table"><thead><tr>';
             res.headers.forEach(h => html += `<th>${h}</th>`);
             html += '<th>操作</th></tr></thead><tbody>';
-            
             res.data.forEach(r => {
                 const isTransfer = String(r[9] || "").trim() !== ""; const isCheckIn = String(r[7] || "").trim() !== "" && String(r[7] || "").trim() !== "0";
                 html += `<tr class="${isTransfer ? 'transfer-row' : ''}">`;
@@ -404,7 +417,6 @@
                         html += `<td class="${isNoWrap} ${isCompact}">${v}</td>`;
                     }
                 });
-                
                 html += `<td>
                     <div class="action-stack">
                         <button class="btn btn-outline-secondary btn-stack" onclick="toggleEdit(this, 'student')">修正</button>
@@ -416,7 +428,7 @@
             $('#result-area').html(html + '</tbody></table>');
         }
 
-        // --- 匯入邏輯 ---
+        // --- 匯入與其他邏輯 ---
         function openImportModal(type) { 
             currentImportType = type; const container = $('#header-tags-container'); container.empty();
             let h = type === 'student' ? ['臨時編班', '身分證字號', '姓名', '性別', '畢業國小', '電話 1', '電話 2'] : ['姓名', '性別', '身分證'];
@@ -448,7 +460,6 @@
             $('#import-confirm-btn').prop('disabled', false).text("🚀 確認並覆蓋資料庫");
         }
 
-        // --- 帳號與其他管理 ---
         async function loadWhitelist() {
             $('#whitelist-area').html('<p class="text-center py-4">讀取中...</p>');
             const res = await apiFetch('getWhitelist', {});
