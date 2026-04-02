@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>鳳甲國中報到管理系統 V1.5</title>
+    <title>鳳甲國中報到管理系統 V1.6</title>
     <!-- 引入外部資源 -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -105,9 +105,9 @@
 
         .transfer-row { background-color: #fff8f8 !important; color: var(--danger) !important; }
         
-        /* --- 修正：編輯輸入框樣式強化 --- */
+        /* --- 修正：編輯輸入框樣式強化 (去除最小寬度限制) --- */
         .editable input { 
-            width: 100%; min-width: 120px; padding: 10px 8px; font-size: 16px; font-weight: 700;
+            width: 100%; min-width: 0; max-width: 100%; padding: 10px 4px; font-size: 16px; font-weight: 700;
             color: var(--primary); text-align: center; border: 2px solid var(--primary); 
             border-radius: 8px; box-sizing: border-box; background-color: #fff;
             transition: 0.2s;
@@ -196,7 +196,7 @@
     <div id="login-overlay" class="login-overlay">
         <div class="login-box">
             <h4>系統登入</h4>
-            <p>鳳甲國中報到管理系統 <span style="color:var(--primary); font-weight:bold;">V 1.5</span></p>
+            <p>鳳甲國中報到管理系統 <span style="color:var(--primary); font-weight:bold;">V 1.6</span></p>
             <div class="auth-section">
                 <div id="g_id_onload"
                     data-client_id="553016940521-araovlp30ctbqn6um5rr49q3es5jm4jg.apps.googleusercontent.com"
@@ -229,7 +229,7 @@
                         <div class="card">
                             <div class="header-row">
                                 <div class="header-title">
-                                    <h5>報到管理作業 <span class="version-badge">V 1.5</span></h5>
+                                    <h5>報到管理作業 <span class="version-badge">V 1.6</span></h5>
                                 </div>
                                 <div class="d-flex align-items-center" style="gap: 12px;">
                                     <span id="user-display" class="text-muted font-weight-bold d-none d-md-inline"></span>
@@ -253,7 +253,7 @@
                                 </div>
                             </div>
 
-                            <!-- 按鈕列，移除重置系統，增加空間排版 -->
+                            <!-- 按鈕列 -->
                             <div class="btn-group-custom">
                                 <button class="btn-custom" style="background: var(--primary);" onclick="searchData()">🔍 查詢學生</button>
                                 <button class="btn-custom" style="background: var(--success);" onclick="$('#addModal').css('display','flex')">＋ 新增新生</button>
@@ -265,7 +265,7 @@
                         </div>
 
                         <div class="card" style="min-height: 200px;">
-                            <!-- 新增：調整欄寬工具列 -->
+                            <!-- 調整欄寬工具列 -->
                             <div id="result-toolbar" class="d-none justify-content-between align-items-center mb-3 pb-2" style="border-bottom: 2px dashed #eee;">
                                 <span class="font-weight-bold" style="color: var(--primary); font-size: 16px;">📋 查詢結果</span>
                                 <button id="toggle-resize-btn" class="btn btn-sm btn-outline-primary font-weight-bold" style="border-radius: 8px; padding: 4px 12px; font-size: 14px;" onclick="toggleColumnResize()">📏 調整欄寬</button>
@@ -281,7 +281,7 @@
                     <div id="page-accounts" class="page mobile-page">
                         <div class="card">
                             <div class="header-row">
-                                <div class="header-title"><h5>帳號授權管理 <span class="version-badge">V 1.5</span></h5></div>
+                                <div class="header-title"><h5>帳號授權管理 <span class="version-badge">V 1.6</span></h5></div>
                                 <button class="btn btn-outline-primary" style="border-radius:12px; font-weight:700;" onclick="switchTab('home', document.querySelector('[data-tab=home]'))">返回報到管理</button>
                             </div>
                             <p class="text-muted mb-4" style="font-size: 16px;">只有在白名單內的 Google 帳號可以登入本系統。</p>
@@ -564,6 +564,13 @@
         async function toggleEdit(btn, type, ov) {
             const tr = btn.closest("tr"); const eds = tr.querySelectorAll(".editable");
             if (btn.innerText !== "儲存變更") {
+                // 鎖死各欄位寬度，避免輸入框撐破表格產生捲軸
+                Array.from(tr.cells).forEach(td => {
+                    const w = td.getBoundingClientRect().width;
+                    td.style.minWidth = w + "px";
+                    td.style.maxWidth = w + "px";
+                });
+                
                 btn.innerText = "儲存變更"; btn.classList.replace("btn-outline-secondary", "btn-warning"); tr.classList.add("editing-row");
                 eds.forEach(td => { td.querySelector("span").style.display="none"; td.querySelector("input").style.display="block"; });
             } else {
@@ -572,9 +579,17 @@
                 else { res = await apiFetch('updateWhitelist', { oldEmail: ov, newEmail: tr.querySelector("input").value.trim() }); }
                 showToast(res.message, res.status === 'success' ? "var(--success)" : "var(--danger)");
                 btn.disabled = false; btn.innerText = type === 'whitelist' ? "修正" : "修正資料"; btn.classList.replace("btn-warning", "btn-outline-secondary"); tr.classList.remove("editing-row");
+                
+                // 解除欄寬鎖定
+                Array.from(tr.cells).forEach(td => {
+                    td.style.minWidth = "";
+                    td.style.maxWidth = "";
+                });
+                
                 if (res.status === 'success') { if(type === 'whitelist') loadWhitelist(); else searchData(); }
             }
         }
+        
         async function checkIn(id, s) { const r = await apiFetch(s ? 'submitCheckIn' : 'cancelCheckIn', id); showToast(r.message, s ? "var(--success)" : "var(--danger)"); searchData(); loadStats(); }
         async function saveNewStudent() {
             const d = { nT: $('#nT').val().trim(), nI: $('#nI').val().trim(), nN: $('#nN').val().trim(), nG: $('#nG').val(), nS: $('#nS').val().trim(), nP1: $('#nP1').val().trim(), nP2: $('#nP2').val().trim() };
